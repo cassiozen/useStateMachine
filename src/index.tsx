@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useReducer } from 'react';
 
-interface MachineState {
+interface MachineConfigState {
   on?: Record<PropertyKey, string>;
   entry?: () => void;
   exit?: () => void;
@@ -8,50 +8,49 @@ interface MachineState {
 
 interface MachineConfig {
   initial: string;
-  states: Record<PropertyKey, MachineState>;
+  states: Record<PropertyKey, MachineConfigState>;
 }
 
-type KeysOf<Object> = Object extends Record<PropertyKey, string> ? keyof Object : never;
-type TransitionEvents<T extends Record<PropertyKey, MachineState>> = T[keyof T]['on'];
+type KeysOf<Obj> = Obj extends Record<PropertyKey, string> ? keyof Obj : never;
+type TransitionEvent<T extends Record<PropertyKey, MachineConfigState>> = T[keyof T]['on'];
 
 export default function useMachine<
   Config extends MachineConfig,
-  States extends keyof Config['states'],
-  Events extends KeysOf<TransitionEvents<Config['states']>>
->(config: Config): [{ value: States; nextEvents: Events[] }, (event: Events) => void] {
-  const [state, setState] = useState<{
-    value: States;
-    nextEvents: Events[];
-  }>({
-    value: config.initial as States,
-    nextEvents: Object.keys(config.states[config.initial].on ?? []) as Events[],
-  });
+  State extends keyof Config['states'],
+  Event extends KeysOf<TransitionEvent<Config['states']>>
+>(config: Config) {
+  type MachineState = {
+    value: State;
+    nextEvents: Event[];
+  };
 
-  useEffect(() => {
-    config.states[state.value]?.entry?.();
-
-    return () => {
-      config.states[state.value]?.exit?.();
-    };
-    // I'm assuming config cannot be changed during renders
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
-
-  const send = useCallback(
-    (event: Events) => {
+  const [machine, send] = useReducer(
+    (state: MachineState, event: Event) => {
       const currentState = config.states[state.value];
       const nextState = currentState?.on?.[event];
       if (nextState) {
-        setState({
-          value: nextState as States,
-          nextEvents: Object.keys(config.states[nextState].on ?? []) as Events[],
-        });
+        return {
+          value: nextState as State,
+          nextEvents: Object.keys(config.states[nextState].on ?? []) as Event[],
+        };
       }
+      return state;
     },
-    // I'm assuming config cannot be changed during renders
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [state]
+    {
+      value: config.initial as State,
+      nextEvents: Object.keys(config.states[config.initial].on ?? []) as Event[],
+    }
   );
 
-  return [state, send];
+  useEffect(() => {
+    config.states[machine.value]?.entry?.();
+
+    return () => {
+      config.states[machine.value]?.exit?.();
+    };
+    // I'm assuming config cannot be changed during renders
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [machine.value]);
+
+  return [machine, send];
 }
