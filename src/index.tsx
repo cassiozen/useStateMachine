@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react';
+import { useEffect, useReducer, Dispatch } from 'react';
 
 interface MachineConfigState {
   on?: Record<PropertyKey, string>;
@@ -18,29 +18,38 @@ export default function useMachine<
   Config extends MachineConfig,
   State extends keyof Config['states'],
   Event extends KeysOf<TransitionEvent<Config['states']>>
->(config: Config) {
-  type MachineState = {
+>(
+  config: Config
+): [
+  {
     value: State;
     nextEvents: Event[];
+  },
+  Dispatch<Event>
+] {
+  const initialState = {
+    value: config.initial as State,
+    nextEvents: Object.keys(config.states[config.initial].on ?? []) as Event[],
   };
 
-  const [machine, send] = useReducer(
-    (state: MachineState, event: Event) => {
-      const currentState = config.states[state.value];
-      const nextState = currentState?.on?.[event];
-      if (nextState) {
-        return {
-          value: nextState as State,
-          nextEvents: Object.keys(config.states[nextState].on ?? []) as Event[],
-        };
-      }
-      return state;
+  function reducer(
+    state: {
+      value: State;
+      nextEvents: Event[];
     },
-    {
-      value: config.initial as State,
-      nextEvents: Object.keys(config.states[config.initial].on ?? []) as Event[],
+    event: Event
+  ) {
+    const currentState = config.states[state.value];
+    const nextState = currentState?.on?.[event];
+    if (nextState) {
+      return {
+        value: nextState as State,
+        nextEvents: Object.keys(config.states[nextState].on ?? []) as Event[],
+      };
     }
-  );
+    return state;
+  }
+  const [machine, send] = useReducer(reducer, initialState);
 
   useEffect(() => {
     config.states[machine.value]?.entry?.();
