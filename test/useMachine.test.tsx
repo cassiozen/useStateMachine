@@ -46,6 +46,38 @@ describe('useMachine', () => {
       nextEvents: ['TOGGLE'],
     });
   });
+  it('should transition with object syntax', () => {
+    const { result } = renderHook(() =>
+      useMachine({
+        initial: 'inactive',
+        states: {
+          inactive: {
+            on: {
+              TOGGLE: {
+                target: 'active',
+              },
+            },
+          },
+          active: {
+            on: {
+              TOGGLE: {
+                target: 'inactive',
+              },
+            },
+          },
+        },
+      })
+    );
+
+    act(() => {
+      result.current[1]('TOGGLE');
+    });
+
+    expect(result.current[0]).toStrictEqual({
+      value: 'active',
+      nextEvents: ['TOGGLE'],
+    });
+  });
   it('should invoke enter & exit callbacks', () => {
     const entry = jest.fn();
     const exit = jest.fn();

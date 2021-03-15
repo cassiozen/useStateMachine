@@ -1,17 +1,28 @@
 import { useEffect, useReducer, Dispatch } from 'react';
 
+type MachineTransition =
+  | string
+  | {
+      target: string;
+      guard?: (state: string, event: string) => boolean;
+    };
+
 interface MachineConfigState {
-  on?: Record<PropertyKey, string>;
+  on?: {
+    [key: string]: MachineTransition;
+  };
   entry?: () => void;
   exit?: () => void;
 }
 
 interface MachineConfig {
   initial: string;
-  states: Record<PropertyKey, MachineConfigState>;
+  states: {
+    [key: string]: MachineConfigState;
+  };
 }
 
-type KeysOf<Obj> = Obj extends Record<PropertyKey, string> ? keyof Obj : never;
+type KeysOf<Obj> = Obj extends Record<PropertyKey, MachineTransition> ? keyof Obj : never;
 type TransitionEvent<T extends Record<PropertyKey, MachineConfigState>> = T[keyof T]['on'];
 
 export default function useMachine<
@@ -27,6 +38,8 @@ export default function useMachine<
   },
   Dispatch<Event>
 ] {
+  type IndexableState = keyof typeof config.states;
+
   const initialState = {
     value: config.initial as State,
     nextEvents: Object.keys(config.states[config.initial].on ?? []) as Event[],
@@ -39,23 +52,31 @@ export default function useMachine<
     },
     event: Event
   ) {
-    const currentState = config.states[state.value];
-    const nextState = currentState?.on?.[event];
-    if (nextState) {
-      return {
-        value: nextState as State,
-        nextEvents: Object.keys(config.states[nextState].on ?? []) as Event[],
-      };
+    const currentState = config.states[state.value as IndexableState];
+    const nextState = currentState?.on?.[event as IndexableState];
+
+    // If there is no defined next state, return early
+    if (!nextState) return state;
+
+    const nextStateValue = typeof nextState === 'string' ? nextState : nextState.target;
+
+    // Check if there are guards
+    if (typeof nextState === 'object' && nextState.guard && !nextState.guard(state.value as string, event as string)) {
+      return state;
     }
-    return state;
+
+    return {
+      value: nextStateValue as State,
+      nextEvents: Object.keys(config.states[nextStateValue].on ?? []) as Event[],
+    };
   }
   const [machine, send] = useReducer(reducer, initialState);
 
   useEffect(() => {
-    config.states[machine.value]?.entry?.();
+    config.states[machine.value as IndexableState]?.entry?.();
 
     return () => {
-      config.states[machine.value]?.exit?.();
+      config.states[machine.value as IndexableState]?.exit?.();
     };
     // I'm assuming config cannot be changed during renders
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -63,3 +84,28 @@ export default function useMachine<
 
   return [machine, send];
 }
+
+// const wa = {
+//   idle: {
+//     on: {
+//       START: {
+//         target: 'running',
+//       },
+//     },
+//   },
+//   running: {
+//     on: {
+//       PAUSE: 'paused',
+//     },
+//   },
+//   paused: {
+//     on: {
+//       RESET: 'idle',
+//       START: {
+//         target: 'running',
+//       },
+//     },
+//   },
+// };
+
+// type xxx = KeysOf<TransitionEvent<typeof wa>>;
