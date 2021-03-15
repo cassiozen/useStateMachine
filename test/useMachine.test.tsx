@@ -114,4 +114,37 @@ describe('useMachine', () => {
 
     expect(exit.mock.calls[0][0]).toBe('inactive');
   });
+
+  it('should guard transitions', () => {
+    const guard = jest.fn(() => false);
+
+    const { result } = renderHook(() =>
+      useMachine({
+        initial: 'inactive',
+        states: {
+          inactive: {
+            on: {
+              TOGGLE: {
+                target: 'active',
+                guard,
+              },
+            },
+          },
+          active: {
+            on: { TOGGLE: 'inactive' },
+          },
+        },
+      })
+    );
+
+    act(() => {
+      result.current[1]('TOGGLE');
+    });
+
+    expect(guard.mock.calls.length).toBe(1);
+    expect(result.current[0]).toStrictEqual({
+      value: 'inactive',
+      nextEvents: ['TOGGLE'],
+    });
+  });
 });

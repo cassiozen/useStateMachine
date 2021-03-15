@@ -84,28 +84,3 @@ export default function useMachine<
 
   return [machine, send];
 }
-
-// const wa = {
-//   idle: {
-//     on: {
-//       START: {
-//         target: 'running',
-//       },
-//     },
-//   },
-//   running: {
-//     on: {
-//       PAUSE: 'paused',
-//     },
-//   },
-//   paused: {
-//     on: {
-//       RESET: 'idle',
-//       START: {
-//         target: 'running',
-//       },
-//     },
-//   },
-// };
-
-// type xxx = KeysOf<TransitionEvent<typeof wa>>;
