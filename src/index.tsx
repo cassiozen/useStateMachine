@@ -11,8 +11,7 @@ interface MachineConfigState {
   on?: {
     [key: string]: MachineTransition;
   };
-  entry?: () => void;
-  exit?: () => void;
+  effect?: () => void;
 }
 
 interface MachineConfig {
@@ -60,7 +59,7 @@ export default function useMachine<
 
     const nextStateValue = typeof nextState === 'string' ? nextState : nextState.target;
 
-    // Check if there are guards
+    // If there are guards, invoke them and return early if the transition is denied
     if (typeof nextState === 'object' && nextState.guard && !nextState.guard(state.value as string, event as string)) {
       return state;
     }
@@ -72,15 +71,12 @@ export default function useMachine<
   }
   const [machine, send] = useReducer(reducer, initialState);
 
-  useEffect(() => {
-    config.states[machine.value as IndexableState]?.entry?.();
-
-    return () => {
-      config.states[machine.value as IndexableState]?.exit?.();
-    };
+  useEffect(
+    () => config.states[machine.value as IndexableState]?.effect?.(),
     // I'm assuming config cannot be changed during renders
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [machine.value]);
+    [machine.value]
+  );
 
   return [machine, send];
 }

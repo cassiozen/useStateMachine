@@ -6,36 +6,36 @@ import useMachine from '../.';
 
 function App() {
   const [time, setTime] = React.useState(0);
-  const intervalID = React.useRef<any>();
   const [machine, send] = useMachine({
     initial: 'idle',
     states: {
       idle: {
         on: {
-          START: 'running',
+          START: {
+            target: 'running',
+          },
         },
-        entry: () => {
+        effect: () => {
           setTime(0);
-          clearInterval(intervalID.current);
         },
       },
       running: {
         on: {
           PAUSE: 'paused',
         },
-        entry: () => {
-          intervalID.current = setInterval(() => {
+        effect: () => {
+          const intervalID = setInterval(() => {
             setTime(t => t + 1);
           }, 100);
+          return () => clearInterval(intervalID);
         },
       },
       paused: {
         on: {
           RESET: 'idle',
-          START: 'running',
-        },
-        entry: () => {
-          clearInterval(intervalID.current);
+          START: {
+            target: 'running',
+          },
         },
       },
     },

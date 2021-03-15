@@ -78,7 +78,7 @@ describe('useMachine', () => {
       nextEvents: ['TOGGLE'],
     });
   });
-  it('should invoke enter & exit callbacks', () => {
+  it('should invoke effect callbacks', () => {
     const entry = jest.fn();
     const exit = jest.fn();
     const { result } = renderHook(() =>
@@ -87,13 +87,17 @@ describe('useMachine', () => {
         states: {
           inactive: {
             on: { TOGGLE: 'active' },
-            entry: entry.bind(null, 'inactive'),
-            exit: exit.bind(null, 'inactive'),
+            effect: () => {
+              entry('inactive');
+              return exit.bind(null, 'inactive');
+            },
           },
           active: {
             on: { TOGGLE: 'inactive' },
-            entry: entry.bind(null, 'active'),
-            exit: exit.bind(null, 'active'),
+            effect: () => {
+              entry('active');
+              return exit.bind(null, 'active');
+            },
           },
         },
       })
