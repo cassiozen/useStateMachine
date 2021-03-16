@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-hooks';
 import { useChart } from '../src';
 
 describe('useChart', () => {
@@ -23,6 +23,37 @@ describe('useChart', () => {
     expect(result.current[0]).toStrictEqual({
       value: 'inactive',
       context: { foo: 'bar' },
+      nextEvents: ['TOGGLE'],
+    });
+  });
+  it('should update context', () => {
+    const { result } = renderHook(() =>
+      useChart<{ toggleCount: number }>()(
+        {
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: { TOGGLE: 'active' },
+            },
+            active: {
+              on: { TOGGLE: 'inactive' },
+              effect: assign => {
+                assign(context => ({ toggleCount: context.toggleCount + 1 }));
+              },
+            },
+          },
+        },
+        { toggleCount: 0 }
+      )
+    );
+
+    act(() => {
+      result.current[1]('TOGGLE');
+    });
+
+    expect(result.current[0]).toStrictEqual({
+      value: 'active',
+      context: { toggleCount: 1 },
       nextEvents: ['TOGGLE'],
     });
   });
