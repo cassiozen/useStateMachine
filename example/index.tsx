@@ -2,48 +2,50 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import './index.css';
 import formatTime from './formatTime';
-import useMachine from '../.';
+import { useChart } from '../.';
 
 function App() {
-  const [time, setTime] = React.useState(0);
-  const [machine, send] = useMachine({
-    initial: 'idle',
-    states: {
-      idle: {
-        on: {
-          START: {
-            target: 'running',
+  const [machine, send, assign] = useChart<{ time: number }>()(
+    {
+      initial: 'idle',
+      states: {
+        idle: {
+          on: {
+            START: {
+              target: 'running',
+            },
+          },
+          effect: () => {
+            assign(() => ({ time: 0 }));
           },
         },
-        effect: () => {
-          setTime(0);
+        running: {
+          on: {
+            PAUSE: 'paused',
+          },
+          effect: () => {
+            const interval = setInterval(() => {
+              assign(context => ({ time: context.time + 1 }));
+            }, 100);
+            return () => clearInterval(interval);
+          },
         },
-      },
-      running: {
-        on: {
-          PAUSE: 'paused',
-        },
-        effect: () => {
-          const intervalID = setInterval(() => {
-            setTime(t => t + 1);
-          }, 100);
-          return () => clearInterval(intervalID);
-        },
-      },
-      paused: {
-        on: {
-          RESET: 'idle',
-          START: {
-            target: 'running',
+        paused: {
+          on: {
+            RESET: 'idle',
+            START: {
+              target: 'running',
+            },
           },
         },
       },
     },
-  });
+    { time: 0 }
+  );
 
   return (
     <div className="StopWatch">
-      <div className="display">{formatTime(time)}</div>
+      <div className="display">{formatTime(machine.context.time)}</div>
 
       <div className="controls">
         {machine.nextEvents.includes('START') && (
