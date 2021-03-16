@@ -145,12 +145,12 @@ export function useStateChart<C extends object>() {
     const [machine, send] = useReducer(getReducer<Config, State, Event>(config), initialState);
 
     // @ts-ignore
-    const assign = (updater: (context: Context) => Context) => send({ type: __contextKey, updater });
+    const update = (updater: (context: Context) => Context) => send({ type: __contextKey, updater });
 
     useEffect(
       () => {
-        const exit = config.states[machine.value as IndexableState]?.effect?.((assign as unknown) as ContextUpdater<C>);
-        return typeof exit === 'function' ? exit.bind(null, (assign as unknown) as ContextUpdater<C>) : void 0;
+        const exit = config.states[machine.value as IndexableState]?.effect?.((update as unknown) as ContextUpdater<C>);
+        return typeof exit === 'function' ? exit.bind(null, (update as unknown) as ContextUpdater<C>) : void 0;
       },
       // I'm assuming config cannot be changed during renders
       // eslint-disable-next-line react-hooks/exhaustive-deps

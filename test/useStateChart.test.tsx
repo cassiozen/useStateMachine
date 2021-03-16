@@ -37,8 +37,8 @@ describe('useStateChart', () => {
             },
             active: {
               on: { TOGGLE: 'inactive' },
-              effect: assign => {
-                assign(context => ({ toggleCount: context.toggleCount + 1 }));
+              effect: update => {
+                update(context => ({ toggleCount: context.toggleCount + 1 }));
               },
             },
           },
@@ -65,8 +65,8 @@ describe('useStateChart', () => {
           states: {
             inactive: {
               on: { TOGGLE: 'active' },
-              effect: assign => {
-                return () => assign(context => ({ toggleCount: context.toggleCount + 1 }));
+              effect: update => {
+                return () => update(context => ({ toggleCount: context.toggleCount + 1 }));
               },
             },
             active: {

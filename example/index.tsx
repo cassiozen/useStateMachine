@@ -15,17 +15,17 @@ function App() {
               target: 'running',
             },
           },
-          effect: assign => {
-            assign(() => ({ time: 0 }));
+          effect: update => {
+            update(() => ({ time: 0 }));
           },
         },
         running: {
           on: {
             PAUSE: 'paused',
           },
-          effect: assign => {
+          effect: update => {
             const interval = setInterval(() => {
-              assign(context => ({ time: context.time + 1 }));
+              update(context => ({ time: context.time + 1 }));
             }, 100);
             return () => clearInterval(interval);
           },
