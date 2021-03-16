@@ -38,7 +38,7 @@ interface MachineConfig extends BaseConfig {
 type ContextUpdater<C> = (updater: (context: C) => C) => void;
 
 interface ChartConfigState<C> extends BaseConfigState {
-  effect?: (assign: ContextUpdater<C>) => void;
+  effect?: (assign: ContextUpdater<C>) => void | ((assign: ContextUpdater<C>) => void);
 }
 
 interface ChartConfig<C> {
@@ -48,7 +48,7 @@ interface ChartConfig<C> {
   };
 }
 
-const _internalContextKey = Symbol('CONTEXT');
+const __contextKey = Symbol('CONTEXT');
 
 const getReducer = <
   Config extends BaseConfig,
@@ -69,7 +69,7 @@ const getReducer = <
     const nextState = currentState?.on?.[event as IndexableState];
 
     // @ts-ignore
-    if (event.hasOwnProperty('type') && event.type === _internalContextKey) {
+    if (event.hasOwnProperty('type') && event.type === __contextKey) {
       return {
         ...state,
         // @ts-ignore
@@ -147,11 +147,12 @@ export const useChart = <C extends object>() => <
   const [machine, send] = useReducer(getReducer<Config, State, Event>(config), initialState);
 
   // @ts-ignore
-  const assign = (updater: (context: Context) => Context) => send({ type: _internalContextKey, updater });
+  const assign = (updater: (context: Context) => Context) => send({ type: __contextKey, updater });
 
   useEffect(
     () => {
-      return config.states[machine.value as IndexableState]?.effect?.((assign as unknown) as ContextUpdater<C>);
+      const exit = config.states[machine.value as IndexableState]?.effect?.((assign as unknown) as ContextUpdater<C>);
+      return typeof exit === 'function' ? exit.bind(null, (assign as unknown) as ContextUpdater<C>) : void 0;
     },
     // I'm assuming config cannot be changed during renders
     // eslint-disable-next-line react-hooks/exhaustive-deps

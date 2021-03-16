@@ -26,7 +26,7 @@ describe('useChart', () => {
       nextEvents: ['TOGGLE'],
     });
   });
-  it('should update context', () => {
+  it('should update context on entry', () => {
     const { result } = renderHook(() =>
       useChart<{ toggleCount: number }>()(
         {
@@ -40,6 +40,37 @@ describe('useChart', () => {
               effect: assign => {
                 assign(context => ({ toggleCount: context.toggleCount + 1 }));
               },
+            },
+          },
+        },
+        { toggleCount: 0 }
+      )
+    );
+
+    act(() => {
+      result.current[1]('TOGGLE');
+    });
+
+    expect(result.current[0]).toStrictEqual({
+      value: 'active',
+      context: { toggleCount: 1 },
+      nextEvents: ['TOGGLE'],
+    });
+  });
+  it('should update context on exit', () => {
+    const { result } = renderHook(() =>
+      useChart<{ toggleCount: number }>()(
+        {
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: { TOGGLE: 'active' },
+              effect: assign => {
+                return () => assign(context => ({ toggleCount: context.toggleCount + 1 }));
+              },
+            },
+            active: {
+              on: { TOGGLE: 'inactive' },
             },
           },
         },
