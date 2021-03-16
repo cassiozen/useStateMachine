@@ -4,20 +4,17 @@ import { useStateChart } from '../src';
 describe('useStateChart', () => {
   it('should set initial context', () => {
     const { result } = renderHook(() =>
-      useStateChart<{ foo: string }>()(
-        {
-          initial: 'inactive',
-          states: {
-            inactive: {
-              on: { TOGGLE: 'active' },
-            },
-            active: {
-              on: { TOGGLE: 'inactive' },
-            },
+      useStateChart<{ foo: string }>({ foo: 'bar' })({
+        initial: 'inactive',
+        states: {
+          inactive: {
+            on: { TOGGLE: 'active' },
+          },
+          active: {
+            on: { TOGGLE: 'inactive' },
           },
         },
-        { foo: 'bar' }
-      )
+      })
     );
 
     expect(result.current[0]).toStrictEqual({
@@ -28,23 +25,20 @@ describe('useStateChart', () => {
   });
   it('should update context on entry', () => {
     const { result } = renderHook(() =>
-      useStateChart<{ toggleCount: number }>()(
-        {
-          initial: 'inactive',
-          states: {
-            inactive: {
-              on: { TOGGLE: 'active' },
-            },
-            active: {
-              on: { TOGGLE: 'inactive' },
-              effect: update => {
-                update(context => ({ toggleCount: context.toggleCount + 1 }));
-              },
+      useStateChart<{ toggleCount: number }>({ toggleCount: 0 })({
+        initial: 'inactive',
+        states: {
+          inactive: {
+            on: { TOGGLE: 'active' },
+          },
+          active: {
+            on: { TOGGLE: 'inactive' },
+            effect: update => {
+              update(context => ({ toggleCount: context.toggleCount + 1 }));
             },
           },
         },
-        { toggleCount: 0 }
-      )
+      })
     );
 
     act(() => {
@@ -59,23 +53,20 @@ describe('useStateChart', () => {
   });
   it('should update context on exit', () => {
     const { result } = renderHook(() =>
-      useStateChart<{ toggleCount: number }>()(
-        {
-          initial: 'inactive',
-          states: {
-            inactive: {
-              on: { TOGGLE: 'active' },
-              effect: update => {
-                return () => update(context => ({ toggleCount: context.toggleCount + 1 }));
-              },
-            },
-            active: {
-              on: { TOGGLE: 'inactive' },
+      useStateChart<{ toggleCount: number }>({ toggleCount: 0 })({
+        initial: 'inactive',
+        states: {
+          inactive: {
+            on: { TOGGLE: 'active' },
+            effect: update => {
+              return () => update(context => ({ toggleCount: context.toggleCount + 1 }));
             },
           },
+          active: {
+            on: { TOGGLE: 'inactive' },
+          },
         },
-        { toggleCount: 0 }
-      )
+      })
     );
 
     act(() => {

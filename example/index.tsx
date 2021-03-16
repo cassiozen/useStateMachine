@@ -5,43 +5,40 @@ import formatTime from './formatTime';
 import { useStateChart } from '../.';
 
 function App() {
-  const [machine, send] = useStateChart<{ time: number }>()(
-    {
-      initial: 'idle',
-      states: {
-        idle: {
-          on: {
-            START: {
-              target: 'running',
-            },
-          },
-          effect: update => {
-            update(() => ({ time: 0 }));
+  const [machine, send] = useStateChart<{ time: number }>({ time: 0 })({
+    initial: 'idle',
+    states: {
+      idle: {
+        on: {
+          START: {
+            target: 'running',
           },
         },
-        running: {
-          on: {
-            PAUSE: 'paused',
-          },
-          effect: update => {
-            const interval = setInterval(() => {
-              update(context => ({ time: context.time + 1 }));
-            }, 100);
-            return () => clearInterval(interval);
-          },
+        effect: update => {
+          update(() => ({ time: 0 }));
         },
-        paused: {
-          on: {
-            RESET: 'idle',
-            START: {
-              target: 'running',
-            },
+      },
+      running: {
+        on: {
+          PAUSE: 'paused',
+        },
+        effect: update => {
+          const interval = setInterval(() => {
+            update(context => ({ time: context.time + 1 }));
+          }, 100);
+          return () => clearInterval(interval);
+        },
+      },
+      paused: {
+        on: {
+          RESET: 'idle',
+          START: {
+            target: 'running',
           },
         },
       },
     },
-    { time: 0 }
-  );
+  });
 
   return (
     <div className="StopWatch">

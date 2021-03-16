@@ -68,11 +68,14 @@ const getReducer = <
     const currentState = config.states[state.value as IndexableState];
     const nextState = currentState?.on?.[event as IndexableState];
 
-    // @ts-ignore
+    // The context is updated by dispatching an internal action with shape:
+    // { key: __contextKey, updater: fn }
+    // We're hiding this event from TypeScript because it's not part of the public API
+    // @ts-expect-error
     if (event.hasOwnProperty('type') && event.type === __contextKey) {
       return {
         ...state,
-        // @ts-ignore
+        // @ts-expect-error
         context: event.updater(state.context),
       };
     }
@@ -127,13 +130,12 @@ export function useStateMachine<
   return [machine, send];
 }
 
-export function useStateChart<C extends object>() {
+export function useStateChart<Context extends object>(context: Context) {
   return function useStateChartWithContext<
-    Config extends ChartConfig<C>,
+    Config extends ChartConfig<Context>,
     State extends keyof Config['states'],
-    Event extends KeysOfTransition<TransitionEvent<Config['states']>>,
-    Context extends C
-  >(config: Config, context: Context) {
+    Event extends KeysOfTransition<TransitionEvent<Config['states']>>
+  >(config: Config) {
     type IndexableState = keyof typeof config.states;
 
     const initialState = {
@@ -144,13 +146,17 @@ export function useStateChart<C extends object>() {
 
     const [machine, send] = useReducer(getReducer<Config, State, Event>(config), initialState);
 
-    // @ts-ignore
+    // The updater function sends an internal event to the reducer to trigger the actual update
+    // We're hiding this from the public API
+    // @ts-expect-error
     const update = (updater: (context: Context) => Context) => send({ type: __contextKey, updater });
 
     useEffect(
       () => {
-        const exit = config.states[machine.value as IndexableState]?.effect?.((update as unknown) as ContextUpdater<C>);
-        return typeof exit === 'function' ? exit.bind(null, (update as unknown) as ContextUpdater<C>) : void 0;
+        const exit = config.states[machine.value as IndexableState]?.effect?.(
+          (update as unknown) as ContextUpdater<Context>
+        );
+        return typeof exit === 'function' ? exit.bind(null, (update as unknown) as ContextUpdater<Context>) : void 0;
       },
       // I'm assuming config cannot be changed during renders
       // eslint-disable-next-line react-hooks/exhaustive-deps
