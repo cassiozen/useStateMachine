@@ -5,7 +5,7 @@ import formatTime from './formatTime';
 import { useChart } from '../.';
 
 function App() {
-  const [machine, send, assign] = useChart<{ time: number }>()(
+  const [machine, send] = useChart<{ time: number }>()(
     {
       initial: 'idle',
       states: {
@@ -15,7 +15,7 @@ function App() {
               target: 'running',
             },
           },
-          effect: () => {
+          effect: assign => {
             assign(() => ({ time: 0 }));
           },
         },
@@ -23,7 +23,7 @@ function App() {
           on: {
             PAUSE: 'paused',
           },
-          effect: () => {
+          effect: assign => {
             const interval = setInterval(() => {
               assign(context => ({ time: context.time + 1 }));
             }, 100);
