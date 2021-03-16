@@ -147,7 +147,7 @@ export const useChart = <C extends object>() => <
   const [machine, send] = useReducer(getReducer<Config, State, Event>(config), initialState);
 
   // @ts-ignore
-  const assign = (updater: (context: Context) => Context) => send({ type: _internalContextUpdateKey, updater });
+  const assign = (updater: (context: Context) => Context) => send({ type: _internalContextKey, updater });
 
   useEffect(
     () => {
