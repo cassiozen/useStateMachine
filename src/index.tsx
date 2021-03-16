@@ -95,7 +95,7 @@ const getReducer = <
     };
   };
 
-export function useMachine<
+export function useStateMachine<
   Config extends MachineConfig,
   State extends keyof Config['states'],
   Event extends KeysOfTransition<TransitionEvent<Config['states']>>
@@ -127,44 +127,43 @@ export function useMachine<
   return [machine, send];
 }
 
-export const useChart = <C extends object>() => <
-  Config extends ChartConfig<C>,
-  State extends keyof Config['states'],
-  Event extends KeysOfTransition<TransitionEvent<Config['states']>>,
-  Context extends C
->(
-  config: Config,
-  context: Context
-) => {
-  type IndexableState = keyof typeof config.states;
+export function useStateChart<C extends object>() {
+  return function useStateChartWithContext<
+    Config extends ChartConfig<C>,
+    State extends keyof Config['states'],
+    Event extends KeysOfTransition<TransitionEvent<Config['states']>>,
+    Context extends C
+  >(config: Config, context: Context) {
+    type IndexableState = keyof typeof config.states;
 
-  const initialState = {
-    value: config.initial as State,
-    context,
-    nextEvents: Object.keys(config.states[config.initial].on ?? []) as Event[],
+    const initialState = {
+      value: config.initial as State,
+      context,
+      nextEvents: Object.keys(config.states[config.initial].on ?? []) as Event[],
+    };
+
+    const [machine, send] = useReducer(getReducer<Config, State, Event>(config), initialState);
+
+    // @ts-ignore
+    const assign = (updater: (context: Context) => Context) => send({ type: __contextKey, updater });
+
+    useEffect(
+      () => {
+        const exit = config.states[machine.value as IndexableState]?.effect?.((assign as unknown) as ContextUpdater<C>);
+        return typeof exit === 'function' ? exit.bind(null, (assign as unknown) as ContextUpdater<C>) : void 0;
+      },
+      // I'm assuming config cannot be changed during renders
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [machine.value]
+    );
+
+    return [machine, send] as [
+      {
+        value: State;
+        context: Context;
+        nextEvents: Event[];
+      },
+      Dispatch<Event>
+    ];
   };
-
-  const [machine, send] = useReducer(getReducer<Config, State, Event>(config), initialState);
-
-  // @ts-ignore
-  const assign = (updater: (context: Context) => Context) => send({ type: __contextKey, updater });
-
-  useEffect(
-    () => {
-      const exit = config.states[machine.value as IndexableState]?.effect?.((assign as unknown) as ContextUpdater<C>);
-      return typeof exit === 'function' ? exit.bind(null, (assign as unknown) as ContextUpdater<C>) : void 0;
-    },
-    // I'm assuming config cannot be changed during renders
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [machine.value]
-  );
-
-  return [machine, send] as [
-    {
-      value: State;
-      context: Context;
-      nextEvents: Event[];
-    },
-    Dispatch<Event>
-  ];
-};
+}

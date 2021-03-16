@@ -1,10 +1,10 @@
 import { renderHook, act } from '@testing-library/react-hooks';
-import { useChart } from '../src';
+import { useStateChart } from '../src';
 
-describe('useChart', () => {
+describe('useStateChart', () => {
   it('should set initial context', () => {
     const { result } = renderHook(() =>
-      useChart<{ foo: string }>()(
+      useStateChart<{ foo: string }>()(
         {
           initial: 'inactive',
           states: {
@@ -28,7 +28,7 @@ describe('useChart', () => {
   });
   it('should update context on entry', () => {
     const { result } = renderHook(() =>
-      useChart<{ toggleCount: number }>()(
+      useStateChart<{ toggleCount: number }>()(
         {
           initial: 'inactive',
           states: {
@@ -59,7 +59,7 @@ describe('useChart', () => {
   });
   it('should update context on exit', () => {
     const { result } = renderHook(() =>
-      useChart<{ toggleCount: number }>()(
+      useStateChart<{ toggleCount: number }>()(
         {
           initial: 'inactive',
           states: {

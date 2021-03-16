@@ -1,10 +1,10 @@
 import { renderHook, act } from '@testing-library/react-hooks';
-import { useMachine } from '../src';
+import { useStateMachine } from '../src';
 
-describe('useMachine', () => {
+describe('useStateMachine', () => {
   it('should set initial state', () => {
     const { result } = renderHook(() =>
-      useMachine({
+      useStateMachine({
         initial: 'inactive',
         states: {
           inactive: {
@@ -24,7 +24,7 @@ describe('useMachine', () => {
   });
   it('should transition', () => {
     const { result } = renderHook(() =>
-      useMachine({
+      useStateMachine({
         initial: 'inactive',
         states: {
           inactive: {
@@ -48,7 +48,7 @@ describe('useMachine', () => {
   });
   it('should transition with object syntax', () => {
     const { result } = renderHook(() =>
-      useMachine({
+      useStateMachine({
         initial: 'inactive',
         states: {
           inactive: {
@@ -82,7 +82,7 @@ describe('useMachine', () => {
     const entry = jest.fn();
     const exit = jest.fn();
     const { result } = renderHook(() =>
-      useMachine({
+      useStateMachine({
         initial: 'inactive',
         states: {
           inactive: {
@@ -124,7 +124,7 @@ describe('useMachine', () => {
       const guard = jest.fn(() => false);
 
       const { result } = renderHook(() =>
-        useMachine({
+        useStateMachine({
           initial: 'inactive',
           states: {
             inactive: {
@@ -157,7 +157,7 @@ describe('useMachine', () => {
       const guard = jest.fn(() => true);
 
       const { result } = renderHook(() =>
-        useMachine({
+        useStateMachine({
           initial: 'inactive',
           states: {
             inactive: {
