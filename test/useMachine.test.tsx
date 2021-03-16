@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react-hooks';
-import useMachine from '../src';
+import { useMachine } from '../src';
 
 describe('useMachine', () => {
   it('should set initial state', () => {
@@ -119,36 +119,71 @@ describe('useMachine', () => {
     expect(exit.mock.calls[0][0]).toBe('inactive');
   });
 
-  it('should guard transitions', () => {
-    const guard = jest.fn(() => false);
+  describe('guarded transitions', () => {
+    it('should block transitions with guard returning false', () => {
+      const guard = jest.fn(() => false);
 
-    const { result } = renderHook(() =>
-      useMachine({
-        initial: 'inactive',
-        states: {
-          inactive: {
-            on: {
-              TOGGLE: {
-                target: 'active',
-                guard,
+      const { result } = renderHook(() =>
+        useMachine({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: {
+                TOGGLE: {
+                  target: 'active',
+                  guard,
+                },
               },
             },
+            active: {
+              on: { TOGGLE: 'inactive' },
+            },
           },
-          active: {
-            on: { TOGGLE: 'inactive' },
-          },
-        },
-      })
-    );
+        })
+      );
 
-    act(() => {
-      result.current[1]('TOGGLE');
+      act(() => {
+        result.current[1]('TOGGLE');
+      });
+
+      expect(guard).toHaveBeenCalled();
+      expect(result.current[0]).toStrictEqual({
+        value: 'inactive',
+        nextEvents: ['TOGGLE'],
+      });
     });
 
-    expect(guard.mock.calls.length).toBe(1);
-    expect(result.current[0]).toStrictEqual({
-      value: 'inactive',
-      nextEvents: ['TOGGLE'],
+    it('should allow transitions with guard returning true', () => {
+      const guard = jest.fn(() => true);
+
+      const { result } = renderHook(() =>
+        useMachine({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: {
+                TOGGLE: {
+                  target: 'active',
+                  guard,
+                },
+              },
+            },
+            active: {
+              on: { TOGGLE: 'inactive' },
+            },
+          },
+        })
+      );
+
+      act(() => {
+        result.current[1]('TOGGLE');
+      });
+
+      expect(guard).toHaveBeenCalled();
+      expect(result.current[0]).toStrictEqual({
+        value: 'active',
+        nextEvents: ['TOGGLE'],
+      });
     });
   });
 });
