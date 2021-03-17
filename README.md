@@ -115,6 +115,12 @@ const [state, send] = useStateMachine({ toggleCount: 0 })({
     },
   },
 });
+
+console.log(state); // { context: { toggleCount: 0 }, value: 'inactive', nextEvents: ['TOGGLE'] }
+
+send('TOGGLE');
+
+console.log(state); // { context: { toggleCount: 1 }, value: 'active', nextEvents: ['TOGGLE'] }
 ```
 
 The context is inferred automatically in TypeScript, but you can provide you own type if you want to be more specific:
