@@ -18,7 +18,7 @@ describe('useStateMachine', () => {
     );
 
     expect(result.current[0]).toStrictEqual({
-      context: undefined,
+      context: {},
       value: 'inactive',
       nextEvents: ['TOGGLE'],
     });
@@ -44,7 +44,7 @@ describe('useStateMachine', () => {
     });
 
     expect(result.current[0]).toStrictEqual({
-      context: undefined,
+      context: {},
       value: 'active',
       nextEvents: ['TOGGLE'],
     });
@@ -72,7 +72,7 @@ describe('useStateMachine', () => {
     });
 
     expect(result.current[0]).toStrictEqual({
-      context: undefined,
+      context: {},
       value: 'inactive',
       nextEvents: ['TOGGLE'],
     });
@@ -106,7 +106,7 @@ describe('useStateMachine', () => {
     });
 
     expect(result.current[0]).toStrictEqual({
-      context: undefined,
+      context: {},
       value: 'active',
       nextEvents: ['TOGGLE'],
     });
@@ -181,7 +181,7 @@ describe('useStateMachine', () => {
 
       expect(guard).toHaveBeenCalled();
       expect(result.current[0]).toStrictEqual({
-        context: undefined,
+        context: {},
         value: 'inactive',
         nextEvents: ['TOGGLE'],
       });
@@ -215,7 +215,7 @@ describe('useStateMachine', () => {
 
       expect(guard).toHaveBeenCalled();
       expect(result.current[0]).toStrictEqual({
-        context: undefined,
+        context: {},
         value: 'active',
         nextEvents: ['TOGGLE'],
       });

@@ -40,6 +40,7 @@ interface MachineConfig<C> {
 const __contextKey = Symbol('CONTEXT');
 
 const getReducer = <
+  Context extends Record<PropertyKey, any>,
   Config extends BaseConfig,
   State extends keyof Config['states'],
   Event extends KeysOfTransition<TransitionEvent<Config['states']>>
@@ -49,29 +50,25 @@ const getReducer = <
   function reducer(
     state: {
       value: State;
+      context: Context;
       nextEvents: Event[];
     },
-    event: Event
+    event: Event | { type: typeof __contextKey; updater: (context: Context) => Context }
   ) {
     type IndexableState = keyof typeof config.states;
     const currentState = config.states[state.value as IndexableState];
     const nextState = currentState?.on?.[event as IndexableState];
 
-    // The context is updated by dispatching an internal action with shape:
-    // { key: __contextKey, updater: fn }
-    // We're hiding this event from TypeScript because it's not part of the public API
-    // @ts-expect-error
-    if (event.hasOwnProperty('type') && event.type === __contextKey) {
+    // Internal action to update context
+    if (typeof event === 'object' && event.type === __contextKey) {
       return {
         ...state,
-        // @ts-expect-error
         context: event.updater(state.context),
       };
     }
 
-    if (!nextState)
-      // If there is no defined next state, return early
-      return state;
+    // If there is no defined next state, return early
+    if (!nextState) return state;
 
     const nextStateValue = typeof nextState === 'string' ? nextState : nextState.target;
 
@@ -87,38 +84,29 @@ const getReducer = <
     };
   };
 
-export default function useStateMachine<Context extends object>(context?: Context) {
-  return function useStateMachineWithContext<
-    Config extends MachineConfig<Context>,
-    State extends keyof Config['states'],
-    Event extends KeysOfTransition<TransitionEvent<Config['states']>>
-  >(config: Config) {
+export default function useStateMachine<Context extends Record<PropertyKey, any>>(context?: Context) {
+  return function useStateMachineWithContext<Config extends MachineConfig<Context>>(config: Config) {
     type IndexableState = keyof typeof config.states;
+    type State = keyof Config['states'];
+    type Event = KeysOfTransition<TransitionEvent<Config['states']>>;
 
     const initialState = {
       value: config.initial as State,
-      context,
+      context: context ?? ({} as Context),
       nextEvents: Object.keys(config.states[config.initial].on ?? []) as Event[],
     };
 
-    const [machine, send] = useReducer(getReducer<Config, State, Event>(config), initialState);
+    const reducer = getReducer<Context, Config, State, Event>(config);
+
+    const [machine, send] = useReducer(reducer, initialState);
 
     // The updater function sends an internal event to the reducer to trigger the actual update
-    // We're hiding this from the public API
-    // @ts-expect-error
     const update = (updater: (context: Context) => Context) => send({ type: __contextKey, updater });
 
-    useEffect(
-      () => {
-        const exit = config.states[machine.value as IndexableState]?.effect?.(
-          (update as unknown) as ContextUpdater<Context>
-        );
-        return typeof exit === 'function' ? exit.bind(null, (update as unknown) as ContextUpdater<Context>) : void 0;
-      },
-      // I'm assuming config cannot be changed during renders
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [machine.value]
-    );
+    useEffect(() => {
+      const exit = config.states[machine.value as IndexableState]?.effect?.(update);
+      return typeof exit === 'function' ? exit.bind(null, update) : void 0;
+    }, [machine.value]);
 
     return [machine, send] as [
       {
