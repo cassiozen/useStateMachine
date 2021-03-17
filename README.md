@@ -101,15 +101,15 @@ Besides the finite number of states, the state machine can have extended state (
 You can provide the initial context value as the first argument to the State Machine hook, and use the update function whithin your effects to change the context:
 
 ```js
-useStateChart ({ toggleCount: 0 }({
-  initial: 'inactive',
+const [state, send] = useStateMachine({ toggleCount: 0 })({
+  initial: 'idle',
   states: {
     inactive: {
       on: { TOGGLE: 'active' },
     },
     active: {
       on: { TOGGLE: 'inactive' },
-      effect: (update) => {
+      effect: update => {
         update(context => ({ toggleCount: context.toggleCount + 1 }));
       },
     },
@@ -120,15 +120,15 @@ useStateChart ({ toggleCount: 0 }({
 The context is inferred automatically in TypeScript, but you can provide you own type if you want to be more specific:
 
 ```typescript
-useStateChart <{ toggleCount: number }>({ toggleCount: 0 }({
-  initial: 'inactive',
+const [state, send] = useStateMachine<{ toggleCount: number }>({ toggleCount: 0 })({
+  initial: 'idle',
   states: {
     inactive: {
       on: { TOGGLE: 'active' },
     },
     active: {
       on: { TOGGLE: 'inactive' },
-      effect: (update) => {
+      effect: update => {
         update(context => ({ toggleCount: context.toggleCount + 1 }));
       },
     },
