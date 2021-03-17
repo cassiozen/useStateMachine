@@ -109,7 +109,7 @@ useStateChart ({ toggleCount: 0 }({
     },
     active: {
       on: { TOGGLE: 'inactive' },
-      effect: update => {
+      effect: (update) => {
         update(context => ({ toggleCount: context.toggleCount + 1 }));
       },
     },
@@ -128,7 +128,7 @@ useStateChart <{ toggleCount: number }>({ toggleCount: 0 }({
     },
     active: {
       on: { TOGGLE: 'inactive' },
-      effect: update => {
+      effect: (update) => {
         update(context => ({ toggleCount: context.toggleCount + 1 }));
       },
     },
