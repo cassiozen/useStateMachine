@@ -25,7 +25,7 @@ const [state, send] = useStateMachine()({
     },
     active: {
       on: { TOGGLE: 'inactive' },
-      effect: () => {
+      effect() {
         console.log('Just entered the Active state');
         // Same cleanup pattern as `useEffect`:
         // If you return a function, it will run when exiting the state.
@@ -81,7 +81,7 @@ const [state, send] = useStateMachine()({
       on: {
         TOGGLE: {
           target: 'active',
-          guard: (stateName, eventName) => {
+          guard(stateName, eventName) {
             // Return a bollean to allow or block the transition
           },
         },
@@ -109,7 +109,7 @@ const [state, send] = useStateMachine({ toggleCount: 0 })({
     },
     active: {
       on: { TOGGLE: 'inactive' },
-      effect: update => {
+      effect(update) {
         update(context => ({ toggleCount: context.toggleCount + 1 }));
       },
     },
@@ -128,7 +128,7 @@ const [state, send] = useStateMachine<{ toggleCount: number }>({ toggleCount: 0 
     },
     active: {
       on: { TOGGLE: 'inactive' },
-      effect: update => {
+      effect(update) {
         update(context => ({ toggleCount: context.toggleCount + 1 }));
       },
     },
