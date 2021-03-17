@@ -27,7 +27,8 @@ const [state, send] = useStateMachine()({
       on: { TOGGLE: 'inactive' },
       effect: () => {
         console.log('Just entered the Active state');
-        // Same cleanup pattern as `useEffect`: If you return a function, it will run when exiting the state.
+        // Same cleanup pattern as `useEffect`:
+        // If you return a function, it will run when exiting the state.
         return () => console.log('Just Left the Active state');
       },
     },
