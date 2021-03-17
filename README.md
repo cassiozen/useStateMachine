@@ -53,7 +53,7 @@ This work around allows TypeScript developers to provide the extended state type
 
 Transitions can be configured using a shorthand syntax:
 
-```json
+```js
 on: {
   TOGGLE: 'active';
 }
@@ -61,7 +61,7 @@ on: {
 
 Or the extended, object syntax, which allows for more control over the transition (like adding guards):
 
-```json
+```js
 on: {
   TOGGLE: {
     target: 'active',
