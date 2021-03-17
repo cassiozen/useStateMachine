@@ -9,7 +9,7 @@ type Transition =
 
 type KeysOfTransition<Obj> = Obj extends Record<PropertyKey, Transition> ? keyof Obj : never;
 
-interface BaseConfigState {
+interface BaseStateConfig {
   on?: {
     [key: string]: Transition;
   };
@@ -18,33 +18,22 @@ interface BaseConfigState {
 interface BaseConfig {
   initial: string;
   states: {
-    [key: string]: BaseConfigState;
+    [key: string]: BaseStateConfig;
   };
 }
 
-type TransitionEvent<T extends Record<PropertyKey, BaseConfigState>> = T[keyof T]['on'];
-
-interface MachineConfigState extends BaseConfigState {
-  effect?: () => void;
-}
-
-interface MachineConfig extends BaseConfig {
-  initial: string;
-  states: {
-    [key: string]: MachineConfigState;
-  };
-}
+type TransitionEvent<T extends Record<PropertyKey, BaseStateConfig>> = T[keyof T]['on'];
 
 type ContextUpdater<C> = (updater: (context: C) => C) => void;
 
-interface ChartConfigState<C> extends BaseConfigState {
+interface MachineStateConfig<C> extends BaseStateConfig {
   effect?: (assign: ContextUpdater<C>) => void | ((assign: ContextUpdater<C>) => void);
 }
 
-interface ChartConfig<C> {
+interface MachineConfig<C> {
   initial: string;
   states: {
-    [key: string]: ChartConfigState<C>;
+    [key: string]: MachineStateConfig<C>;
   };
 }
 
@@ -98,41 +87,9 @@ const getReducer = <
     };
   };
 
-export function useStateMachine<
-  Config extends MachineConfig,
-  State extends keyof Config['states'],
-  Event extends KeysOfTransition<TransitionEvent<Config['states']>>
->(
-  config: Config
-): [
-  {
-    value: State;
-    nextEvents: Event[];
-  },
-  Dispatch<Event>
-] {
-  type IndexableState = keyof typeof config.states;
-
-  const initialState = {
-    value: config.initial as State,
-    nextEvents: Object.keys(config.states[config.initial].on ?? []) as Event[],
-  };
-
-  const [machine, send] = useReducer(getReducer<Config, State, Event>(config), initialState);
-
-  useEffect(
-    () => config.states[machine.value as IndexableState]?.effect?.(),
-    // I'm assuming config cannot be changed during renders
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [machine.value]
-  );
-
-  return [machine, send];
-}
-
-export function useStateChart<Context extends object>(context: Context) {
-  return function useStateChartWithContext<
-    Config extends ChartConfig<Context>,
+export default function useStateMachine<Context extends object>(context?: Context) {
+  return function useStateMachineWithContext<
+    Config extends MachineConfig<Context>,
     State extends keyof Config['states'],
     Event extends KeysOfTransition<TransitionEvent<Config['states']>>
   >(config: Config) {

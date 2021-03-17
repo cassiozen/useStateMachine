@@ -2,10 +2,10 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import './index.css';
 import formatTime from './formatTime';
-import { useStateChart } from '../.';
+import useStateMachine from '../.';
 
 function App() {
-  const [machine, send] = useStateChart<{ time: number }>({ time: 0 })({
+  const [machine, send] = useStateMachine<{ time: number }>({ time: 0 })({
     initial: 'idle',
     states: {
       idle: {

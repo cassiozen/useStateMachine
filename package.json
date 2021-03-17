@@ -52,11 +52,11 @@
   "size-limit": [
     {
       "path": "dist/usemachine.cjs.production.min.js",
-      "limit": "500 B"
+      "limit": "512 B"
     },
     {
       "path": "dist/usemachine.esm.js",
-      "limit": "500 B"
+      "limit": "512 B"
     }
   ]
 }

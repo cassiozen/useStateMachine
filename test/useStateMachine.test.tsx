@@ -1,10 +1,10 @@
 import { renderHook, act } from '@testing-library/react-hooks';
-import { useStateMachine } from '../src';
+import useStateMachine from '../src';
 
 describe('useStateMachine', () => {
   it('should set initial state', () => {
     const { result } = renderHook(() =>
-      useStateMachine({
+      useStateMachine()({
         initial: 'inactive',
         states: {
           inactive: {
@@ -18,13 +18,15 @@ describe('useStateMachine', () => {
     );
 
     expect(result.current[0]).toStrictEqual({
+      context: undefined,
       value: 'inactive',
       nextEvents: ['TOGGLE'],
     });
   });
+
   it('should transition', () => {
     const { result } = renderHook(() =>
-      useStateMachine({
+      useStateMachine()({
         initial: 'inactive',
         states: {
           inactive: {
@@ -42,13 +44,43 @@ describe('useStateMachine', () => {
     });
 
     expect(result.current[0]).toStrictEqual({
+      context: undefined,
       value: 'active',
       nextEvents: ['TOGGLE'],
     });
   });
+
+  it('should ignore unexisting events', () => {
+    const { result } = renderHook(() =>
+      useStateMachine()({
+        initial: 'inactive',
+        states: {
+          inactive: {
+            on: { TOGGLE: 'active' },
+          },
+          active: {
+            on: { TOGGLE: 'inactive' },
+          },
+        },
+      })
+    );
+
+    act(() => {
+      // TypeScript won't allow me to type "ON" because it knows it's not a valid event
+      // @ts-expect-error
+      result.current[1]('ON');
+    });
+
+    expect(result.current[0]).toStrictEqual({
+      context: undefined,
+      value: 'inactive',
+      nextEvents: ['TOGGLE'],
+    });
+  });
+
   it('should transition with object syntax', () => {
     const { result } = renderHook(() =>
-      useStateMachine({
+      useStateMachine()({
         initial: 'inactive',
         states: {
           inactive: {
@@ -74,6 +106,7 @@ describe('useStateMachine', () => {
     });
 
     expect(result.current[0]).toStrictEqual({
+      context: undefined,
       value: 'active',
       nextEvents: ['TOGGLE'],
     });
@@ -82,7 +115,7 @@ describe('useStateMachine', () => {
     const entry = jest.fn();
     const exit = jest.fn();
     const { result } = renderHook(() =>
-      useStateMachine({
+      useStateMachine()({
         initial: 'inactive',
         states: {
           inactive: {
@@ -124,7 +157,7 @@ describe('useStateMachine', () => {
       const guard = jest.fn(() => false);
 
       const { result } = renderHook(() =>
-        useStateMachine({
+        useStateMachine()({
           initial: 'inactive',
           states: {
             inactive: {
@@ -148,6 +181,7 @@ describe('useStateMachine', () => {
 
       expect(guard).toHaveBeenCalled();
       expect(result.current[0]).toStrictEqual({
+        context: undefined,
         value: 'inactive',
         nextEvents: ['TOGGLE'],
       });
@@ -157,7 +191,7 @@ describe('useStateMachine', () => {
       const guard = jest.fn(() => true);
 
       const { result } = renderHook(() =>
-        useStateMachine({
+        useStateMachine()({
           initial: 'inactive',
           states: {
             inactive: {
@@ -181,7 +215,87 @@ describe('useStateMachine', () => {
 
       expect(guard).toHaveBeenCalled();
       expect(result.current[0]).toStrictEqual({
+        context: undefined,
         value: 'active',
+        nextEvents: ['TOGGLE'],
+      });
+    });
+  });
+  describe('Extended State', () => {
+    it('should set initial context', () => {
+      const { result } = renderHook(() =>
+        useStateMachine<{ foo: string }>({ foo: 'bar' })({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: { TOGGLE: 'active' },
+            },
+            active: {
+              on: { TOGGLE: 'inactive' },
+            },
+          },
+        })
+      );
+
+      expect(result.current[0]).toStrictEqual({
+        value: 'inactive',
+        context: { foo: 'bar' },
+        nextEvents: ['TOGGLE'],
+      });
+    });
+    it('should update context on entry', () => {
+      const { result } = renderHook(() =>
+        useStateMachine<{ toggleCount: number }>({ toggleCount: 0 })({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: { TOGGLE: 'active' },
+            },
+            active: {
+              on: { TOGGLE: 'inactive' },
+              effect: update => {
+                update(context => ({ toggleCount: context.toggleCount + 1 }));
+              },
+            },
+          },
+        })
+      );
+
+      act(() => {
+        result.current[1]('TOGGLE');
+      });
+
+      expect(result.current[0]).toStrictEqual({
+        value: 'active',
+        context: { toggleCount: 1 },
+        nextEvents: ['TOGGLE'],
+      });
+    });
+    it('should update context on exit', () => {
+      const { result } = renderHook(() =>
+        useStateMachine<{ toggleCount: number }>({ toggleCount: 0 })({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: { TOGGLE: 'active' },
+              effect: update => {
+                return () => update(context => ({ toggleCount: context.toggleCount + 1 }));
+              },
+            },
+            active: {
+              on: { TOGGLE: 'inactive' },
+            },
+          },
+        })
+      );
+
+      act(() => {
+        result.current[1]('TOGGLE');
+      });
+
+      expect(result.current[0]).toStrictEqual({
+        value: 'active',
+        context: { toggleCount: 1 },
         nextEvents: ['TOGGLE'],
       });
     });
