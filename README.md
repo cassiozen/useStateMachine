@@ -1,8 +1,9 @@
 # React State Machine
 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/33676/111731961-8ecdc080-8842-11eb-98d5-28fbfe50e298.png" width="300" alt=""/>
+<img src="https://user-images.githubusercontent.com/33676/111815108-4695b900-88a9-11eb-8b61-3c45b40d4df6.png" width="300" alt=""/>
 </p>
+
 
 **The ½ kb _state machine_ hook for React:**
 
