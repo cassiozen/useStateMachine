@@ -1,7 +1,7 @@
 # React State Machine
 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/33676/111815108-4695b900-88a9-11eb-8b61-3c45b40d4df6.png" width="300" alt=""/>
+<img src="https://user-images.githubusercontent.com/33676/111815108-4695b900-88a9-11eb-8b61-3c45b40d4df6.png" width="250" alt=""/>
 </p>
 
 
