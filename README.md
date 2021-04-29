@@ -10,8 +10,6 @@
 const [state, send] = useStateMachine(/* Context */)(/* Configuration */);
 ```
 
-## Features
-
 - Effects (Entry/exit transition callbacks)
 - Guarded transitions
 - Extended State (Context)
@@ -24,7 +22,7 @@ const [state, send] = useStateMachine(/* Context */)(/* Configuration */);
 $ npm install @cassiozen/usestatemachine
 ```
 
-## Basic Usage
+## Example
 
 ```typescript
 const [state, send] = useStateMachine()({
@@ -59,7 +57,52 @@ console.log(state); // { value: 'active', nextEvents: ['TOGGLE'] }
 useStateMachine is a curried function because TypeScript doesn't yet support [partial gerenics type inference](https://github.com/microsoft/TypeScript/issues/14400).
 This work around allows TypeScript developers to provide the extended state type while still having TypeScript infer the configuration types.
 
-## Transition Syntax
+## API
+
+### useStateMachine
+
+```typescript
+const [state, send] = useStateMachine(/* Optional Context */)(/* Configuration */);
+```
+
+`useStateMachine` takes a JavaScript object as context (optional, see below) and one as the state machine configuration. It returns an array consisting of a `current state` object and a `transition` function.
+
+**`current state`**
+
+The `current state` consists of three properties: `value`, `nextEvents` and `context`.
+
+`value` returns the name of the current state. `nextEvents` returns an array with the names of available transitions from this state.
+
+**`transition`**
+
+`transition` takes a transition name as argument. If the transition exists and is allowed (see guard), it will change the state machine state and execute effects.
+
+### State Machine configuration
+
+We'll pass the machine configuration as the second argument to useStateMachine:
+
+```typescript
+const [state, send] = useStateMachine()(/* Machine Configuration */);
+```
+
+The configuration object should contain:
+
+- initial: The initial state node this machine should be in
+- states: Define each of the possible states:
+
+```typescript
+const [state, send] = useStateMachine()({
+  initial: 'inactive',
+  states: {
+    inactive: {},
+    active: {},
+  },
+});
+```
+
+#### Transition Syntax
+
+For each state, you can define the possible transitions.
 
 Transitions can be configured using a shorthand syntax:
 
@@ -79,7 +122,26 @@ on: {
 };
 ```
 
-## Guards
+#### Effects
+
+Uses the same format as useEffect: Effects are triggered when the state machine enters a given state. If you return a function from your effect, it will be invoked when leaving that state.
+
+```typescript
+const [state, send] = useStateMachine()({
+  initial: 'active',
+  states: {
+    active: {
+      on: { TOGGLE: 'inactive' },
+      effect() {
+        console.log('Just entered the Active state');
+        return () => console.log('Just Left the Active state');
+      },
+    },
+  },
+});
+```
+
+#### Guards
 
 You can set up a guard per transition, using the transition object syntax. Guard run before actually running the transition: If the guard returns false the transition will be denied.
 
@@ -104,7 +166,7 @@ const [state, send] = useStateMachine()({
 });
 ```
 
-## Extended state (context)
+#### Extended state (context)
 
 Besides the finite number of states, the state machine can have extended state (known as context).
 
@@ -133,7 +195,7 @@ send('TOGGLE');
 console.log(state); // { context: { toggleCount: 1 }, value: 'active', nextEvents: ['TOGGLE'] }
 ```
 
-The context is inferred automatically in TypeScript, but you can provide you own type if you want to be more specific:
+The context types are inferred automatically in TypeScript, but you can provide you own typing if you want to be more specific:
 
 ```typescript
 const [state, send] = useStateMachine<{ toggleCount: number }>({ toggleCount: 0 })({
