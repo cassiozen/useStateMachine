@@ -55,7 +55,7 @@ console.log(state); // { value: 'active', nextEvents: ['TOGGLE'] }
 ## What's up with the double parenthesis?
 
 useStateMachine is a curried function because TypeScript doesn't yet support [partial gerenics type inference](https://github.com/microsoft/TypeScript/issues/14400).
-This work around allows TypeScript developers to provide the extended state type while still having TypeScript infer the configuration types.
+This work around allows TypeScript developers to provide a custom type for the context while still having TypeScript infer all the types used in the configuration (Like the state & transitions names, etc...).
 
 ## API
 
