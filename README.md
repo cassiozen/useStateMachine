@@ -4,7 +4,6 @@
 <img src="https://user-images.githubusercontent.com/33676/111815108-4695b900-88a9-11eb-8b61-3c45b40d4df6.png" width="250" alt=""/>
 </p>
 
-
 **The ½ kb _state machine_ hook for React:**
 
 ```typescript
@@ -18,6 +17,12 @@ const [state, send] = useStateMachine(/* Context */)(/* Configuration */);
 - Extended State (Context)
 - Heavy focus on type inference (auto completion for both TypeScript & JavaScript users)
 - Idiomatic react patterns (Since it's built on top of React, might as well...)
+
+## Instalation
+
+```bash
+$ npm install @cassiozen/usestatemachine
+```
 
 ## Basic Usage
 
