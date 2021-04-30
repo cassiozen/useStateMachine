@@ -14,7 +14,7 @@ const [state, send] = useStateMachine(/* Context */)(/* Configuration */);
 - Guarded transitions
 - Extended State (Context)
 - Heavy focus on type inference (auto completion for both TypeScript & JavaScript users)
-- Idiomatic react patterns (Since it's built on top of React, might as well...)
+- Idiomatic react patterns (Since it's built on top of React's useReducer & useEffect, might as well...)
 
 ## Instalation
 
@@ -175,7 +175,7 @@ const [state, send] = useStateMachine()({
         TOGGLE: {
           target: 'active',
           guard(context) {
-            // Return a bollean to allow or block the transition
+            // Return a boolean to allow or block the transition
           },
         },
       },

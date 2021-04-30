@@ -1,4 +1,4 @@
-import { useEffect, useReducer, Dispatch } from 'react';
+import { useEffect, useReducer, Dispatch, useRef } from 'react';
 
 type Transition<C> =
   | string
@@ -87,19 +87,28 @@ const getReducer = <
     };
   };
 
+const useConstant = <T,>(init: () => T) => {
+  const ref = useRef<T | null>(null);
+
+  if (ref.current === null) {
+    ref.current = init();
+  }
+  return ref.current;
+};
+
 export default function useStateMachine<Context extends Record<PropertyKey, any>>(context?: Context) {
   return function useStateMachineWithContext<Config extends MachineConfig<Context>>(config: Config) {
     type IndexableState = keyof typeof config.states;
     type State = keyof Config['states'];
     type Event = KeysOfTransition<Context, TransitionEvent<Context, Config['states']>>;
 
-    const initialState = {
+    const initialState = useConstant(() => ({
       value: config.initial as State,
       context: context ?? ({} as Context),
       nextEvents: Object.keys(config.states[config.initial].on ?? []) as Event[],
-    };
+    }));
 
-    const reducer = getReducer<Context, Config, State, Event>(config);
+    const reducer = useConstant(() => getReducer<Context, Config, State, Event>(config));
 
     const [machine, send] = useReducer(reducer, initialState);
 
