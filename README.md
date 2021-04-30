@@ -141,6 +141,27 @@ const [state, send] = useStateMachine()({
 });
 ```
 
+The effect function receives two params: the `send` method (So you can trigger transitions from whithin an effect) and and updater function, to update the context (more on context below).
+
+In this example, the state machine will always send the "RETRY" event when entering the error state:
+
+```typescript
+const [state, send] = useStateMachine()({
+  initial: 'loading',
+  states: {
+    /* Other states here... */
+    error: {
+      on: {
+        RETRY: 'load',
+      },
+      effect(send) {
+        send('RETRY');
+      },
+    },
+  },
+});
+```
+
 ### Guards
 
 You can set up a guard per transition, using the transition object syntax. Guard run before actually running the transition: If the guard returns false the transition will be denied.
@@ -153,7 +174,7 @@ const [state, send] = useStateMachine()({
       on: {
         TOGGLE: {
           target: 'active',
-          guard(stateName, eventName) {
+          guard(context) {
             // Return a bollean to allow or block the transition
           },
         },
@@ -181,7 +202,7 @@ const [state, send] = useStateMachine({ toggleCount: 0 })({
     },
     active: {
       on: { TOGGLE: 'inactive' },
-      effect(update) {
+      effect(send, update) {
         update(context => ({ toggleCount: context.toggleCount + 1 }));
       },
     },
@@ -206,7 +227,7 @@ const [state, send] = useStateMachine<{ toggleCount: number }>({ toggleCount: 0 
     },
     active: {
       on: { TOGGLE: 'inactive' },
-      effect(update) {
+      effect(send, update) {
         update(context => ({ toggleCount: context.toggleCount + 1 }));
       },
     },

@@ -1,42 +1,33 @@
 import { useEffect, useReducer, Dispatch } from 'react';
 
-type Transition =
+type Transition<C> =
   | string
   | {
       target: string;
-      // TODO: Use context type here
-      guard?: (
-        state: {
-          value: string;
-          context: Record<PropertyKey, any>;
-          nextEvents: string[];
-        },
-        event: string
-      ) => boolean;
+      guard?: (context: C) => boolean;
     };
 
-type KeysOfTransition<Obj> = Obj extends Record<PropertyKey, Transition> ? keyof Obj : never;
+type KeysOfTransition<C, Obj> = Obj extends Record<PropertyKey, Transition<C>> ? keyof Obj : never;
 
-interface BaseStateConfig {
+interface BaseStateConfig<C> {
   on?: {
-    [key: string]: Transition;
+    [key: string]: Transition<C>;
   };
 }
 
 interface BaseConfig {
   initial: string;
   states: {
-    [key: string]: BaseStateConfig;
+    [key: string]: BaseStateConfig<any>;
   };
 }
 
-type TransitionEvent<T extends Record<PropertyKey, BaseStateConfig>> = T[keyof T]['on'];
+type TransitionEvent<C, T extends Record<PropertyKey, BaseStateConfig<C>>> = T[keyof T]['on'];
 
 type ContextUpdater<C> = (updater: (context: C) => C) => void;
 
-interface MachineStateConfig<C> extends BaseStateConfig {
+interface MachineStateConfig<C> extends BaseStateConfig<C> {
   effect?: (
-    // TODO: Dispatch should have correct transition list instead of string
     send: Dispatch<string>,
     assign: ContextUpdater<C>
   ) => void | ((send: Dispatch<string>, assign: ContextUpdater<C>) => void);
@@ -55,7 +46,7 @@ const getReducer = <
   Context extends Record<PropertyKey, any>,
   Config extends BaseConfig,
   State extends keyof Config['states'],
-  Event extends KeysOfTransition<TransitionEvent<Config['states']>>
+  Event extends KeysOfTransition<Context, TransitionEvent<Context, Config['states']>>
 >(
   config: Config
 ) =>
@@ -85,19 +76,7 @@ const getReducer = <
     const nextStateValue = typeof nextState === 'string' ? nextState : nextState.target;
 
     // If there are guards, invoke them and return early if the transition is denied
-    if (
-      typeof nextState === 'object' &&
-      nextState.guard &&
-      // TODO: Don't cast here: guard function should expect correct state context
-      !nextState.guard(
-        state as {
-          value: string;
-          context: Record<PropertyKey, any>;
-          nextEvents: string[];
-        },
-        event as string
-      )
-    ) {
+    if (typeof nextState === 'object' && nextState.guard && !nextState.guard(state.context)) {
       return state;
     }
 
@@ -112,7 +91,7 @@ export default function useStateMachine<Context extends Record<PropertyKey, any>
   return function useStateMachineWithContext<Config extends MachineConfig<Context>>(config: Config) {
     type IndexableState = keyof typeof config.states;
     type State = keyof Config['states'];
-    type Event = KeysOfTransition<TransitionEvent<Config['states']>>;
+    type Event = KeysOfTransition<Context, TransitionEvent<Context, Config['states']>>;
 
     const initialState = {
       value: config.initial as State,
@@ -125,10 +104,13 @@ export default function useStateMachine<Context extends Record<PropertyKey, any>
     const [machine, send] = useReducer(reducer, initialState);
 
     // The updater function sends an internal event to the reducer to trigger the actual update
-    const update = (updater: (context: Context) => Context) => send({ type: __contextKey, updater });
+    const update = (updater: (context: Context) => Context) =>
+      send({
+        type: __contextKey,
+        updater,
+      });
 
     useEffect(() => {
-      // TODO: Don't cast send here
       const exit = config.states[machine.value as IndexableState]?.effect?.(send as Dispatch<string>, update);
       return typeof exit === 'function' ? exit.bind(null, send as Dispatch<string>, update) : void 0;
     }, [machine.value]);
