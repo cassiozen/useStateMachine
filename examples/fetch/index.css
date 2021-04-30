@@ -1,0 +1,45 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #233b35;
+  color: #ededed;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans',
+    'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: 'Bad Script', cursive;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Fredericka the Great', cursive;
+  margin-bottom: 0;
+}
+
+p {
+  margin: 0;
+}
+
+svg {
+  display: block;
+  margin: auto;
+  margin-bottom: 3em;
+}
+
+ul {
+  columns: 2;
+}
+li {
+  break-inside: avoid;
+  list-style: none;
+}
+
+.coffees {
+  padding: 1em 8em;
+}

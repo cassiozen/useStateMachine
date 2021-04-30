@@ -253,7 +253,7 @@ describe('useStateMachine', () => {
             },
             active: {
               on: { TOGGLE: 'inactive' },
-              effect(update) {
+              effect(_, update) {
                 update(context => ({ toggleCount: context.toggleCount + 1 }));
               },
             },
@@ -278,7 +278,7 @@ describe('useStateMachine', () => {
           states: {
             inactive: {
               on: { TOGGLE: 'active' },
-              effect(update) {
+              effect(_, update) {
                 return () => update(context => ({ toggleCount: context.toggleCount + 1 }));
               },
             },

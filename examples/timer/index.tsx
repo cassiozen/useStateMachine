@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import './index.css';
 import formatTime from './formatTime';
-import useStateMachine from '../.';
+import useStateMachine from '../../dist';
 
 function App() {
   const [machine, send] = useStateMachine<{ time: number }>({ time: 0 })({
@@ -14,7 +14,7 @@ function App() {
             target: 'running',
           },
         },
-        effect(update) {
+        effect(_, update) {
           update(() => ({ time: 0 }));
         },
       },
@@ -22,7 +22,7 @@ function App() {
         on: {
           PAUSE: 'paused',
         },
-        effect(update) {
+        effect(_, update) {
           const interval = setInterval(() => {
             update(context => ({ time: context.time + 1 }));
           }, 100);
