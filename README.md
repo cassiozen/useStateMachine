@@ -1,5 +1,3 @@
-# React State Machine
-
 <p align="center">
 <img src="https://user-images.githubusercontent.com/33676/111815108-4695b900-88a9-11eb-8b61-3c45b40d4df6.png" width="250" alt=""/>
 </p>
@@ -75,15 +73,10 @@ The `state` consists of three properties: `value`, `nextEvents` and `context`.
 
 **transition**
 
-`transition` takes a transition name as argument. If the transition exists and is allowed (see guard), it will change the state machine state and execute effects.
+`send` takes a transition name as argument. If the transition exists and is allowed (see guard), it will change the state machine state and execute effects.
 
 ## State Machine configuration
 
-We'll pass the machine configuration as the second argument to useStateMachine:
-
-```typescript
-const [state, send] = useStateMachine()(/* Machine Configuration */);
-```
 
 The configuration object should contain:
 
