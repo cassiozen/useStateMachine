@@ -154,7 +154,7 @@ const [state, send] = useStateMachine()({
         TOGGLE: {
           target: 'active',
           guard(stateName, eventName) {
-            // Return a bollean to allow or block the transition
+            // Return a boolean to allow or block the transition
           },
         },
       },
