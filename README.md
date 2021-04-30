@@ -68,13 +68,13 @@ const [state, send] = useStateMachine(/* Optional Context */)(/* Configuration *
 
 `useStateMachine` takes a JavaScript object as context (optional, see below) and one as the state machine configuration. It returns an array consisting of a `current state` object and a `transition` function.
 
-**state**
+**Machine state**
 
 The `state` consists of three properties: `value`, `nextEvents` and `context`.
 
 `value` returns the name of the current state. `nextEvents` returns an array with the names of available transitions from this state.
 
-**transition**
+**Send events**
 
 `send` takes a transition name as argument. If the transition exists and is allowed (see guard), it will change the state machine state and execute effects.
 
