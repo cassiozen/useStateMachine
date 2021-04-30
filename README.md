@@ -54,12 +54,12 @@ console.log(state); // { value: 'active', nextEvents: ['TOGGLE'] }
 
 ## What's up with the double parenthesis?
 
-useStateMachine is a curried function because TypeScript doesn't yet support [partial gerenics type inference](https://github.com/microsoft/TypeScript/issues/14400).
+useStateMachine is a curried function because TypeScript doesn't yet support [partial generics type inference](https://github.com/microsoft/TypeScript/issues/14400).
 This work around allows TypeScript developers to provide a custom type for the context while still having TypeScript infer all the types used in the configuration (Like the state & transitions names, etc...).
 
-## API
+# API
 
-### useStateMachine
+## useStateMachine
 
 ```typescript
 const [state, send] = useStateMachine(/* Optional Context */)(/* Configuration */);
@@ -67,17 +67,17 @@ const [state, send] = useStateMachine(/* Optional Context */)(/* Configuration *
 
 `useStateMachine` takes a JavaScript object as context (optional, see below) and one as the state machine configuration. It returns an array consisting of a `current state` object and a `transition` function.
 
-**`current state`**
+**state**
 
-The `current state` consists of three properties: `value`, `nextEvents` and `context`.
+The `state` consists of three properties: `value`, `nextEvents` and `context`.
 
 `value` returns the name of the current state. `nextEvents` returns an array with the names of available transitions from this state.
 
-**`transition`**
+**transition**
 
 `transition` takes a transition name as argument. If the transition exists and is allowed (see guard), it will change the state machine state and execute effects.
 
-### State Machine configuration
+## State Machine configuration
 
 We'll pass the machine configuration as the second argument to useStateMachine:
 
@@ -100,7 +100,7 @@ const [state, send] = useStateMachine()({
 });
 ```
 
-#### Transition Syntax
+### Transition Syntax
 
 For each state, you can define the possible transitions.
 
@@ -122,7 +122,7 @@ on: {
 };
 ```
 
-#### Effects
+### Effects
 
 Uses the same format as useEffect: Effects are triggered when the state machine enters a given state. If you return a function from your effect, it will be invoked when leaving that state.
 
@@ -141,7 +141,7 @@ const [state, send] = useStateMachine()({
 });
 ```
 
-#### Guards
+### Guards
 
 You can set up a guard per transition, using the transition object syntax. Guard run before actually running the transition: If the guard returns false the transition will be denied.
 
@@ -166,7 +166,7 @@ const [state, send] = useStateMachine()({
 });
 ```
 
-#### Extended state (context)
+### Extended state (context)
 
 Besides the finite number of states, the state machine can have extended state (known as context).
 
@@ -213,3 +213,9 @@ const [state, send] = useStateMachine<{ toggleCount: number }>({ toggleCount: 0 
   },
 });
 ```
+
+## About the codebase
+
+This library is build on top of React's useReducer and useEffect hooks. This video walks through creating a basic version of this library:
+
+[![Creating a custom State Machine Hook with useReducer & useEffect](https://img.youtube.com/vi/jF1tO2hTdC0/0.jpg)](https://youtu.be/jF1tO2hTdC0)
