@@ -8,11 +8,9 @@
     "build": "parcel build index.html"
   },
   "dependencies": {
+    "@cassiozen/usestatemachine": "^0.2.0",
+    "react": "^17.0.1",
     "react-dom": "^17.0.1"
-  },
-  "alias": {
-    "react": "../../node_modules/react",
-    "scheduler/tracing": "../../node_modules/scheduler/tracing-profiling"
   },
   "devDependencies": {
     "@types/react": "^16.9.11",

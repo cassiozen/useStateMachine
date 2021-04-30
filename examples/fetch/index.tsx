@@ -1,8 +1,8 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import useStateMachine from '@cassiozen/usestatemachine';
 import './index.css';
 import Cup from './Cup';
-import useStateMachine from '../../dist';
 
 type Coffee = {
   id: number;
