@@ -55,7 +55,7 @@ console.log(state); // { value: 'active', nextEvents: ['TOGGLE'] }
 ## What's up with the double parenthesis?
 
 useStateMachine is a curried function because TypeScript doesn't yet support [partial generics type inference](https://github.com/microsoft/TypeScript/issues/14400).
-This work around allows TypeScript developers to provide a custom type for the context while still having TypeScript infer all the types used in the configuration (Like the state & transitions names, etc...).
+This workaround allows TypeScript developers to provide a custom type for the context while still having TypeScript infer all the types used in the configuration (Like the state & transitions names, etc...).
 
 # API
 
@@ -214,7 +214,7 @@ const [state, send] = useStateMachine<{ toggleCount: number }>({ toggleCount: 0 
 });
 ```
 
-## About the codebase
+## Codebase walk-through
 
 This library is build on top of React's useReducer and useEffect hooks. This video walks through creating a basic version of this library:
 
