@@ -11,8 +11,8 @@
     "react-dom": "^17.0.1"
   },
   "alias": {
-    "react": "../node_modules/react",
-    "scheduler/tracing": "../node_modules/scheduler/tracing-profiling"
+    "react": "../../node_modules/react",
+    "scheduler/tracing": "../../node_modules/scheduler/tracing-profiling"
   },
   "devDependencies": {
     "@types/react": "^16.9.11",

@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import './index.css';
 import formatTime from './formatTime';
-import useStateMachine from '../.';
+import useStateMachine from '../../dist';
 
 function App() {
   const [machine, send] = useStateMachine<{ time: number }>({ time: 0 })({

@@ -4,7 +4,15 @@ type Transition =
   | string
   | {
       target: string;
-      guard?: (state: string, event: string) => boolean;
+      // TODO: Use context type here
+      guard?: (
+        state: {
+          value: string;
+          context: Record<PropertyKey, any>;
+          nextEvents: string[];
+        },
+        event: string
+      ) => boolean;
     };
 
 type KeysOfTransition<Obj> = Obj extends Record<PropertyKey, Transition> ? keyof Obj : never;
@@ -27,7 +35,11 @@ type TransitionEvent<T extends Record<PropertyKey, BaseStateConfig>> = T[keyof T
 type ContextUpdater<C> = (updater: (context: C) => C) => void;
 
 interface MachineStateConfig<C> extends BaseStateConfig {
-  effect?: (assign: ContextUpdater<C>) => void | ((assign: ContextUpdater<C>) => void);
+  effect?: (
+    // TODO: Dispatch should have correct transition list instead of string
+    send: Dispatch<string>,
+    assign: ContextUpdater<C>
+  ) => void | ((send: Dispatch<string>, assign: ContextUpdater<C>) => void);
 }
 
 interface MachineConfig<C> {
@@ -73,7 +85,19 @@ const getReducer = <
     const nextStateValue = typeof nextState === 'string' ? nextState : nextState.target;
 
     // If there are guards, invoke them and return early if the transition is denied
-    if (typeof nextState === 'object' && nextState.guard && !nextState.guard(state.value as string, event as string)) {
+    if (
+      typeof nextState === 'object' &&
+      nextState.guard &&
+      // TODO: Don't cast here: guard function should expect correct state context
+      !nextState.guard(
+        state as {
+          value: string;
+          context: Record<PropertyKey, any>;
+          nextEvents: string[];
+        },
+        event as string
+      )
+    ) {
       return state;
     }
 
@@ -104,8 +128,9 @@ export default function useStateMachine<Context extends Record<PropertyKey, any>
     const update = (updater: (context: Context) => Context) => send({ type: __contextKey, updater });
 
     useEffect(() => {
-      const exit = config.states[machine.value as IndexableState]?.effect?.(update);
-      return typeof exit === 'function' ? exit.bind(null, update) : void 0;
+      // TODO: Don't cast send here
+      const exit = config.states[machine.value as IndexableState]?.effect?.(send as Dispatch<string>, update);
+      return typeof exit === 'function' ? exit.bind(null, send as Dispatch<string>, update) : void 0;
     }, [machine.value]);
 
     return [machine, send] as [
