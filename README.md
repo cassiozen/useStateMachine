@@ -4,15 +4,13 @@
 
 **The ½ kb _state machine_ hook for React:**
 
-```typescript
-const [state, send] = useStateMachine(/* Context */)(/* Configuration */);
-```
-
 - Effects (Entry/exit transition callbacks)
 - Guarded transitions
 - Extended State (Context)
 - Heavy focus on type inference (auto completion for both TypeScript & JavaScript users)
 - Idiomatic react patterns (Since it's built on top of React's useReducer & useEffect, might as well...)
+
+<img width="400" alt="size_badge" src="https://user-images.githubusercontent.com/33676/116728438-8624ea00-a9ab-11eb-9413-65458c6d54d4.png">
 
 ## Examples
 
