@@ -34,6 +34,7 @@ svg {
 
 ul {
   columns: 2;
+  padding: 0;
 }
 li {
   break-inside: avoid;
@@ -42,4 +43,13 @@ li {
 
 .coffees {
   padding: 1em 8em;
+}
+
+@media only screen and (max-width: 500px) {
+  ul {
+    columns: 1;
+  }
+  .coffees {
+    padding: 1em;
+  }
 }
