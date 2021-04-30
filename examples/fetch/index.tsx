@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import './index.css';
+import Cup from './Cup';
 import useStateMachine from '../../dist';
 
 type Coffee = {
@@ -43,7 +44,7 @@ function App() {
         on: {
           RETRY: {
             target: 'loading',
-            guard: state => state.context.retryCount < 3,
+            guard: context => context.retryCount < 3,
           },
         },
         effect(send, update) {
@@ -56,12 +57,16 @@ function App() {
 
   return (
     <div className="coffees">
+      <Cup />
       {machine.value === 'loading' && <p>Loading</p>}
       {machine.value === 'error' && <p>{machine.context.error}</p>}
       {machine.value === 'loaded' && (
         <ul>
           {machine.context.data?.map(coffee => (
-            <li key={coffee.id}>{coffee.title}</li>
+            <li key={coffee.id}>
+              <h2>{coffee.title}</h2>
+              <p>{coffee.description}</p>
+            </li>
           ))}
         </ul>
       )}

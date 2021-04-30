@@ -14,7 +14,7 @@ function App() {
             target: 'running',
           },
         },
-        effect(update) {
+        effect(_, update) {
           update(() => ({ time: 0 }));
         },
       },
@@ -22,7 +22,7 @@ function App() {
         on: {
           PAUSE: 'paused',
         },
-        effect(update) {
+        effect(_, update) {
           const interval = setInterval(() => {
             update(context => ({ time: context.time + 1 }));
           }, 100);
