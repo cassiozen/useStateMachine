@@ -14,13 +14,18 @@ const [state, send] = useStateMachine(/* Context */)(/* Configuration */);
 - Heavy focus on type inference (auto completion for both TypeScript & JavaScript users)
 - Idiomatic react patterns (Since it's built on top of React's useReducer & useEffect, might as well...)
 
+## Examples
+
+- Complex UI (Hiding and showing UI Elements based on the state) - [CodeSandbox](https://codesandbox.io/s/github/cassiozen/usestatemachine/tree/main/examples/timer) - [Source](./examples/timer)
+- Async orchestration (Fetch data with limited retry) - [CodeSandbox](https://codesandbox.io/s/github/cassiozen/usestatemachine/tree/main/examples/fetch) - [Source](./examples/fetch)
+
 ## Instalation
 
 ```bash
 $ npm install @cassiozen/usestatemachine
 ```
 
-## Example
+## Sample Usage
 
 ```typescript
 const [state, send] = useStateMachine()({
@@ -76,7 +81,6 @@ The `state` consists of three properties: `value`, `nextEvents` and `context`.
 `send` takes a transition name as argument. If the transition exists and is allowed (see guard), it will change the state machine state and execute effects.
 
 ## State Machine configuration
-
 
 The configuration object should contain:
 

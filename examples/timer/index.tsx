@@ -4,6 +4,11 @@ import useStateMachine from '@cassiozen/usestatemachine';
 import './index.css';
 import formatTime from './formatTime';
 
+/*
+ * In this example we simulate a somewhat complicated UI:
+ * there are multiple buttons but they can only appear when they can be used
+ */
+
 function App() {
   const [machine, send] = useStateMachine<{ time: number }>({ time: 0 })({
     initial: 'idle',

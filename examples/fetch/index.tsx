@@ -4,6 +4,10 @@ import useStateMachine from '@cassiozen/usestatemachine';
 import './index.css';
 import Cup from './Cup';
 
+/*
+ * In this example we're fetching some data with included retry logic (Will retry 2 times before giving up)
+ */
+
 type Coffee = {
   id: number;
   title: string;
