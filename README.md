@@ -4,11 +4,9 @@
 
 **The ½ kb _state machine_ hook for React:**
 
-- Effects (Entry/exit transition callbacks)
-- Guarded transitions
-- Extended State (Context)
-- Heavy focus on type inference (auto completion for both TypeScript & JavaScript users)
-- Idiomatic react patterns (Since it's built on top of React's useReducer & useEffect, might as well...)
+- Feature complete (Entry/exit callbacks, Guarded transitions & Extended State - Context)
+- Heavy focus on type inference (you get auto completion for both TypeScript & JavaScript users without having to manually define the typings)
+- Idiomatic React patterns (Since it's built on top of React's useReducer & useEffect, might as well...)
 
 <img width="400" alt="size_badge" src="https://user-images.githubusercontent.com/33676/116728438-8624ea00-a9ab-11eb-9413-65458c6d54d4.png">
 
@@ -55,7 +53,7 @@ console.log(state); // { value: 'active', nextEvents: ['TOGGLE'] }
 
 ## What's up with the double parenthesis?
 
-useStateMachine is a curried function because TypeScript doesn't yet support [partial generics type inference](https://github.com/microsoft/TypeScript/issues/14400).
+useStateMachine is a curried function (Yummm tasty!) because TypeScript doesn't yet support [partial generics type inference](https://github.com/microsoft/TypeScript/issues/14400).
 This workaround allows TypeScript developers to provide a custom type for the context while still having TypeScript infer all the types used in the configuration (Like the state & transitions names, etc...).
 
 # API
@@ -66,7 +64,7 @@ This workaround allows TypeScript developers to provide a custom type for the co
 const [state, send] = useStateMachine(/* Optional Context */)(/* Configuration */);
 ```
 
-`useStateMachine` takes a JavaScript object as context (optional, see below) and one as the state machine configuration. It returns an array consisting of a `current state` object and a `transition` function.
+`useStateMachine` takes a JavaScript object as context (optional, see below) and one as the state machine configuration. It returns an array consisting of a `current machine state` object and a `send` function to trigger transitions.
 
 **Machine state**
 
@@ -117,9 +115,9 @@ on: {
 };
 ```
 
-### Effects
+### Effects (entry/exit callbacks)
 
-Uses the same format as useEffect: Effects are triggered when the state machine enters a given state. If you return a function from your effect, it will be invoked when leaving that state.
+Effects are triggered when the state machine enters a given state. If you return a function from your effect, it will be invoked when leaving that state (similarly to how useEffect works in React).
 
 ```typescript
 const [state, send] = useStateMachine()({
@@ -230,8 +228,7 @@ const [state, send] = useStateMachine<{ toggleCount: number }>({ toggleCount: 0 
 });
 ```
 
-## Codebase walk-through
+## Wiki
 
-This library is build on top of React's useReducer and useEffect hooks. This video walks through creating a basic version of this library:
-
-[![Creating a custom State Machine Hook with useReducer & useEffect](https://img.youtube.com/vi/jF1tO2hTdC0/0.jpg)](https://youtu.be/jF1tO2hTdC0)
+- [Comparisson with XState](https://github.com/cassiozen/useStateMachine/wiki/XState-comparisson)
+- [Source code walkthrough video](https://github.com/cassiozen/useStateMachine/wiki/Source-code-walkthrough-video)
