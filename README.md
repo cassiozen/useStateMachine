@@ -15,7 +15,7 @@
 - Complex UI (Hiding and showing UI Elements based on the state) - [CodeSandbox](https://codesandbox.io/s/github/cassiozen/usestatemachine/tree/main/examples/timer?file=/index.tsx) - [Source](./examples/timer)
 - Async orchestration (Fetch data with limited retry) - [CodeSandbox](https://codesandbox.io/s/github/cassiozen/usestatemachine/tree/main/examples/fetch?file=/index.tsx) - [Source](./examples/fetch)
 
-## Instalation
+## Installation
 
 ```bash
 $ npm install @cassiozen/usestatemachine
@@ -134,7 +134,7 @@ const [state, send] = useStateMachine()({
 });
 ```
 
-The effect function receives two params: the `send` method (So you can trigger transitions from whithin an effect) and and updater function, to update the context (more on context below).
+The effect function receives two params: the `send` method (So you can trigger transitions from within an effect) and and updater function, to update the context (more on context below).
 
 In this example, the state machine will always send the "RETRY" event when entering the error state:
 
@@ -184,7 +184,7 @@ const [state, send] = useStateMachine()({
 
 Besides the finite number of states, the state machine can have extended state (known as context).
 
-You can provide the initial context value as the first argument to the State Machine hook, and use the update function whithin your effects to change the context:
+You can provide the initial context value as the first argument to the State Machine hook, and use the update function within your effects to change the context:
 
 ```js
 const [state, send] = useStateMachine({ toggleCount: 0 })({
@@ -231,5 +231,5 @@ const [state, send] = useStateMachine<{ toggleCount: number }>({ toggleCount: 0 
 ## Wiki
 
 - [Contributing](https://github.com/cassiozen/useStateMachine/wiki/Contributing-to-useStateMachine)
-- [Comparisson with XState](https://github.com/cassiozen/useStateMachine/wiki/XState-comparisson)
+- [Comparison with XState](https://github.com/cassiozen/useStateMachine/wiki/XState-comparisson)
 - [Source code walkthrough video](https://github.com/cassiozen/useStateMachine/wiki/Source-code-walkthrough-video)
