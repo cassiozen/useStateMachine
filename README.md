@@ -81,17 +81,29 @@ The `state` consists of three properties: `value`, `nextEvents` and `context`.
 The configuration object should contain:
 
 - initial: The initial state node this machine should be in
+- debug: Whether or not to log state & context changes. False by default.
 - states: Define each of the possible states:
 
 ```typescript
 const [state, send] = useStateMachine()({
   initial: 'inactive',
+  debug: true,
   states: {
     inactive: {},
     active: {},
   },
 });
 ```
+
+### Debugging
+
+If you set `debug: true` in the state machine configuration, it will `console.log` every time:
+
+- A transition is successful (the state machine changed to a different state)
+- A transition is unsuccessful (because it was guarded or the state didn't listen to the event that was sent)
+- The context changed
+
+If you use a module bundler (Parcel, webpack, rollup, etc), all log messages will be stripped out in the production build.
 
 ### Transition Syntax
 
