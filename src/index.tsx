@@ -7,7 +7,7 @@ type Transition<C> =
       guard?: (context: C) => boolean;
     };
 
-type KeysOfTransition<C, Obj> = Obj extends Record<PropertyKey, Transition<C>> ? keyof Obj : never;
+type KeysOfTransition<Obj> = Obj extends { on: { [key: string]: Transition<any> } } ? keyof Obj['on'] : never;
 
 interface BaseStateConfig<C> {
   on?: {
@@ -21,8 +21,6 @@ interface BaseConfig {
     [key: string]: BaseStateConfig<any>;
   };
 }
-
-type TransitionEvent<C, T extends Record<PropertyKey, BaseStateConfig<C>>> = T[keyof T]['on'];
 
 type ContextUpdater<C> = (updater: (context: C) => C) => void;
 
@@ -46,7 +44,7 @@ const getReducer = <
   Context extends Record<PropertyKey, any>,
   Config extends BaseConfig,
   State extends keyof Config['states'],
-  Event extends KeysOfTransition<Context, TransitionEvent<Context, Config['states']>>
+  Event extends KeysOfTransition<Config['states'][keyof Config['states']]>
 >(
   config: Config
 ) =>
@@ -100,7 +98,7 @@ export default function useStateMachine<Context extends Record<PropertyKey, any>
   return function useStateMachineWithContext<Config extends MachineConfig<Context>>(config: Config) {
     type IndexableState = keyof typeof config.states;
     type State = keyof Config['states'];
-    type Event = KeysOfTransition<Context, TransitionEvent<Context, Config['states']>>;
+    type Event = KeysOfTransition<Config['states'][keyof Config['states']]>;
 
     const initialState = useConstant(() => ({
       value: config.initial as State,
