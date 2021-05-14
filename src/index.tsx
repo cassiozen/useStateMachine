@@ -15,13 +15,6 @@ interface BaseStateConfig<C> {
   };
 }
 
-interface BaseConfig {
-  initial: string;
-  states: {
-    [key: string]: BaseStateConfig<any>;
-  };
-}
-
 type ContextUpdater<C> = (updater: (context: C) => C) => void;
 
 interface MachineStateConfig<C> extends BaseStateConfig<C> {
@@ -33,6 +26,7 @@ interface MachineStateConfig<C> extends BaseStateConfig<C> {
 
 interface MachineConfig<C> {
   initial: string;
+  debug?: boolean;
   states: {
     [key: string]: MachineStateConfig<C>;
   };
@@ -42,7 +36,7 @@ const __contextKey = Symbol('CONTEXT');
 
 const getReducer = <
   Context extends Record<PropertyKey, any>,
-  Config extends BaseConfig,
+  Config extends MachineConfig<Context>,
   State extends keyof Config['states'],
   Event extends KeysOfTransition<Config['states'][keyof Config['states']]>
 >(
@@ -62,20 +56,61 @@ const getReducer = <
 
     // Internal action to update context
     if (typeof event === 'object' && event.type === __contextKey) {
+      const nextContext = event.updater(state.context);
+
+      if (process.env.NODE_ENV === 'development') {
+        if (config.debug)
+          console.log(
+            '%cuseStateMachine ' + `%cContext update from %o to %o`,
+            'color: #888;',
+            'color: default;',
+            state.context,
+            nextContext
+          );
+      }
       return {
         ...state,
-        context: event.updater(state.context),
+        context: nextContext,
       };
     }
 
     // If there is no defined next state, return early
-    if (!nextState) return state;
+    if (!nextState) {
+      if (process.env.NODE_ENV === 'development') {
+        if (config.debug)
+          console.log(
+            '%cuseStateMachine ' + `%cCurrent state %o doesn't listen to event ${event}.`,
+            'color: #888;',
+            'color: default;',
+            state
+          );
+      }
+
+      return state;
+    }
 
     const nextStateValue = typeof nextState === 'string' ? nextState : nextState.target;
 
     // If there are guards, invoke them and return early if the transition is denied
     if (typeof nextState === 'object' && nextState.guard && !nextState.guard(state.context)) {
+      if (process.env.NODE_ENV === 'development') {
+        if (config.debug)
+          console.log(
+            '%cuseStateMachine ' + `%cTransition from ${state.value} to ${nextStateValue} denied by guard`,
+            'color: #888;',
+            'color: default;'
+          );
+      }
       return state;
+    } else {
+      if (process.env.NODE_ENV === 'development') {
+        if (config.debug)
+          console.log(
+            '%cuseStateMachine ' + `%cTransition from ${state.value} to ${nextStateValue}`,
+            'color: #888;',
+            'color: default;'
+          );
+      }
     }
 
     return {
