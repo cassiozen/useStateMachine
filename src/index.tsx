@@ -1,4 +1,5 @@
 import { useEffect, useReducer, Dispatch, useRef } from 'react';
+import log from './logger';
 
 type Transition<Context, S extends string> =
   | S
@@ -21,6 +22,7 @@ interface MachineStateConfig<Context, S extends string, T extends string> {
 
 interface MachineConfig<Context, S extends string, T extends string> {
   initial: S;
+  verbose?: boolean;
   states: {
     [key in S]: MachineStateConfig<Context, S, T>;
   };
@@ -60,9 +62,11 @@ function getReducer<Context, S extends string, T extends string>(config: Machine
   return function reducer(state: State<Context, S, T>, event: Event<Context, T>): State<Context, S, T> {
     if (event.type === 'Update') {
       // Internal action to update context
+      const nextContext = event.updater(state.context);
+      if (config.verbose) log('Context update from %o to %o', state.context, nextContext);
       return {
         value: state.value,
-        context: event.updater(state.context),
+        context: nextContext,
         nextEvents: state.nextEvents,
       };
     } else {
@@ -70,19 +74,24 @@ function getReducer<Context, S extends string, T extends string>(config: Machine
       const nextState: Transition<Context, S> | undefined = currentState.on?.[event.next];
 
       // If there is no defined next state, return early
-      if (!nextState) return state;
+      if (!nextState) {
+        if (config.verbose) log(`Current state %o doesn't listen to event "${event.next}".`, state);
+        return state;
+      }
 
       let target: S;
       if (typeof nextState === 'string') {
         target = nextState;
       } else {
+        target = nextState.target;
         // If there are guards, invoke them and return early if the transition is denied
         if (nextState.guard && !nextState.guard(state.context)) {
+          if (config.verbose) log(`Transition from "${state.value}" to "${target}" denied by guard`);
           return state;
         }
-
-        target = nextState.target;
       }
+
+      if (config.verbose) log(`Transition from "${state.value}" to "${target}"`);
 
       return getState(state.context, config, target);
     }
