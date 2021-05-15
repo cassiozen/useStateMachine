@@ -1,134 +1,131 @@
 import { useEffect, useReducer, Dispatch, useRef } from 'react';
 
-type Transition<C> =
-  | string
+type Transition<Context, S extends string> =
+  | S
   | {
-      target: string;
-      guard?: (context: C) => boolean;
+      target: S;
+      guard?: (context: Context) => boolean;
     };
 
-type KeysOfTransition<Obj> = Obj extends { on: { [key: string]: Transition<any> } } ? keyof Obj['on'] : never;
+type ContextUpdate<Context> = (context: Context) => Context;
 
-interface BaseStateConfig<C> {
+interface MachineStateConfig<Context, S extends string, T extends string> {
   on?: {
-    [key: string]: Transition<C>;
+    [key in T]?: Transition<Context, S>;
   };
-}
-
-interface BaseConfig {
-  initial: string;
-  states: {
-    [key: string]: BaseStateConfig<any>;
-  };
-}
-
-type ContextUpdater<C> = (updater: (context: C) => C) => void;
-
-interface MachineStateConfig<C> extends BaseStateConfig<C> {
   effect?: (
-    send: Dispatch<string>,
-    assign: ContextUpdater<C>
-  ) => void | ((send: Dispatch<string>, assign: ContextUpdater<C>) => void);
+    send: Dispatch<T>,
+    assign: Dispatch<ContextUpdate<Context>>
+  ) => void | ((send: Dispatch<T>, assign: Dispatch<ContextUpdate<Context>>) => void);
 }
 
-interface MachineConfig<C> {
-  initial: string;
+interface MachineConfig<Context, S extends string, T extends string> {
+  initial: S;
   states: {
-    [key: string]: MachineStateConfig<C>;
+    [key in S]: MachineStateConfig<Context, S, T>;
   };
 }
 
-const __contextKey = Symbol('CONTEXT');
+interface State<Context, S extends string, T extends string> {
+  value: S;
+  context: Context;
+  nextEvents: T[];
+}
 
-const getReducer = <
-  Context extends Record<PropertyKey, any>,
-  Config extends BaseConfig,
-  State extends keyof Config['states'],
-  Event extends KeysOfTransition<Config['states'][keyof Config['states']]>
->(
-  config: Config
-) =>
-  function reducer(
-    state: {
-      value: State;
-      context: Context;
-      nextEvents: Event[];
-    },
-    event: Event | { type: typeof __contextKey; updater: (context: Context) => Context }
-  ) {
-    type IndexableState = keyof typeof config.states;
-    const currentState = config.states[state.value as IndexableState];
-    const nextState = currentState?.on?.[event as IndexableState];
+interface UpdateEvent<Context> {
+  type: 'Update';
+  updater: (context: Context) => Context;
+}
+interface TransitionEvent<T extends string> {
+  type: 'Transition';
+  next: T;
+}
+type Event<Context, T extends string> = UpdateEvent<Context> | TransitionEvent<T>;
 
-    // Internal action to update context
-    if (typeof event === 'object' && event.type === __contextKey) {
-      return {
-        ...state,
-        context: event.updater(state.context),
-      };
-    }
+function getState<Context, S extends string, T extends string>(
+  context: Context,
+  config: MachineConfig<Context, S, T>,
+  value: S
+): State<Context, S, T> {
+  const on = config.states[value].on;
 
-    // If there is no defined next state, return early
-    if (!nextState) return state;
-
-    const nextStateValue = typeof nextState === 'string' ? nextState : nextState.target;
-
-    // If there are guards, invoke them and return early if the transition is denied
-    if (typeof nextState === 'object' && nextState.guard && !nextState.guard(state.context)) {
-      return state;
-    }
-
-    return {
-      ...state,
-      value: nextStateValue as State,
-      nextEvents: Object.keys(config.states[nextStateValue].on ?? []) as Event[],
-    };
+  return {
+    value,
+    context,
+    nextEvents: on ? (Object.keys(on) as T[]) : [],
   };
+}
 
-const useConstant = <T,>(init: () => T) => {
+function getReducer<Context, S extends string, T extends string>(config: MachineConfig<Context, S, T>) {
+  return function reducer(state: State<Context, S, T>, event: Event<Context, T>): State<Context, S, T> {
+    if (event.type === 'Update') {
+      // Internal action to update context
+      return {
+        value: state.value,
+        context: event.updater(state.context),
+        nextEvents: state.nextEvents,
+      };
+    } else {
+      const currentState = config.states[state.value];
+      const nextState: Transition<Context, S> | undefined = currentState.on?.[event.next];
+
+      // If there is no defined next state, return early
+      if (!nextState) return state;
+
+      let target: S;
+      if (typeof nextState === 'string') {
+        target = nextState;
+      } else {
+        // If there are guards, invoke them and return early if the transition is denied
+        if (nextState.guard && !nextState.guard(state.context)) {
+          return state;
+        }
+
+        target = nextState.target;
+      }
+
+      return getState(state.context, config, target);
+    }
+  };
+}
+
+function useConstant<T>(init: () => T): T {
   const ref = useRef<T | null>(null);
 
   if (ref.current === null) {
     ref.current = init();
   }
   return ref.current;
-};
+}
 
-export default function useStateMachine<Context extends Record<PropertyKey, any>>(context?: Context) {
-  return function useStateMachineWithContext<Config extends MachineConfig<Context>>(config: Config) {
-    type IndexableState = keyof typeof config.states;
-    type State = keyof Config['states'];
-    type Event = KeysOfTransition<Config['states'][keyof Config['states']]>;
+type UseStateMachineWithContext<Context> = <S extends string, T extends string>(
+  config: MachineConfig<Context, S, T>
+) => [State<Context, S, T>, Dispatch<T>];
 
-    const initialState = useConstant(() => ({
-      value: config.initial as State,
-      context: context ?? ({} as Context),
-      nextEvents: Object.keys(config.states[config.initial].on ?? []) as Event[],
-    }));
+function useStateMachineImpl<Context>(context: Context): UseStateMachineWithContext<Context> {
+  return function useStateMachineWithContext<S extends string, T extends string>(config: MachineConfig<Context, S, T>) {
+    const initialState = useConstant<State<Context, S, T>>(() => getState(context, config, config.initial));
 
-    const reducer = useConstant(() => getReducer<Context, Config, State, Event>(config));
+    const reducer = useConstant(() => getReducer<Context, S, T>(config));
 
     const [machine, send] = useReducer(reducer, initialState);
-
     // The updater function sends an internal event to the reducer to trigger the actual update
-    const update = (updater: (context: Context) => Context) =>
-      send({
-        type: __contextKey,
-        updater,
-      });
+    const sendUpdater: Dispatch<ContextUpdate<Context>> = updater => send({ type: 'Update', updater });
+    // The public updater function exposed to the user
+    const sendNext: Dispatch<T> = next => send({ type: 'Transition', next });
 
     useEffect(() => {
-      const exit = config.states[machine.value as IndexableState]?.effect?.(send as Dispatch<string>, update);
-      return typeof exit === 'function' ? exit.bind(null, send as Dispatch<string>, update) : void 0;
+      const exit = config.states[machine.value]?.effect?.(sendNext, sendUpdater);
+      return typeof exit === 'function' ? () => exit(sendNext, sendUpdater) : undefined;
     }, [machine.value]);
 
-    return [machine, send] as [
-      {
-        value: State;
-        context: Context;
-        nextEvents: Event[];
-      },
-      Dispatch<Event>
-    ];
+    return [machine, sendNext];
   };
+}
+
+export default function useStateMachine(): UseStateMachineWithContext<undefined>;
+export default function useStateMachine<Context>(context: Context): UseStateMachineWithContext<Context>;
+export default function useStateMachine<Context>(context?: Context): UseStateMachineWithContext<Context | undefined>;
+export default function useStateMachine<Context>(context?: Context): UseStateMachineWithContext<Context | undefined> {
+  return useStateMachineImpl(context);
 }
