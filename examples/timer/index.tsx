@@ -12,6 +12,7 @@ import formatTime from './formatTime';
 function App() {
   const [machine, send] = useStateMachine<{ time: number }>({ time: 0 })({
     initial: 'idle',
+    verbose: true,
     states: {
       idle: {
         on: {

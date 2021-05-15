@@ -18,6 +18,7 @@ type Coffee = {
 function App() {
   const [machine, send] = useStateMachine<{ retryCount: number; data?: Coffee[]; error?: string }>({ retryCount: 0 })({
     initial: 'loading',
+    verbose: true,
     states: {
       loading: {
         on: {
