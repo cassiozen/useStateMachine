@@ -81,11 +81,13 @@ The `state` consists of three properties: `value`, `nextEvents` and `context`.
 The configuration object should contain:
 
 - initial: The initial state node this machine should be in
+- verbose(optional): If true, will log every context & state changes. Log messages will be stripped out in the production build.
 - states: Define each of the possible states:
 
 ```typescript
 const [state, send] = useStateMachine()({
   initial: 'inactive',
+  verbose: true,
   states: {
     inactive: {},
     active: {},
