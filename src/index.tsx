@@ -117,18 +117,29 @@ function useStateMachineImpl<Context>(context: Context): UseStateMachineWithCont
 
     const reducer = useConstant(() => getReducer<Context, S, T>(config));
 
-    const [machine, send] = useReducer(reducer, initialState);
+    const [machine, dispatch] = useReducer(reducer, initialState);
     // The updater function sends an internal event to the reducer to trigger the actual update
-    const sendUpdater: Dispatch<ContextUpdate<Context>> = updater => send({ type: 'Update', updater });
-    // The public updater function exposed to the user
-    const sendNext: Dispatch<T> = next => send({ type: 'Transition', next });
+    const update: Dispatch<ContextUpdate<Context>> = updater =>
+      dispatch({
+        type: 'Update',
+        updater,
+      });
+    // The public dispatch/send function exposed to the user
+    const send: Dispatch<T> = useConstant(() => next =>
+      dispatch({
+        type: 'Transition',
+        next,
+      })
+    );
 
     useEffect(() => {
-      const exit = config.states[machine.value]?.effect?.(sendNext, sendUpdater);
-      return typeof exit === 'function' ? () => exit(sendNext, sendUpdater) : undefined;
+      const exit = config.states[machine.value]?.effect?.(send, update);
+      return typeof exit === 'function' ? () => exit(send, update) : undefined;
+      // We are bypassing the linter here because we deliberately want the effects to run on explicit machine state changes.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [machine.value]);
 
-    return [machine, sendNext];
+    return [machine, send];
   };
 }
 

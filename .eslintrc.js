@@ -1,6 +1,8 @@
 module.exports = {
-  plugins: ['react-hooks'],
-  rules: {
-    'react-hooks/exhaustive-deps': 'warn',
+  extends: ['react-app', 'prettier/@typescript-eslint', 'plugin:prettier/recommended'],
+  settings: {
+    react: {
+      version: 'detect',
+    },
   },
 };
