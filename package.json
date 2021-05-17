@@ -4,8 +4,9 @@
   "license": "MIT",
   "author": "Cassio Zen",
   "main": "dist/index.js",
-  "module": "dist/usemachine.esm.js",
+  "module": "dist/usestatemachine.esm.js",
   "typings": "dist/index.d.ts",
+  "sideEffects": false,
   "files": [
     "dist",
     "src"
