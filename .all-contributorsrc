@@ -1,0 +1,25 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "icyJoseph",
+      "name": "Joseph",
+      "avatar_url": "https://avatars.githubusercontent.com/u/21013447?v=4",
+      "profile": "https://icyjoseph.dev/",
+      "contributions": [
+        "code",
+        "bug"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "useStateMachine",
+  "projectOwner": "cassiozen",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
