@@ -31,6 +31,15 @@
       "profile": "https://github.com/mutewinter",
       "contributions": [
         "doc"
+    },
+    {
+      "login": "devronhansen",
+      "name": "Ron",
+      "avatar_url": "https://avatars.githubusercontent.com/u/20226404?v=4",
+      "profile": "https://github.com/devronhansen",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
