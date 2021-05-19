@@ -246,7 +246,8 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- markdownlint-disable -->
 <table>
   <tr>
-    <td align="center"><a href="https://icyjoseph.dev/"><img src="https://avatars.githubusercontent.com/u/21013447?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Joseph</b></sub></a><br /><a href="https://github.com/cassiozen/useStateMachine/commits?author=icyJoseph" title="Code">💻</a> <a href="https://github.com/cassiozen/useStateMachine/issues?q=author%3AicyJoseph" title="Bug reports">🐛</a> <a href="https://github.com/cassiozen/useStateMachine/commits?author=icyJoseph" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/RunDevelopment"><img src="https://avatars.githubusercontent.com/u/20878432?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Michael Schmidt</b></sub></a><br /><a href="https://github.com/cassiozen/useStateMachine/commits?author=RunDevelopment" title="Code">💻</a> <a href="https://github.com/cassiozen/useStateMachine/commits?author=RunDevelopment" title="Tests">⚠️</a> <a href="#ideas-RunDevelopment" title="Ideas, Planning, & Feedback">🤔</a></td>
+    <td align="center"><a href="https://icyjoseph.dev/"><img src="https://avatars.githubusercontent.com/u/21013447?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Joseph</b></sub></a><br /><a href="https://github.com/cassiozen/useStateMachine/commits?author=icyJoseph" title="Code">💻</a></td>
   </tr>
 </table>
 
