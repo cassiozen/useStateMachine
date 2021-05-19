@@ -1,0 +1,25 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "devronhansen",
+      "name": "Ron",
+      "avatar_url": "https://avatars.githubusercontent.com/u/20226404?v=4",
+      "profile": "https://github.com/devronhansen",
+      "contributions": [
+        "code",
+        "doc"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "useStateMachine",
+  "projectOwner": "cassiozen",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
