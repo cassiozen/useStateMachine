@@ -6,6 +6,19 @@
   "commit": false,
   "contributors": [
     {
+      "login": "cassiozen",
+      "name": "Cassio Zen",
+      "avatar_url": "https://avatars.githubusercontent.com/u/33676?v=4",
+      "profile": "http://YouTube.com/ReactCasts",
+      "contributions": [
+        "code",
+        "doc",
+        "test",
+        "ideas",
+        "bug"
+      ]
+    },
+    {
       "login": "RunDevelopment",
       "name": "Michael Schmidt",
       "avatar_url": "https://avatars.githubusercontent.com/u/20878432?v=4",
