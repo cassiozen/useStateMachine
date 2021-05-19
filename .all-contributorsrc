@@ -6,13 +6,31 @@
   "commit": false,
   "contributors": [
     {
+      "login": "RunDevelopment",
+      "name": "Michael Schmidt",
+      "avatar_url": "https://avatars.githubusercontent.com/u/20878432?v=4",
+      "profile": "https://github.com/RunDevelopment",
+      "contributions": [
+        "code",
+        "test",
+        "ideas"
+    },
+    {
+      "login": "icyJoseph",
+      "name": "Joseph",
+      "avatar_url": "https://avatars.githubusercontent.com/u/21013447?v=4",
+      "profile": "https://icyjoseph.dev/",
+      "contributions": [
+        "code",
+      ]
+    },
+    {
       "login": "mutewinter",
       "name": "Jeremy Mack",
       "avatar_url": "https://avatars.githubusercontent.com/u/305901?v=4",
       "profile": "https://github.com/mutewinter",
       "contributions": [
         "doc"
-      ]
     }
   ],
   "contributorsPerLine": 7,
