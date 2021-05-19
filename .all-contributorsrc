@@ -1,0 +1,24 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "mutewinter",
+      "name": "Jeremy Mack",
+      "avatar_url": "https://avatars.githubusercontent.com/u/305901?v=4",
+      "profile": "https://github.com/mutewinter",
+      "contributions": [
+        "doc"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "useStateMachine",
+  "projectOwner": "cassiozen",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
