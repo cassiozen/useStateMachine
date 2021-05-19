@@ -1,0 +1,26 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "RunDevelopment",
+      "name": "Michael Schmidt",
+      "avatar_url": "https://avatars.githubusercontent.com/u/20878432?v=4",
+      "profile": "https://github.com/RunDevelopment",
+      "contributions": [
+        "code",
+        "test",
+        "ideas"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "useStateMachine",
+  "projectOwner": "cassiozen",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
