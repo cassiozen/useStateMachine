@@ -23,6 +23,14 @@
       "contributions": [
         "code",
       ]
+    },
+    {
+      "login": "mutewinter",
+      "name": "Jeremy Mack",
+      "avatar_url": "https://avatars.githubusercontent.com/u/305901?v=4",
+      "profile": "https://github.com/mutewinter",
+      "contributions": [
+        "doc"
     }
   ],
   "contributorsPerLine": 7,
