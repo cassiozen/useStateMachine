@@ -236,6 +236,7 @@ const [state, send] = useStateMachine<{ toggleCount: number }>({ toggleCount: 0 
 - [Contributing](https://github.com/cassiozen/useStateMachine/wiki/Contributing-to-useStateMachine)
 - [Comparison with XState](https://github.com/cassiozen/useStateMachine/wiki/XState-comparison)
 - [Source code walkthrough video](https://github.com/cassiozen/useStateMachine/wiki/Source-code-walkthrough-video)
+- [Usage with Preact](https://github.com/cassiozen/useStateMachine/wiki/Usage-with-Preact)
 
 ## Contributors ✨
 
