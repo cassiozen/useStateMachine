@@ -1,0 +1,66 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "cassiozen",
+      "name": "Cassio Zen",
+      "avatar_url": "https://avatars.githubusercontent.com/u/33676?v=4",
+      "profile": "http://YouTube.com/ReactCasts",
+      "contributions": [
+        "code",
+        "doc",
+        "test",
+        "ideas",
+        "bug"
+      ]
+    },
+    {
+      "login": "RunDevelopment",
+      "name": "Michael Schmidt",
+      "avatar_url": "https://avatars.githubusercontent.com/u/20878432?v=4",
+      "profile": "https://github.com/RunDevelopment",
+      "contributions": [
+        "code",
+        "test",
+        "ideas"
+      ]
+    },
+    {
+      "login": "icyJoseph",
+      "name": "Joseph",
+      "avatar_url": "https://avatars.githubusercontent.com/u/21013447?v=4",
+      "profile": "https://icyjoseph.dev/",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "mutewinter",
+      "name": "Jeremy Mack",
+      "avatar_url": "https://avatars.githubusercontent.com/u/305901?v=4",
+      "profile": "https://github.com/mutewinter",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "devronhansen",
+      "name": "Ron",
+      "avatar_url": "https://avatars.githubusercontent.com/u/20226404?v=4",
+      "profile": "https://github.com/devronhansen",
+      "contributions": [
+        "doc"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "useStateMachine",
+  "projectOwner": "cassiozen",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}

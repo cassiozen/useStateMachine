@@ -1,0 +1,64 @@
+{
+  "name": "@cassiozen/usestatemachine",
+  "version": "0.3.2",
+  "license": "MIT",
+  "author": "Cassio Zen",
+  "main": "dist/index.js",
+  "module": "dist/usestatemachine.esm.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "test": "tsdx test & tsd",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build",
+    "size": "size-limit",
+    "analyze": "size-limit --why"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  },
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^4.10.1",
+    "@testing-library/react-hooks": "^5.1.0",
+    "@types/react": "^17.0.3",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "husky": "^5.1.3",
+    "react": ">=16.8.0",
+    "react-test-renderer": "^17.0.1",
+    "size-limit": "^4.10.1",
+    "tsd": "^0.15.1",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.1.0",
+    "typescript": "^3.9.4"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 120,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "size-limit": [
+    {
+      "path": "dist/usestatemachine.cjs.production.min.js",
+      "limit": "512 B"
+    },
+    {
+      "path": "dist/usestatemachine.esm.js",
+      "limit": "512 B"
+    }
+  ]
+}
