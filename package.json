@@ -1,64 +1,44 @@
 {
-  "name": "@cassiozen/usestatemachine",
-  "version": "0.3.2",
-  "license": "MIT",
+  "name": "use-machine",
+  "version": "0.1.0",
   "author": "Cassio Zen",
+  "license": "MIT",
+  "description": "",
   "main": "dist/index.js",
-  "module": "dist/usestatemachine.esm.js",
-  "types": "dist/index.d.ts",
-  "sideEffects": false,
+  "module": "dist/index.es.js",
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
-  "engines": {
-    "node": ">=10"
-  },
+  "types": "dist/index.d.ts",
   "scripts": {
-    "start": "tsdx watch",
-    "build": "tsdx build",
-    "test": "tsdx test & tsd",
-    "lint": "tsdx lint",
-    "prepare": "tsdx build",
-    "size": "size-limit",
-    "analyze": "size-limit --why"
+    "start": "rollup -cw",
+    "build": "rollup -c",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@testing-library/react-hooks": "^5.1.0",
+    "@types/jest": "^26.0.22",
+    "@types/react": ">=16.8.0",
+    "@typescript-eslint/eslint-plugin": "^4.19.0",
+    "@typescript-eslint/parser": "^4.19.0",
+    "eslint": "^7.22.0",
+    "eslint-plugin-react": "^7.23.1",
+    "eslint-plugin-react-hooks": "^4.1.0",
+    "jest": "^26.6.3",
+    "react": ">=16.8.0",
+    "react-test-renderer": "^17.0.2",
+    "rollup": "^2.42.3",
+    "rollup-plugin-typescript2": "^0.30.0",
+    "ts-jest": "^26.5.4",
+    "typescript": "^4.2.0"
   },
   "peerDependencies": {
     "react": ">=16.8.0"
-  },
-  "devDependencies": {
-    "@size-limit/preset-small-lib": "^4.10.1",
-    "@testing-library/react-hooks": "^5.1.0",
-    "@types/react": "^17.0.3",
-    "eslint-plugin-react-hooks": "^4.2.0",
-    "husky": "^5.1.3",
-    "react": ">=16.8.0",
-    "react-test-renderer": "^17.0.1",
-    "size-limit": "^4.10.1",
-    "tsd": "^0.15.1",
-    "tsdx": "^0.14.1",
-    "tslib": "^2.1.0",
-    "typescript": "^3.9.4"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "tsdx lint"
-    }
   },
   "prettier": {
     "printWidth": 120,
     "semi": true,
     "singleQuote": true,
     "trailingComma": "es5"
-  },
-  "size-limit": [
-    {
-      "path": "dist/usestatemachine.cjs.production.min.js",
-      "limit": "512 B"
-    },
-    {
-      "path": "dist/usestatemachine.esm.js",
-      "limit": "512 B"
-    }
-  ]
+  }
 }
