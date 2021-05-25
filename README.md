@@ -75,7 +75,7 @@ The `state` consists of three properties: `value`, `nextEvents` and `context`.
 
 **Send events**
 
-`send` takes a transition name as argument. If the transition exists and is allowed (see guard), it will change the state machine state and execute effects.
+`send` takes a event as argument. If a transition exists for this event and is allowed (see guard), it will change the state machine state and execute effects.
 
 ## State Machine configuration
 
@@ -98,9 +98,7 @@ const [state, send] = useStateMachine()({
 
 ### Transition Syntax
 
-For each state, you can define the possible transitions.
-
-Transitions can be configured using a shorthand syntax:
+A state transition defines what the next state is, given the current state and event. State transitions are defined on state nodes, in the on property:
 
 ```js
 on: {
