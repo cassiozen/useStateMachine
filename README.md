@@ -108,6 +108,8 @@ on: {
 }
 ```
 
+Where TOGGLE stands for the name of a transition, that you can invoke with the `send()` command, when you are in the corresponding state.
+
 Or the extended, object syntax, which allows for more control over the transition (like adding guards):
 
 ```js
