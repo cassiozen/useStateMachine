@@ -45,6 +45,8 @@ const [state, send] = useStateMachine()({
 
 console.log(state); // { value: 'inactive', nextEvents: ['TOGGLE'] }
 
+// Refers to the TOGGLE transition from the state we are currently in. 
+
 send('TOGGLE');
 
 // Logs: Just entered the Active state
