@@ -106,9 +106,9 @@ A state transition defines what the next state is, given the current state and e
 on: {
   TOGGLE: 'active';
 }
-```
 
-Where TOGGLE stands for an event name that will trigger a transition. TOGGLE can invoked with the `send()` command, for the currently acive state state.
+// (Where TOGGLE stands for an event name that will trigger a transition.)
+```
 
 Or the extended, object syntax, which allows for more control over the transition (like adding guards):
 
