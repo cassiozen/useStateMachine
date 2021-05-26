@@ -254,6 +254,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://icyjoseph.dev/"><img src="https://avatars.githubusercontent.com/u/21013447?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Joseph</b></sub></a><br /><a href="https://github.com/cassiozen/useStateMachine/commits?author=icyJoseph" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/mutewinter"><img src="https://avatars.githubusercontent.com/u/305901?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Jeremy Mack</b></sub></a><br /><a href="https://github.com/cassiozen/useStateMachine/commits?author=mutewinter" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/devronhansen"><img src="https://avatars.githubusercontent.com/u/20226404?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Ron</b></sub></a><br /><a href="https://github.com/cassiozen/useStateMachine/commits?author=devronhansen" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://v01.io"><img src="https://avatars.githubusercontent.com/u/32771?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Klaus Breyer</b></sub></a><br /><a href="https://github.com/cassiozen/useStateMachine/commits?author=klausbreyer" title="Documentation">📖</a></td>
   </tr>
 </table>
 
