@@ -152,7 +152,37 @@ describe('useStateMachine', () => {
 
       expect(exit.mock.calls[0][0]).toBe('inactive');
     });
+
+    it('should invoke effect with context as a parameter', () => {
+      const finalEffect = jest.fn();
+      const initialEffect = jest.fn((send, update, _) => {
+        update((context: boolean) => !context);
+        send('TOGGLE');
+      });
+
+      renderHook(() =>
+        useStateMachine(false)({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: { TOGGLE: 'active' },
+              effect: initialEffect,
+            },
+            active: {
+              effect: finalEffect,
+            },
+          },
+        })
+      );
+
+      expect(initialEffect).toHaveBeenCalledTimes(1);
+      expect(initialEffect.mock.calls[0][2]).toBe(false);
+
+      expect(finalEffect).toHaveBeenCalledTimes(1);
+      expect(finalEffect.mock.calls[0][2]).toBe(true);
+    });
   });
+
   describe('guarded transitions', () => {
     it('should block transitions with guard returning false', () => {
       const guard = jest.fn(() => false);

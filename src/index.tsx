@@ -16,7 +16,8 @@ interface MachineStateConfig<Context, S extends string, T extends string> {
   };
   effect?: (
     send: Dispatch<T>,
-    assign: Dispatch<ContextUpdate<Context>>
+    assign: Dispatch<ContextUpdate<Context>>,
+    context: Context
   ) => void | ((send: Dispatch<T>, assign: Dispatch<ContextUpdate<Context>>) => void);
 }
 
@@ -133,7 +134,7 @@ function useStateMachineImpl<Context>(context: Context): UseStateMachineWithCont
     );
 
     useEffect(() => {
-      const exit = config.states[machine.value]?.effect?.(send, update);
+      const exit = config.states[machine.value]?.effect?.(send, update, machine.context);
       return typeof exit === 'function' ? () => exit(send, update) : undefined;
       // We are bypassing the linter here because we deliberately want the effects to run on explicit machine state changes.
       // eslint-disable-next-line react-hooks/exhaustive-deps
