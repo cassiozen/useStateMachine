@@ -52,9 +52,9 @@ const machine2 = useStateMachine<{ time: number }>({ time: 0 })({
           target: 'running',
         },
       },
-      effect(send, update) {
-        expectType<Dispatch<'START' | 'PAUSE' | 'RESET'>>(send);
+      effect(update) {
         expectType<(value: (context: { time: number }) => { time: number }) => void>(update);
+        expectType<Dispatch<'START' | 'PAUSE' | 'RESET'>>(update());
       },
     },
     running: {
@@ -67,6 +67,11 @@ const machine2 = useStateMachine<{ time: number }>({ time: 0 })({
         RESET: 'idle',
         START: {
           target: 'running',
+          guard(context, event) {
+            expectType<{ time: number }>(context)
+            expectType<{ type: "START" | "PAUSE" | "RESET"; [key: string]: any; }>(event)
+            return true;
+          }
         },
       },
     },
