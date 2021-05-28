@@ -1,44 +1,47 @@
 import { useEffect, useReducer, Dispatch, useRef } from 'react';
 import log from './logger';
 
-type Transition<Context, S extends string> =
-  | S
+type Transition<Context, State extends string> =
+  | State
   | {
-      target: S;
+      target: State;
       guard?: (context: Context) => boolean;
     };
 
-type ContextUpdate<Context> = (context: Context) => Context;
+type ContextUpdater<Context> = (context: Context) => Context;
 
-interface MachineStateConfig<Context, S extends string, T extends string> {
+interface MachineStateConfig<Context, State extends string, EventString extends string> {
   on?: {
-    [key in T]?: Transition<Context, S>;
+    [key in EventString]?: Transition<Context, State>;
   };
   effect?: (
-    assign: (updater: ContextUpdate<Context>) => Dispatch<T | EventObject<T>>,
-    event?: EventObject<T>
+    assign: (updater: ContextUpdater<Context>) => Dispatch<EventString | EventObject<EventString>>,
+    event?: EventObject<EventString>
   ) =>
     | void
-    | ((assign: (updater: ContextUpdate<Context>) => Dispatch<T | EventObject<T>>, event?: EventObject<T>) => void);
+    | ((
+        assign: (updater: ContextUpdater<Context>) => Dispatch<EventString | EventObject<EventString>>,
+        event?: EventObject<EventString>
+      ) => void);
 }
 
-interface MachineConfig<Context, S extends string, T extends string> {
-  initial: S;
+interface MachineConfig<Context, State extends string, EventString extends string> {
+  initial: State;
   verbose?: boolean;
   states: {
-    [key in S]: MachineStateConfig<Context, S, T>;
+    [key in State]: MachineStateConfig<Context, State, EventString>;
   };
 }
 
-interface State<Context, S extends string, T extends string> {
-  value: S;
+interface MachineState<Context, State extends string, EventString extends string> {
+  value: State;
   context: Context;
-  event?: EventObject<T>;
-  nextEvents: T[];
+  event?: EventObject<EventString>;
+  nextEvents: EventString[];
 }
 
-interface EventObject<T extends string> {
-  type: T;
+interface EventObject<EventString extends string> {
+  type: EventString;
   [key: string]: any;
 }
 
@@ -46,30 +49,35 @@ interface UpdateEvent<Context> {
   type: 'Update';
   updater: (context: Context) => Context;
 }
-interface TransitionEvent<T extends string> {
+interface TransitionEvent<EventString extends string> {
   type: 'Transition';
-  next: T | EventObject<T>;
+  next: EventString | EventObject<EventString>;
 }
-type Event<Context, T extends string> = UpdateEvent<Context> | TransitionEvent<T>;
+type Event<Context, EventString extends string> = UpdateEvent<Context> | TransitionEvent<EventString>;
 
-function getState<Context, S extends string, T extends string>(
+function getState<Context, State extends string, EventString extends string>(
   context: Context,
-  config: MachineConfig<Context, S, T>,
-  value: S,
-  event?: EventObject<T>
-): State<Context, S, T> {
+  config: MachineConfig<Context, State, EventString>,
+  value: State,
+  event?: EventObject<EventString>
+): MachineState<Context, State, EventString> {
   const on = config.states[value].on;
 
   return {
     value,
     context,
     event,
-    nextEvents: on ? (Object.keys(on) as T[]) : [],
+    nextEvents: on ? (Object.keys(on) as EventString[]) : [],
   };
 }
 
-function getReducer<Context, S extends string, T extends string>(config: MachineConfig<Context, S, T>) {
-  return function reducer(state: State<Context, S, T>, event: Event<Context, T>): State<Context, S, T> {
+function getReducer<Context, State extends string, EventString extends string>(
+  config: MachineConfig<Context, State, EventString>
+) {
+  return function reducer(
+    state: MachineState<Context, State, EventString>,
+    event: Event<Context, EventString>
+  ): MachineState<Context, State, EventString> {
     if (event.type === 'Update') {
       // Internal action to update context
       const nextContext = event.updater(state.context);
@@ -84,7 +92,7 @@ function getReducer<Context, S extends string, T extends string>(config: Machine
       // Events can have a shortcut string format. We want the full object notation here
       const eventObject = typeof event.next === 'string' ? { type: event.next } : event.next;
 
-      const nextState: Transition<Context, S> | undefined = currentState.on?.[eventObject.type];
+      const nextState: Transition<Context, State> | undefined = currentState.on?.[eventObject.type];
 
       // If there is no defined next state, return early
       if (!nextState) {
@@ -92,7 +100,7 @@ function getReducer<Context, S extends string, T extends string>(config: Machine
         return state;
       }
 
-      let target: S;
+      let target: State;
       if (typeof nextState === 'string') {
         target = nextState;
       } else {
@@ -120,20 +128,24 @@ function useConstant<T>(init: () => T): T {
   return ref.current;
 }
 
-type UseStateMachineWithContext<Context> = <S extends string, T extends string>(
-  config: MachineConfig<Context, S, T>
-) => [State<Context, S, T>, Dispatch<T | EventObject<T>>];
+type UseStateMachineWithContext<Context> = <State extends string, EventString extends string>(
+  config: MachineConfig<Context, State, EventString>
+) => [MachineState<Context, State, EventString>, Dispatch<EventString | EventObject<EventString>>];
 
 function useStateMachineImpl<Context>(context: Context): UseStateMachineWithContext<Context> {
-  return function useStateMachineWithContext<S extends string, T extends string>(config: MachineConfig<Context, S, T>) {
-    const initialState = useConstant<State<Context, S, T>>(() => getState(context, config, config.initial));
+  return function useStateMachineWithContext<State extends string, EventString extends string>(
+    config: MachineConfig<Context, State, EventString>
+  ) {
+    const initialState = useConstant<MachineState<Context, State, EventString>>(() =>
+      getState(context, config, config.initial)
+    );
 
-    const reducer = useConstant(() => getReducer<Context, S, T>(config));
+    const reducer = useConstant(() => getReducer<Context, State, EventString>(config));
 
     const [machine, dispatch] = useReducer(reducer, initialState);
 
     // The public dispatch/send function exposed to the user
-    const send: Dispatch<T | EventObject<T>> = useConstant(() => next =>
+    const send: Dispatch<EventString | EventObject<EventString>> = useConstant(() => next =>
       dispatch({
         type: 'Transition',
         next,
@@ -141,7 +153,7 @@ function useStateMachineImpl<Context>(context: Context): UseStateMachineWithCont
     );
 
     // The updater function sends an internal event to the reducer to trigger the actual update
-    const update = (updater: ContextUpdate<Context>) => {
+    const update = (updater: ContextUpdater<Context>) => {
       dispatch({
         type: 'Update',
         updater,
