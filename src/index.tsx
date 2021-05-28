@@ -1,26 +1,26 @@
 import { useEffect, useReducer, Dispatch, useRef } from 'react';
 import log from './logger';
 
-type Transition<Context, State extends string> =
+type Transition<Context, State extends string, EventString extends string> =
   | State
   | {
       target: State;
-      guard?: (context: Context) => boolean;
+      guard?: (context: Context, event: EventObject<EventString>) => boolean;
     };
 
 type ContextUpdater<Context> = (context: Context) => Context;
 
 interface MachineStateConfig<Context, State extends string, EventString extends string> {
   on?: {
-    [key in EventString]?: Transition<Context, State>;
+    [key in EventString]?: Transition<Context, State, EventString>;
   };
   effect?: (
-    assign: (updater: ContextUpdater<Context>) => Dispatch<EventString | EventObject<EventString>>,
+    assign: (updater?: ContextUpdater<Context>) => Dispatch<EventString | EventObject<EventString>>,
     event?: EventObject<EventString>
   ) =>
     | void
     | ((
-        assign: (updater: ContextUpdater<Context>) => Dispatch<EventString | EventObject<EventString>>,
+        assign: (updater?: ContextUpdater<Context>) => Dispatch<EventString | EventObject<EventString>>,
         event?: EventObject<EventString>
       ) => void);
 }
@@ -92,7 +92,7 @@ function getReducer<Context, State extends string, EventString extends string>(
       // Events can have a shortcut string format. We want the full object notation here
       const eventObject = typeof event.next === 'string' ? { type: event.next } : event.next;
 
-      const nextState: Transition<Context, State> | undefined = currentState.on?.[eventObject.type];
+      const nextState: Transition<Context, State, EventString> | undefined = currentState.on?.[eventObject.type];
 
       // If there is no defined next state, return early
       if (!nextState) {
@@ -106,7 +106,7 @@ function getReducer<Context, State extends string, EventString extends string>(
       } else {
         target = nextState.target;
         // If there are guards, invoke them and return early if the transition is denied
-        if (nextState.guard && !nextState.guard(state.context)) {
+        if (nextState.guard && !nextState.guard(state.context, eventObject)) {
           if (config.verbose) log(`Transition from "${state.value}" to "${target}" denied by guard`);
           return state;
         }
@@ -153,11 +153,13 @@ function useStateMachineImpl<Context>(context: Context): UseStateMachineWithCont
     );
 
     // The updater function sends an internal event to the reducer to trigger the actual update
-    const update = (updater: ContextUpdater<Context>) => {
-      dispatch({
-        type: 'Update',
-        updater,
-      });
+    const update = (updater?: ContextUpdater<Context>) => {
+      if (updater) {
+        dispatch({
+          type: 'Update',
+          updater,
+        });
+      }
       return send;
     };
 
