@@ -1,5 +1,6 @@
 import { useEffect, useReducer, Dispatch, useRef } from 'react';
 import log from './logger';
+import { UseStateMachine } from './types';
 
 const enum DispatchType {
   'Update',

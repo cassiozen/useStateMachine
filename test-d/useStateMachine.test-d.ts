@@ -137,3 +137,56 @@ const machine5 = useStateMachine<undefined, { type: 'ACTIVATE', optionalKey: str
   },
 });
 expectType<Dispatch<{ type: 'ACTIVATE'; optionalKey: string; } | { type: 'DEACTIVATE'; }>>(machine5[1])
+
+
+let [flightMachine] = useStateMachine<FlightMachineContext>({ trip: 'oneWay' })({
+  initial: 'editing',
+  states: {
+    editing: {
+      on: {
+        SUBMIT: {
+          target: 'submitted',
+          guard: (context): context is FlightMachineSubmittedContext => {
+            if (context.trip === 'oneWay') {
+              return !!context.startDate;
+            } else {
+              return (
+                !!context.startDate &&
+                !!context.returnDate &&
+                context.returnDate > context.startDate
+              );
+            }
+          }
+        }
+      }
+    },
+    submitted: {}
+  }
+})
+
+type FlightMachineEditingContext =
+  { trip: 'oneWay' | 'roundTrip'
+  , startDate?: Date
+  , returnDate?: Date
+  }
+type FlightMachineSubmittedContext =
+  | { trip: 'oneWay'
+    , startDate: Date
+    }
+  | { trip: 'roundTrip'
+    , startDate: Date
+    , returnDate: Date
+    }
+
+type FlightMachineContext =
+  | FlightMachineEditingContext
+  | FlightMachineSubmittedContext
+
+expectType<FlightMachineContext>(flightMachine.context);
+if (flightMachine.value === 'submitted') {
+  expectType<FlightMachineSubmittedContext>(flightMachine.context);
+  
+  if (flightMachine.context.trip === 'oneWay') {
+    expectError(flightMachine.context.returnDate)
+  }
+}
