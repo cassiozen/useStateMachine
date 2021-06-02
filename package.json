@@ -54,11 +54,13 @@
   "size-limit": [
     {
       "path": "dist/usestatemachine.cjs.production.min.js",
-      "limit": "512 B"
+      "limit": "512 B",
+      "brotli": true
     },
     {
       "path": "dist/usestatemachine.esm.js",
-      "limit": "512 B"
+      "limit": "512 B",
+      "brotli": true
     }
   ]
 }
