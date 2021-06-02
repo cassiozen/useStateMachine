@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import type { Dispatch } from 'react';
 import useStateMachine from '../src';
-import { expectType, expectError } from 'tsd';
+import { expectType, expectError, expectAssignable } from 'tsd';
  
 expectError(useStateMachine()({
   initial: '--nonexisting state---',
@@ -35,12 +35,14 @@ const machine1 = useStateMachine()({
     },
   },
 });
-expectType<{
+
+expectAssignable<{
   value: 'inactive' | 'active';
   context: undefined;
+  event?: { type: 'TOGGLE' };
   nextEvents: 'TOGGLE'[];
 }>(machine1[0]);
-expectType<Dispatch<'TOGGLE'>>(machine1[1]);
+expectAssignable<Dispatch<'TOGGLE' | { type: 'TOGGLE' }>>(machine1[1]);
 
 const machine2 = useStateMachine<{ time: number }>({ time: 0 })({
   initial: 'idle',
@@ -52,9 +54,9 @@ const machine2 = useStateMachine<{ time: number }>({ time: 0 })({
           target: 'running',
         },
       },
-      effect(update) {
-        expectType<(value: (context: { time: number }) => { time: number }) => void>(update);
-        expectType<Dispatch<'START' | 'PAUSE' | 'RESET'>>(update());
+      effect(send, update) {
+        expectAssignable<Dispatch<'START' | 'PAUSE' | 'RESET' | { type: 'START' } | { type: 'PAUSE' } | { type: 'RESET' }>>(send);
+        expectAssignable<(value: (context: { time: number }) => { time: number }) => void>(update);
       },
     },
     running: {
@@ -77,9 +79,9 @@ const machine2 = useStateMachine<{ time: number }>({ time: 0 })({
     },
   },
 });
-expectType<{
+expectAssignable<{
   value: 'idle' | 'running' | 'paused';
   context: { time: number };
   nextEvents: ('START' | 'PAUSE' | 'RESET')[];
 }>(machine2[0]);
-expectType<Dispatch<'START' | 'PAUSE' | 'RESET'>>(machine2[1]);
+expectAssignable<Dispatch<'START' | 'PAUSE' | 'RESET' | { type: 'START' } | { type: 'PAUSE' } | { type: 'RESET' }>>(machine2[1]);

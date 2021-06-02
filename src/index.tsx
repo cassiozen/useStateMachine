@@ -1,6 +1,11 @@
 import { useEffect, useReducer, Dispatch, useRef } from 'react';
 import log from './logger';
 
+const enum DispatchType {
+  'Update',
+  'Transition',
+}
+
 type Transition<Context, State extends string, EventString extends string> =
   | State
   | {
@@ -15,12 +20,14 @@ interface MachineStateConfig<Context, State extends string, EventString extends 
     [key in EventString]?: Transition<Context, State, EventString>;
   };
   effect?: (
-    assign: (updater?: ContextUpdater<Context>) => Dispatch<EventString | EventObject<EventString>>,
+    send: Dispatch<EventString | EventObject<EventString>>,
+    assign: (updater?: ContextUpdater<Context>) => { send: Dispatch<EventString | EventObject<EventString>> },
     event?: EventObject<EventString>
   ) =>
     | void
     | ((
-        assign: (updater?: ContextUpdater<Context>) => Dispatch<EventString | EventObject<EventString>>,
+        send: Dispatch<EventString | EventObject<EventString>>,
+        assign: (updater?: ContextUpdater<Context>) => { send: Dispatch<EventString | EventObject<EventString>> },
         event?: EventObject<EventString>
       ) => void);
 }
@@ -46,11 +53,11 @@ interface EventObject<EventString extends string> {
 }
 
 interface UpdateEvent<Context> {
-  type: 'Update';
+  type: DispatchType.Update;
   updater: (context: Context) => Context;
 }
 interface TransitionEvent<EventString extends string> {
-  type: 'Transition';
+  type: DispatchType.Transition;
   next: EventString | EventObject<EventString>;
 }
 type Event<Context, EventString extends string> = UpdateEvent<Context> | TransitionEvent<EventString>;
@@ -78,7 +85,7 @@ function getReducer<Context, State extends string, EventString extends string>(
     state: MachineState<Context, State, EventString>,
     event: Event<Context, EventString>
   ): MachineState<Context, State, EventString> {
-    if (event.type === 'Update') {
+    if (event.type === DispatchType.Update) {
       // Internal action to update context
       const nextContext = event.updater(state.context);
       if (config.verbose) log('Context update from %o to %o', state.context, nextContext);
@@ -147,7 +154,7 @@ function useStateMachineImpl<Context>(context: Context): UseStateMachineWithCont
     // The public dispatch/send function exposed to the user
     const send: Dispatch<EventString | EventObject<EventString>> = useConstant(() => next =>
       dispatch({
-        type: 'Transition',
+        type: DispatchType.Transition,
         next,
       })
     );
@@ -156,16 +163,16 @@ function useStateMachineImpl<Context>(context: Context): UseStateMachineWithCont
     const update = (updater?: ContextUpdater<Context>) => {
       if (updater) {
         dispatch({
-          type: 'Update',
+          type: DispatchType.Update,
           updater,
         });
       }
-      return send;
+      return { send };
     };
 
     useEffect(() => {
-      const exit = config.states[machine.value]?.effect?.(update, machine.event);
-      return typeof exit === 'function' ? () => exit(update, machine.event) : undefined;
+      const exit = config.states[machine.value]?.effect?.(send, update, machine.event);
+      return typeof exit === 'function' ? () => exit(send, update, machine.event) : undefined;
       // We are bypassing the linter here because we deliberately want the effects to run on explicit machine state changes.
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [machine.value]);
