@@ -8,7 +8,7 @@
 - Heavy focus on type inference (you get auto completion for both TypeScript & JavaScript users without having to manually define the typings)
 - Idiomatic React patterns (Since it's built on top of React's useReducer & useEffect, might as well...)
 
-<img width="400" alt="size_badge" src="https://user-images.githubusercontent.com/33676/116728438-8624ea00-a9ab-11eb-9413-65458c6d54d4.png">
+<img width="400" alt="size_badge" src="https://user-images.githubusercontent.com/33676/120556214-ce2b9800-c3c1-11eb-9a55-f9fa4e1fbbe4.png">
 
 ## Examples
 
@@ -67,15 +67,21 @@ const [state, send] = useStateMachine(/* Optional Context */)(/* Configuration *
 
 `useStateMachine` takes a JavaScript object as context (optional, see below) and one as the state machine configuration. It returns an array consisting of a `current machine state` object and a `send` function to trigger transitions.
 
-**Machine state**
+### Machine state
 
-The `state` consists of three properties: `value`, `nextEvents` and `context`.
+The `state` consists of three properties: `value`, `event`, `nextEvents` and `context`.
 
-`value` returns the name of the current state. `nextEvents` returns an array with the names of available transitions from this state.
+`value` (string): Returns the name of the current state.
 
-**Send events**
+`event` (eventObject: `{type: string}`; Optional): The name of the last sent event that led to this state.
 
-`send` takes a transition name as argument. If the transition exists and is allowed (see guard), it will change the state machine state and execute effects.
+`nextEvents` (`string[]`): An array with the names of available events to trigger transitions from this state.
+
+### Send events
+
+`send` takes an event as argument. The event can be provided in shorthand string format (eg. "TOGGLE") or as an event object (eg. `{ type: "TOGGLE" }`)
+
+If the transition exists and is allowed (see guard), it will change the state machine state and execute effects.
 
 ## State Machine configuration
 
@@ -137,7 +143,7 @@ const [state, send] = useStateMachine()({
 });
 ```
 
-The effect function receives two params: the `send` method (So you can trigger transitions from within an effect) and and updater function, to update the context (more on context below).
+The effect function receives three params: the `send` method (So you can trigger transitions from within an effect), an updater function, to update the context (more on context below) and the event that triggered this transition.
 
 In this example, the state machine will always send the "RETRY" event when entering the error state:
 
@@ -170,7 +176,7 @@ const [state, send] = useStateMachine()({
       on: {
         TOGGLE: {
           target: 'active',
-          guard(context) {
+          guard(context, event) {
             // Return a boolean to allow or block the transition
           },
         },
