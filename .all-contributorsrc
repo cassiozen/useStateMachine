@@ -55,6 +55,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "klausbreyer",
+      "name": "Klaus Breyer",
+      "avatar_url": "https://avatars.githubusercontent.com/u/32771?v=4",
+      "profile": "https://v01.io",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
