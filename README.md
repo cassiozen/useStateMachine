@@ -45,7 +45,7 @@ const [state, send] = useStateMachine()({
 
 console.log(state); // { value: 'inactive', nextEvents: ['TOGGLE'] }
 
-// Refers to the TOGGLE event name for the state we are currently in. 
+// Refers to the TOGGLE event name for the state we are currently in.
 
 send('TOGGLE');
 
@@ -71,7 +71,7 @@ const [state, send] = useStateMachine(/* Optional Context */)(/* Configuration *
 
 ### Machine state
 
-The `state` consists of three properties: `value`, `event`, `nextEvents` and `context`.
+The `state` consists of 4 properties: `value`, `event`, `nextEvents` and `context`.
 
 `value` (string): Returns the name of the current state.
 
@@ -79,11 +79,13 @@ The `state` consists of three properties: `value`, `event`, `nextEvents` and `co
 
 `nextEvents` (`string[]`): An array with the names of available events to trigger transitions from this state.
 
+`context`: The state machine extended state. See "Extended State" below.
+
 ### Send events
 
-`send` takes an event as argument. The event can be provided in shorthand string format (eg. "TOGGLE") or as an event object (eg. `{ type: "TOGGLE" }`)
+`send` takes an event as argument, provided in shorthand string format (e.g. "TOGGLE") or as an event object (e.g. `{ type: "TOGGLE" }`)
 
-If the transition exists and is allowed (see guard), it will change the state machine state and execute effects.
+If the transition exists in the configuration object for that state, and is allowed (see guard), it will change the state machine state and execute effects.
 
 ## State Machine configuration
 
@@ -104,9 +106,9 @@ const [state, send] = useStateMachine()({
 });
 ```
 
-### Transition Syntax
+### Events & Transition Syntax
 
-A state transition defines what the next state is, given the current state and event. State transitions are defined on state nodes, in the on property:
+A state transition defines what the next state is, given the current state and event. State transitions are defined on state nodes, in the `on` property:
 
 ```js
 on: {
@@ -116,7 +118,7 @@ on: {
 // (Where TOGGLE stands for an event name that will trigger a transition.)
 ```
 
-Or the extended, object syntax, which allows for more control over the transition (like adding guards):
+Or using the extended, object syntax, which allows for more control over the transition (like adding guards):
 
 ```js
 on: {
@@ -136,7 +138,7 @@ const [state, send] = useStateMachine()({
   states: {
     active: {
       on: { TOGGLE: 'inactive' },
-      effect() {
+      effect(send, update, event) {
         console.log('Just entered the Active state');
         return () => console.log('Just Left the Active state');
       },
@@ -145,7 +147,11 @@ const [state, send] = useStateMachine()({
 });
 ```
 
-The effect function receives three params: the `send` method (So you can trigger transitions from within an effect), an updater function, to update the context (more on context below) and the event that triggered this transition.
+The effect function receives three params:
+
+- `send`: Takes an event as argument, provided in shorthand string format (e.g. "TOGGLE") or as an event object (e.g. `{ type: "TOGGLE" }`)
+- `update`: Takes an updater function as parameter to update the context (more on context below). Returns an object with `send`, so you can update the context and send an event on a single line.
+- `event`: The event that triggered a transition to this state. (The event parameter always uses the object format (e.g. `{ type: 'TOGGLE' }`).).
 
 In this example, the state machine will always send the "RETRY" event when entering the error state:
 
@@ -191,6 +197,8 @@ const [state, send] = useStateMachine()({
 });
 ```
 
+The guard function receives the current context and the event as arguments. The event parameter always uses the object format (e.g. `{ type: 'TOGGLE' }`).
+
 ### Extended state (context)
 
 Besides the finite number of states, the state machine can have extended state (known as context).
@@ -206,7 +214,7 @@ const [state, send] = useStateMachine({ toggleCount: 0 })({
     },
     active: {
       on: { TOGGLE: 'inactive' },
-      effect(send, update) {
+      effect(send, update, event) {
         update(context => ({ toggleCount: context.toggleCount + 1 }));
       },
     },
@@ -231,7 +239,7 @@ const [state, send] = useStateMachine<{ toggleCount: number }>({ toggleCount: 0 
     },
     active: {
       on: { TOGGLE: 'inactive' },
-      effect(send, update) {
+      effect(send, update, event) {
         update(context => ({ toggleCount: context.toggleCount + 1 }));
       },
     },
