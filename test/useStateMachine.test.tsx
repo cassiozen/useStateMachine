@@ -55,6 +55,35 @@ describe('useStateMachine', () => {
       });
     });
 
+    it('should transition using an object event', () => {
+      const { result } = renderHook(() =>
+        useStateMachine()({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: { TOGGLE: 'active' },
+            },
+            active: {
+              on: { TOGGLE: 'inactive' },
+            },
+          },
+        })
+      );
+
+      act(() => {
+        result.current[1]({ type: 'TOGGLE' });
+      });
+
+      expect(result.current[0]).toStrictEqual({
+        context: undefined,
+        event: {
+          type: 'TOGGLE',
+        },
+        value: 'active',
+        nextEvents: ['TOGGLE'],
+      });
+    });
+
     it('should ignore unexisting events', () => {
       const { result } = renderHook(() =>
         useStateMachine()({
@@ -187,6 +216,29 @@ describe('useStateMachine', () => {
         value: 'active',
         nextEvents: ['TOGGLE'],
       });
+    });
+
+    it('should get payload sent with event object', () => {
+      const effect = jest.fn();
+      const { result } = renderHook(() =>
+        useStateMachine<undefined>()({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: { ACTIVATE: 'active' },
+            },
+            active: {
+              on: { DEACTIVATE: 'inactive' },
+              effect,
+            },
+          },
+        })
+      );
+
+      act(() => {
+        result.current[1]({ type: 'ACTIVATE', number: 10 });
+      });
+      expect(effect.mock.calls[0][2]).toStrictEqual({ type: 'ACTIVATE', number: 10 });
     });
   });
   describe('guarded transitions', () => {

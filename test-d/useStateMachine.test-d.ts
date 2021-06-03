@@ -85,3 +85,29 @@ expectAssignable<{
   nextEvents: ('START' | 'PAUSE' | 'RESET')[];
 }>(machine2[0]);
 expectAssignable<Dispatch<'START' | 'PAUSE' | 'RESET' | { type: 'START' } | { type: 'PAUSE' } | { type: 'RESET' }>>(machine2[1]);
+
+const machine4 = useStateMachine<undefined, {}>()({
+  initial: 'inactive',
+  states: {
+    inactive: {
+      on: { TOGGLE: 'active' },
+    },
+    active: {
+      on: { TOGGLE: 'inactive' },
+    },
+  },
+});
+expectType<Dispatch<never>>(machine4[1])
+
+const machine5 = useStateMachine<undefined, { type: 'ACTIVATE', optionalKey: string } | { type: 'DEACTIVATE' }>()({
+  initial: 'inactive',
+  states: {
+    inactive: {
+      on: { ACTIVATE: 'active' },
+    },
+    active: {
+      on: { DEACTIVATE: 'inactive' },
+    },
+  },
+});
+expectType<Dispatch<{ type: 'ACTIVATE'; optionalKey: string; } | { type: 'DEACTIVATE'; }>>(machine5[1])
