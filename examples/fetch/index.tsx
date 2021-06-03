@@ -34,11 +34,9 @@ function App() {
                 throw new Error(`An error has occured: ${response.status}`);
               }
               const coffees = await response.json();
-              update(context => ({ data: coffees, ...context }));
-              send('SUCCESS');
+              update(context => ({ data: coffees, ...context })).send('SUCCESS');
             } catch (error) {
-              update(context => ({ error: error.message, ...context }));
-              send('FAILURE');
+              update(context => ({ error: error.message, ...context })).send('FAILURE');
             }
           };
           fetchCoffees();
