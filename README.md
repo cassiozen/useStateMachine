@@ -249,6 +249,7 @@ const [state, send] = useStateMachine<{ toggleCount: number }>({ toggleCount: 0 
 
 ## Wiki
 
+- [Sending data with events](https://github.com/cassiozen/useStateMachine/wiki/Sending-data-with-Events)
 - [Contributing](https://github.com/cassiozen/useStateMachine/wiki/Contributing-to-useStateMachine)
 - [Comparison with XState](https://github.com/cassiozen/useStateMachine/wiki/XState-comparison)
 - [Source code walkthrough video](https://github.com/cassiozen/useStateMachine/wiki/Source-code-walkthrough-video)
