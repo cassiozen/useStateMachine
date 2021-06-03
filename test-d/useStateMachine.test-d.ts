@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import type { Dispatch } from 'react';
 import useStateMachine from '../src';
-import { expectType, expectError } from 'tsd';
+import { expectType, expectError, expectAssignable } from 'tsd';
  
 expectError(useStateMachine()({
   initial: '--nonexisting state---',
@@ -35,12 +35,14 @@ const machine1 = useStateMachine()({
     },
   },
 });
-expectType<{
+
+expectAssignable<{
   value: 'inactive' | 'active';
   context: undefined;
+  event?: { type: 'TOGGLE' };
   nextEvents: 'TOGGLE'[];
 }>(machine1[0]);
-expectType<Dispatch<'TOGGLE'>>(machine1[1]);
+expectAssignable<Dispatch<'TOGGLE' | { type: 'TOGGLE' }>>(machine1[1]);
 
 const machine2 = useStateMachine<{ time: number }>({ time: 0 })({
   initial: 'idle',
@@ -53,8 +55,8 @@ const machine2 = useStateMachine<{ time: number }>({ time: 0 })({
         },
       },
       effect(send, update) {
-        expectType<Dispatch<'START' | 'PAUSE' | 'RESET'>>(send);
-        expectType<(value: (context: { time: number }) => { time: number }) => void>(update);
+        expectAssignable<Dispatch<'START' | 'PAUSE' | 'RESET' | { type: 'START' } | { type: 'PAUSE' } | { type: 'RESET' }>>(send);
+        expectAssignable<(value: (context: { time: number }) => { time: number }) => void>(update);
       },
     },
     running: {
@@ -67,14 +69,45 @@ const machine2 = useStateMachine<{ time: number }>({ time: 0 })({
         RESET: 'idle',
         START: {
           target: 'running',
+          guard(context, event) {
+            expectType<{ time: number }>(context)
+            expectType<{ type: "START" | "PAUSE" | "RESET"; [key: string]: any; }>(event)
+            return true;
+          }
         },
       },
     },
   },
 });
-expectType<{
+expectAssignable<{
   value: 'idle' | 'running' | 'paused';
   context: { time: number };
   nextEvents: ('START' | 'PAUSE' | 'RESET')[];
 }>(machine2[0]);
-expectType<Dispatch<'START' | 'PAUSE' | 'RESET'>>(machine2[1]);
+expectAssignable<Dispatch<'START' | 'PAUSE' | 'RESET' | { type: 'START' } | { type: 'PAUSE' } | { type: 'RESET' }>>(machine2[1]);
+
+const machine4 = useStateMachine<undefined, {}>()({
+  initial: 'inactive',
+  states: {
+    inactive: {
+      on: { TOGGLE: 'active' },
+    },
+    active: {
+      on: { TOGGLE: 'inactive' },
+    },
+  },
+});
+expectType<Dispatch<never>>(machine4[1])
+
+const machine5 = useStateMachine<undefined, { type: 'ACTIVATE', optionalKey: string } | { type: 'DEACTIVATE' }>()({
+  initial: 'inactive',
+  states: {
+    inactive: {
+      on: { ACTIVATE: 'active' },
+    },
+    active: {
+      on: { DEACTIVATE: 'inactive' },
+    },
+  },
+});
+expectType<Dispatch<{ type: 'ACTIVATE'; optionalKey: string; } | { type: 'DEACTIVATE'; }>>(machine5[1])

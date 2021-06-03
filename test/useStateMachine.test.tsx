@@ -20,6 +20,7 @@ describe('useStateMachine', () => {
 
       expect(result.current[0]).toStrictEqual({
         context: undefined,
+        event: undefined,
         value: 'inactive',
         nextEvents: ['TOGGLE'],
       });
@@ -46,6 +47,38 @@ describe('useStateMachine', () => {
 
       expect(result.current[0]).toStrictEqual({
         context: undefined,
+        event: {
+          type: 'TOGGLE',
+        },
+        value: 'active',
+        nextEvents: ['TOGGLE'],
+      });
+    });
+
+    it('should transition using an object event', () => {
+      const { result } = renderHook(() =>
+        useStateMachine()({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: { TOGGLE: 'active' },
+            },
+            active: {
+              on: { TOGGLE: 'inactive' },
+            },
+          },
+        })
+      );
+
+      act(() => {
+        result.current[1]({ type: 'TOGGLE' });
+      });
+
+      expect(result.current[0]).toStrictEqual({
+        context: undefined,
+        event: {
+          type: 'TOGGLE',
+        },
         value: 'active',
         nextEvents: ['TOGGLE'],
       });
@@ -74,6 +107,7 @@ describe('useStateMachine', () => {
 
       expect(result.current[0]).toStrictEqual({
         context: undefined,
+        event: undefined,
         value: 'inactive',
         nextEvents: ['TOGGLE'],
       });
@@ -108,6 +142,9 @@ describe('useStateMachine', () => {
 
       expect(result.current[0]).toStrictEqual({
         context: undefined,
+        event: {
+          type: 'TOGGLE',
+        },
         value: 'active',
         nextEvents: ['TOGGLE'],
       });
@@ -152,6 +189,57 @@ describe('useStateMachine', () => {
 
       expect(exit.mock.calls[0][0]).toBe('inactive');
     });
+
+    it('should transition from effect', () => {
+      const { result } = renderHook(() =>
+        useStateMachine()({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: { TOGGLE: 'active' },
+              effect(send) {
+                send('TOGGLE');
+              },
+            },
+            active: {
+              on: { TOGGLE: 'inactive' },
+            },
+          },
+        })
+      );
+
+      expect(result.current[0]).toStrictEqual({
+        context: undefined,
+        event: {
+          type: 'TOGGLE',
+        },
+        value: 'active',
+        nextEvents: ['TOGGLE'],
+      });
+    });
+
+    it('should get payload sent with event object', () => {
+      const effect = jest.fn();
+      const { result } = renderHook(() =>
+        useStateMachine<undefined>()({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: { ACTIVATE: 'active' },
+            },
+            active: {
+              on: { DEACTIVATE: 'inactive' },
+              effect,
+            },
+          },
+        })
+      );
+
+      act(() => {
+        result.current[1]({ type: 'ACTIVATE', number: 10 });
+      });
+      expect(effect.mock.calls[0][2]).toStrictEqual({ type: 'ACTIVATE', number: 10 });
+    });
   });
   describe('guarded transitions', () => {
     it('should block transitions with guard returning false', () => {
@@ -183,6 +271,7 @@ describe('useStateMachine', () => {
       expect(guard).toHaveBeenCalled();
       expect(result.current[0]).toStrictEqual({
         context: undefined,
+        event: undefined,
         value: 'inactive',
         nextEvents: ['TOGGLE'],
       });
@@ -217,6 +306,9 @@ describe('useStateMachine', () => {
       expect(guard).toHaveBeenCalled();
       expect(result.current[0]).toStrictEqual({
         context: undefined,
+        event: {
+          type: 'TOGGLE',
+        },
         value: 'active',
         nextEvents: ['TOGGLE'],
       });
@@ -241,6 +333,7 @@ describe('useStateMachine', () => {
       expect(result.current[0]).toStrictEqual({
         value: 'inactive',
         context: { foo: 'bar' },
+        event: undefined,
         nextEvents: ['TOGGLE'],
       });
     });
@@ -269,6 +362,9 @@ describe('useStateMachine', () => {
       expect(result.current[0]).toStrictEqual({
         value: 'active',
         context: { toggleCount: 1 },
+        event: {
+          type: 'TOGGLE',
+        },
         nextEvents: ['TOGGLE'],
       });
     });
@@ -297,6 +393,9 @@ describe('useStateMachine', () => {
       expect(result.current[0]).toStrictEqual({
         value: 'active',
         context: { toggleCount: 1 },
+        event: {
+          type: 'TOGGLE',
+        },
         nextEvents: ['TOGGLE'],
       });
     });
