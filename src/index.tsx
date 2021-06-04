@@ -119,7 +119,7 @@ function getReducer<Context, Events, State extends string, EventString extends s
 
       // If there is no defined next state, return early
       if (!nextState) {
-        if (config.verbose) log(`Current state %o doesn't listen to event "${event.next}".`, state);
+        if (config.verbose) log(`Current state %o doesn't listen to event "${eventObject.type}".`, state);
         return state;
       }
 

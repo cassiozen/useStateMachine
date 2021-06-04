@@ -1,5 +1,10 @@
 import { renderHook, act } from '@testing-library/react-hooks';
 import useStateMachine from '../src';
+import logger from '../src/logger';
+
+jest.mock('../src/logger', () => jest.fn());
+
+const loggerMock = logger as jest.Mock;
 
 describe('useStateMachine', () => {
   describe('States & Transitions', () => {
@@ -239,6 +244,40 @@ describe('useStateMachine', () => {
         result.current[1]({ type: 'ACTIVATE', number: 10 });
       });
       expect(effect.mock.calls[0][2]).toStrictEqual({ type: 'ACTIVATE', number: 10 });
+    });
+
+    it('should log when invalid event is provided as string', () => {
+      renderHook(() =>
+        useStateMachine()({
+          verbose: true,
+          initial: 'idle',
+          states: {
+            idle: {
+              effect: send => send('invalid'),
+            },
+          },
+        })
+      );
+
+      expect(loggerMock).toHaveBeenCalledTimes(1);
+      expect(loggerMock.mock.calls[0][0]).toMatch(/invalid/);
+    });
+
+    it('should log when invalid event is provided as object', () => {
+      renderHook(() =>
+        useStateMachine()({
+          verbose: true,
+          initial: 'idle',
+          states: {
+            idle: {
+              effect: send => send({ type: 'invalid' }),
+            },
+          },
+        })
+      );
+
+      expect(loggerMock).toHaveBeenCalledTimes(1);
+      expect(loggerMock.mock.calls[0][0]).toMatch(/invalid/);
     });
   });
   describe('guarded transitions', () => {
