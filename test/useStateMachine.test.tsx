@@ -245,40 +245,6 @@ describe('useStateMachine', () => {
       });
       expect(effect.mock.calls[0][2]).toStrictEqual({ type: 'ACTIVATE', number: 10 });
     });
-
-    it('should log when invalid event is provided as string', () => {
-      renderHook(() =>
-        useStateMachine()({
-          verbose: true,
-          initial: 'idle',
-          states: {
-            idle: {
-              effect: send => send('invalid'),
-            },
-          },
-        })
-      );
-
-      expect(loggerMock).toHaveBeenCalledTimes(1);
-      expect(loggerMock.mock.calls[0][0]).toMatch(/invalid/);
-    });
-
-    it('should log when invalid event is provided as object', () => {
-      renderHook(() =>
-        useStateMachine()({
-          verbose: true,
-          initial: 'idle',
-          states: {
-            idle: {
-              effect: send => send({ type: 'invalid' }),
-            },
-          },
-        })
-      );
-
-      expect(loggerMock).toHaveBeenCalledTimes(1);
-      expect(loggerMock.mock.calls[0][0]).toMatch(/invalid/);
-    });
   });
   describe('guarded transitions', () => {
     it('should block transitions with guard returning false', () => {
@@ -387,7 +353,7 @@ describe('useStateMachine', () => {
             active: {
               on: { TOGGLE: 'inactive' },
               effect(_, update) {
-                update(context => ({ toggleCount: context.toggleCount + 1 }));
+                update((context) => ({ toggleCount: context.toggleCount + 1 }));
               },
             },
           },
@@ -415,7 +381,7 @@ describe('useStateMachine', () => {
             inactive: {
               on: { TOGGLE: 'active' },
               effect(_, update) {
-                return () => update(context => ({ toggleCount: context.toggleCount + 1 }));
+                return () => update((context) => ({ toggleCount: context.toggleCount + 1 }));
               },
             },
             active: {
@@ -437,6 +403,41 @@ describe('useStateMachine', () => {
         },
         nextEvents: ['TOGGLE'],
       });
+    });
+  });
+  describe('Verbose Mode (Logger)', () => {
+    it('should log when invalid event is provided as string', () => {
+      renderHook(() =>
+        useStateMachine()({
+          verbose: true,
+          initial: 'idle',
+          states: {
+            idle: {
+              effect: (send) => send('invalid'),
+            },
+          },
+        })
+      );
+
+      expect(loggerMock).toHaveBeenCalledTimes(1);
+      expect(loggerMock.mock.calls[0][0]).toMatch(/invalid/);
+    });
+
+    it('should log when invalid event is provided as object', () => {
+      renderHook(() =>
+        useStateMachine()({
+          verbose: true,
+          initial: 'idle',
+          states: {
+            idle: {
+              effect: (send) => send({ type: 'invalid' }),
+            },
+          },
+        })
+      );
+
+      expect(loggerMock).toHaveBeenCalledTimes(1);
+      expect(loggerMock.mock.calls[0][0]).toMatch(/invalid/);
     });
   });
   describe('React performance', () => {
