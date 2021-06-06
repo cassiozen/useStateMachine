@@ -40,6 +40,9 @@
     "tslib": "^2.1.0",
     "typescript": "^3.9.4"
   },
+  "jest": {
+    "resetMocks": true
+  },
   "husky": {
     "hooks": {
       "pre-commit": "tsdx lint"

@@ -119,7 +119,7 @@ function getReducer<Context, Events, State extends string, EventString extends s
 
       // If there is no defined next state, return early
       if (!nextState) {
-        if (config.verbose) log(`Current state %o doesn't listen to event "${event.next}".`, state);
+        if (config.verbose) log(`Current state %o doesn't listen to event type "${eventObject.type}".`, state);
         return state;
       }
 
@@ -168,11 +168,12 @@ function useStateMachineImpl<Context, Events>(context: Context): UseStateMachine
     const [machine, dispatch] = useReducer(reducer, initialState);
 
     // The public dispatch/send function exposed to the user
-    const send: Dispatch<SendEvent<Events, EventString>> = useConstant(() => next =>
-      dispatch({
-        type: DispatchType.Transition,
-        next,
-      })
+    const send: Dispatch<SendEvent<Events, EventString>> = useConstant(
+      () => (next) =>
+        dispatch({
+          type: DispatchType.Transition,
+          next,
+        })
     );
 
     // The updater function sends an internal event to the reducer to trigger the actual update
