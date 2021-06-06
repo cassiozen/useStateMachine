@@ -64,6 +64,17 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "arthurdenner",
+      "name": "Arthur Denner",
+      "avatar_url": "https://avatars.githubusercontent.com/u/13774309?v=4",
+      "profile": "https://linktr.ee/arthurdenner",
+      "contributions": [
+        "code",
+        "bug",
+        "test"
+      ]
     }
   ],
   "contributorsPerLine": 7,
