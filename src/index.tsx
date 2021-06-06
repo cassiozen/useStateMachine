@@ -190,9 +190,11 @@ function useStateMachineImpl<Context, Events>(context: Context): UseStateMachine
     useEffect(() => {
       const exit = config.states[machine.value]?.effect?.(send, update, machine.event);
       return typeof exit === 'function' ? () => exit(send, update, machine.event) : undefined;
-      // We are bypassing the linter here because we deliberately want the effects to run on explicit machine state changes.
+      // We are bypassing the linter here because we deliberately want the effects to run:
+      // - When the machine state changes or
+      // - When a different event was sent (e.g. self-transition)
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [machine.value]);
+    }, [machine.value, machine.event]);
 
     return [machine, send];
   };
