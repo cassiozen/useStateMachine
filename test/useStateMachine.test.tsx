@@ -195,6 +195,34 @@ describe('useStateMachine', () => {
       expect(exit.mock.calls[0][0]).toBe('inactive');
     });
 
+    it('should transition from effect', () => {
+      const { result } = renderHook(() =>
+        useStateMachine()({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: { TOGGLE: 'active' },
+              effect({ send }) {
+                send('TOGGLE');
+              },
+            },
+            active: {
+              on: { TOGGLE: 'inactive' },
+            },
+          },
+        })
+      );
+
+      expect(result.current[0]).toStrictEqual({
+        context: undefined,
+        event: {
+          type: 'TOGGLE',
+        },
+        value: 'active',
+        nextEvents: ['TOGGLE'],
+      });
+    });
+
     it('should get payload sent with event object', () => {
       const effect = jest.fn();
       const { result } = renderHook(() =>
