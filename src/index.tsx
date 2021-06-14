@@ -233,8 +233,15 @@ function useStateMachineImpl<Context, Events>(context: Context): UseStateMachine
     };
 
     useEffect(() => {
-      const exit = config.states[machine.value]?.effect?.({ send, setContext, event: machine.event, context });
-      return typeof exit === 'function' ? () => exit({ send, setContext, event: machine.event, context }) : undefined;
+      const exit = config.states[machine.value]?.effect?.({
+        send,
+        setContext,
+        event: machine.event,
+        context: machine.context,
+      });
+      return typeof exit === 'function'
+        ? () => exit({ send, setContext, event: machine.event, context: machine.context })
+        : undefined;
       // We are bypassing the linter here because we deliberately want the effects to run:
       // - When the machine state changes or
       // - When a different event was sent (e.g. self-transition)
