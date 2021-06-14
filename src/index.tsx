@@ -134,7 +134,7 @@ function getReducer<Context, Events, State extends string, EventString extends s
     if (event.type === DispatchType.Update) {
       // Internal action to update context
       const nextContext = event.updater(state.context);
-      if (config.verbose) log('Context update from %o to %o', state.context, nextContext);
+      if (config.verbose) log('Context update', ['Previous Context', state.context], ['Next Context', nextContext]);
       return {
         ...state,
         context: nextContext,
@@ -153,7 +153,12 @@ function getReducer<Context, Events, State extends string, EventString extends s
 
       // If there is no defined next state, return early
       if (!nextState) {
-        if (config.verbose) log(`Current state %o doesn't listen to event type "${eventObject.type}".`, state);
+        if (config.verbose)
+          log(
+            `Current state doesn't listen to event type "${eventObject.type}".`,
+            ['Current State', state],
+            ['Event', eventObject]
+          );
         return state;
       }
 
@@ -164,12 +169,17 @@ function getReducer<Context, Events, State extends string, EventString extends s
         target = nextState.target;
         // If there are guards, invoke them and return early if the transition is denied
         if (nextState.guard && !nextState.guard(state.context, eventObject)) {
-          if (config.verbose) log(`Transition from "${state.value}" to "${target}" denied by guard`);
+          if (config.verbose)
+            log(
+              `Transition from "${state.value}" to "${target}" denied by guard`,
+              ['Event', eventObject],
+              ['Context', state.context]
+            );
           return state;
         }
       }
 
-      if (config.verbose) log(`Transition from "${state.value}" to "${target}"`);
+      if (config.verbose) log(`Transition from "${state.value}" to "${target}"`, ['Event', eventObject]);
 
       return getState(state.context, config, target, eventObject);
     }
