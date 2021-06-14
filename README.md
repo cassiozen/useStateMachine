@@ -138,7 +138,7 @@ const [state, send] = useStateMachine()({
   states: {
     active: {
       on: { TOGGLE: 'inactive' },
-      effect(send, update, event) {
+      effect({ send, setContext, event, context }) {
         console.log('Just entered the Active state');
         return () => console.log('Just Left the Active state');
       },
@@ -147,11 +147,12 @@ const [state, send] = useStateMachine()({
 });
 ```
 
-The effect function receives three params:
+The effect function receives an object as parameter with four keys:
 
 - `send`: Takes an event as argument, provided in shorthand string format (e.g. "TOGGLE") or as an event object (e.g. `{ type: "TOGGLE" }`)
-- `update`: Takes an updater function as parameter to update the context (more on context below). Returns an object with `send`, so you can update the context and send an event on a single line.
+- `setContext`: Takes an updater function as parameter to set a new context (more on context below). Returns an object with `send`, so you can set the context and send an event on a single line.
 - `event`: The event that triggered a transition to this state. (The event parameter always uses the object format (e.g. `{ type: 'TOGGLE' }`).).
+- `context` The context at the time the effect runs.
 
 In this example, the state machine will always send the "RETRY" event when entering the error state:
 
@@ -164,7 +165,7 @@ const [state, send] = useStateMachine()({
       on: {
         RETRY: 'load',
       },
-      effect(send) {
+      effect({ send }) {
         send('RETRY');
       },
     },
@@ -184,7 +185,7 @@ const [state, send] = useStateMachine()({
       on: {
         TOGGLE: {
           target: 'active',
-          guard(context, event) {
+          guard({ context, event }) {
             // Return a boolean to allow or block the transition
           },
         },
@@ -197,25 +198,25 @@ const [state, send] = useStateMachine()({
 });
 ```
 
-The guard function receives the current context and the event as arguments. The event parameter always uses the object format (e.g. `{ type: 'TOGGLE' }`).
+The guard function receives an object with the current context and the event. The event parameter always uses the object format (e.g. `{ type: 'TOGGLE' }`).
 
 ### Extended state (context)
 
 Besides the finite number of states, the state machine can have extended state (known as context).
 
-You can provide the initial context value as the first argument to the State Machine hook, and use the update function within your effects to change the context:
+You can provide the initial context value as the first argument to the State Machine hook, and use the `setContext` function within your effects to change the context:
 
 ```js
 const [state, send] = useStateMachine({ toggleCount: 0 })({
-  initial: 'idle',
+  initial: 'inactive',
   states: {
     inactive: {
       on: { TOGGLE: 'active' },
     },
     active: {
       on: { TOGGLE: 'inactive' },
-      effect(send, update, event) {
-        update(context => ({ toggleCount: context.toggleCount + 1 }));
+      effect({ setContext }) {
+        setContext(context => ({ toggleCount: context.toggleCount + 1 }));
       },
     },
   },
@@ -228,19 +229,21 @@ send('TOGGLE');
 console.log(state); // { context: { toggleCount: 1 }, value: 'active', nextEvents: ['TOGGLE'] }
 ```
 
+#### Context Typing
+
 The context types are inferred automatically in TypeScript, but you can provide you own typing if you want to be more specific:
 
 ```typescript
 const [state, send] = useStateMachine<{ toggleCount: number }>({ toggleCount: 0 })({
-  initial: 'idle',
+  initial: 'inactive',
   states: {
     inactive: {
       on: { TOGGLE: 'active' },
     },
     active: {
       on: { TOGGLE: 'inactive' },
-      effect(send, update, event) {
-        update(context => ({ toggleCount: context.toggleCount + 1 }));
+      effect({ setContext }) {
+        setContext(context => ({ toggleCount: context.toggleCount + 1 }));
       },
     },
   },

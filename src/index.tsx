@@ -16,7 +16,7 @@ type Transition<Context, Events, State extends string, EventString extends strin
       /**
        * A guard function runs before the transition: If the guard returns false the transition will be denied.
        */
-      guard?: (context: Context, event: Event<Events, EventString>) => boolean;
+      guard?: (params: { context: Context; event: Event<Events, EventString> }) => boolean;
     };
 
 type ContextUpdater<Context> = (context: Context) => Context;
@@ -32,17 +32,19 @@ interface MachineStateConfig<Context, Events, State extends string, EventString 
    * Effects are triggered when the state machine enters a given state. If you return a function from your effect,
    * it will be invoked when leaving that state (similarly to how useEffect works in React).
    */
-  effect?: (
-    send: Dispatch<SendEvent<Events, EventString>>,
-    assign: (updater?: ContextUpdater<Context>) => { send: Dispatch<SendEvent<Events, EventString>> },
-    event?: Event<Events, EventString>
-  ) =>
+  effect?: (params: {
+    send: Dispatch<SendEvent<Events, EventString>>;
+    setContext: (updater?: ContextUpdater<Context>) => { send: Dispatch<SendEvent<Events, EventString>> };
+    event?: Event<Events, EventString>;
+    context: Context;
+  }) =>
     | void
-    | ((
-        send: Dispatch<SendEvent<Events, EventString>>,
-        assign: (updater?: ContextUpdater<Context>) => { send: Dispatch<SendEvent<Events, EventString>> },
-        event?: Event<Events, EventString>
-      ) => void);
+    | ((params: {
+        send: Dispatch<SendEvent<Events, EventString>>;
+        setContext: (updater?: ContextUpdater<Context>) => { send: Dispatch<SendEvent<Events, EventString>> };
+        event?: Event<Events, EventString>;
+        context: Context;
+      }) => void);
 }
 
 interface MachineConfig<Context, Events, State extends string, EventString extends string> {
@@ -174,7 +176,7 @@ function getReducer<Context, Events, State extends string, EventString extends s
       } else {
         target = nextState.target;
         // If there are guards, invoke them and return early if the transition is denied
-        if (nextState.guard && !nextState.guard(state.context, eventObject)) {
+        if (nextState.guard && !nextState.guard({ context: state.context, event: eventObject })) {
           if (config.verbose)
             log(
               `Transition from "${state.value}" to "${target}" denied by guard`,
@@ -226,7 +228,7 @@ function useStateMachineImpl<Context, Events>(context: Context): UseStateMachine
     );
 
     // The updater function sends an internal event to the reducer to trigger the actual update
-    const update = (updater?: ContextUpdater<Context>) => {
+    const setContext = (updater?: ContextUpdater<Context>) => {
       if (updater) {
         dispatch({
           type: DispatchType.Update,
@@ -237,8 +239,15 @@ function useStateMachineImpl<Context, Events>(context: Context): UseStateMachine
     };
 
     useEffect(() => {
-      const exit = config.states[machine.value]?.effect?.(send, update, machine.event);
-      return typeof exit === 'function' ? () => exit(send, update, machine.event) : undefined;
+      const exit = config.states[machine.value]?.effect?.({
+        send,
+        setContext,
+        event: machine.event,
+        context: machine.context,
+      });
+      return typeof exit === 'function'
+        ? () => exit({ send, setContext, event: machine.event, context: machine.context })
+        : undefined;
       // We are bypassing the linter here because we deliberately want the effects to run:
       // - When the machine state changes or
       // - When a different event was sent (e.g. self-transition)
