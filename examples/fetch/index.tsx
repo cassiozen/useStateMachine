@@ -25,7 +25,7 @@ function App() {
           SUCCESS: 'loaded',
           FAILURE: 'error',
         },
-        effect(send, update) {
+        effect({ setContext }) {
           const fetchCoffees = async () => {
             let response: Response;
             try {
@@ -34,9 +34,9 @@ function App() {
                 throw new Error(`An error has occured: ${response.status}`);
               }
               const coffees = await response.json();
-              update(context => ({ data: coffees, ...context })).send('SUCCESS');
+              setContext(context => ({ data: coffees, ...context })).send('SUCCESS');
             } catch (error) {
-              update(context => ({ error: error.message, ...context })).send('FAILURE');
+              setContext(context => ({ error: error.message, ...context })).send('FAILURE');
             }
           };
           fetchCoffees();
@@ -47,12 +47,11 @@ function App() {
         on: {
           RETRY: {
             target: 'loading',
-            guard: context => context.retryCount < 3,
+            guard: ({ context }) => context.retryCount < 3,
           },
         },
-        effect(send, update) {
-          update(context => ({ ...context, retryCount: context.retryCount + 1 }));
-          send('RETRY');
+        effect({ setContext }) {
+          setContext(context => ({ ...context, retryCount: context.retryCount + 1 })).send('RETRY');
         },
       },
     },

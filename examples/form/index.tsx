@@ -5,7 +5,7 @@ import { checkUsernameAvailability } from './fakeForm';
 import './index.css';
 
 /*
- * In this example we use events with payload to send data to the state machine
+ * In this example we use events with payload to send data from the form to the state machine
  */
 
 function App() {
