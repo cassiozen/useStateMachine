@@ -60,6 +60,38 @@ describe('useStateMachine', () => {
       });
     });
 
+    it('should transition using a top-level `on`', () => {
+      const { result } = renderHook(() =>
+        useStateMachine()({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: { TOGGLE: 'active' },
+            },
+            active: {
+              on: { TOGGLE: 'inactive' },
+            },
+          },
+          on: {
+            ACTIVATE: 'active',
+          },
+        })
+      );
+
+      act(() => {
+        result.current[1]('ACTIVATE');
+      });
+
+      expect(result.current[0]).toStrictEqual({
+        context: undefined,
+        event: {
+          type: 'ACTIVATE',
+        },
+        value: 'active',
+        nextEvents: ['TOGGLE', 'ACTIVATE'],
+      });
+    });
+
     it('should transition using an object event', () => {
       const { result } = renderHook(() =>
         useStateMachine()({
