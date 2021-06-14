@@ -195,34 +195,6 @@ describe('useStateMachine', () => {
       expect(exit.mock.calls[0][0]).toBe('inactive');
     });
 
-    it('should transition from effect', () => {
-      const { result } = renderHook(() =>
-        useStateMachine()({
-          initial: 'inactive',
-          states: {
-            inactive: {
-              on: { TOGGLE: 'active' },
-              effect(send) {
-                send('TOGGLE');
-              },
-            },
-            active: {
-              on: { TOGGLE: 'inactive' },
-            },
-          },
-        })
-      );
-
-      expect(result.current[0]).toStrictEqual({
-        context: undefined,
-        event: {
-          type: 'TOGGLE',
-        },
-        value: 'active',
-        nextEvents: ['TOGGLE'],
-      });
-    });
-
     it('should get payload sent with event object', () => {
       const effect = jest.fn();
       const { result } = renderHook(() =>
@@ -243,7 +215,7 @@ describe('useStateMachine', () => {
       act(() => {
         result.current[1]({ type: 'ACTIVATE', number: 10 });
       });
-      expect(effect.mock.calls[0][2]).toStrictEqual({ type: 'ACTIVATE', number: 10 });
+      expect(effect.mock.calls[0][0]['event']).toStrictEqual({ type: 'ACTIVATE', number: 10 });
     });
   });
   describe('guarded transitions', () => {
@@ -342,6 +314,36 @@ describe('useStateMachine', () => {
         nextEvents: ['TOGGLE'],
       });
     });
+
+    it('should get the context inside effects', () => {
+      const { result } = renderHook(() =>
+        useStateMachine<{ foo: string }>({ foo: 'bar' })({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: { TOGGLE: 'active' },
+              effect(params) {
+                expect(params.context).toStrictEqual({
+                  foo: 'bar',
+                });
+                expect(params.event).toBeUndefined();
+              },
+            },
+            active: {
+              on: { TOGGLE: 'inactive' },
+            },
+          },
+        })
+      );
+
+      expect(result.current[0]).toStrictEqual({
+        value: 'inactive',
+        context: { foo: 'bar' },
+        event: undefined,
+        nextEvents: ['TOGGLE'],
+      });
+    });
+
     it('should update context on entry', () => {
       const { result } = renderHook(() =>
         useStateMachine<{ toggleCount: number }>({ toggleCount: 0 })({
@@ -352,8 +354,8 @@ describe('useStateMachine', () => {
             },
             active: {
               on: { TOGGLE: 'inactive' },
-              effect(_, update) {
-                update((context) => ({ toggleCount: context.toggleCount + 1 }));
+              effect({ setContext }) {
+                setContext(c => ({ toggleCount: c.toggleCount + 1 }));
               },
             },
           },
@@ -380,8 +382,8 @@ describe('useStateMachine', () => {
           states: {
             inactive: {
               on: { TOGGLE: 'active' },
-              effect(_, update) {
-                return () => update((context) => ({ toggleCount: context.toggleCount + 1 }));
+              effect({ setContext }) {
+                return () => setContext(c => ({ toggleCount: c.toggleCount + 1 }));
               },
             },
             active: {
@@ -413,7 +415,7 @@ describe('useStateMachine', () => {
           initial: 'idle',
           states: {
             idle: {
-              effect: (send) => send('invalid'),
+              effect: ({ send }) => send('invalid'),
             },
           },
         })
@@ -430,7 +432,7 @@ describe('useStateMachine', () => {
           initial: 'idle',
           states: {
             idle: {
-              effect: (send) => send({ type: 'invalid' }),
+              effect: ({ send }) => send({ type: 'invalid' }),
             },
           },
         })

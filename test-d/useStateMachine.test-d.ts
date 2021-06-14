@@ -54,9 +54,9 @@ const machine2 = useStateMachine<{ time: number }>({ time: 0 })({
           target: 'running',
         },
       },
-      effect(send, update) {
+      effect({send, setContext}) {
         expectAssignable<Dispatch<'START' | 'PAUSE' | 'RESET' | { type: 'START' } | { type: 'PAUSE' } | { type: 'RESET' }>>(send);
-        expectAssignable<(value: (context: { time: number }) => { time: number }) => void>(update);
+        expectAssignable<(value: (context: { time: number }) => { time: number }) => void>(setContext);
       },
     },
     running: {
@@ -69,7 +69,7 @@ const machine2 = useStateMachine<{ time: number }>({ time: 0 })({
         RESET: 'idle',
         START: {
           target: 'running',
-          guard(context, event) {
+          guard({context, event}) {
             expectType<{ time: number }>(context)
             expectType<{ type: "START" | "PAUSE" | "RESET"; [key: string]: any; }>(event)
             return true;
