@@ -10,6 +10,8 @@
 
 <img width="400" alt="size_badge" src="https://user-images.githubusercontent.com/33676/120556214-ce2b9800-c3c1-11eb-9a55-f9fa4e1fbbe4.png">
 
+**This docs are for the 1.0.0 version (currently in beta). [Older 0.x.x docs](https://github.com/cassiozen/useStateMachine/tree/b2eea57d877d3b379aa2b86c5301ebbad7515fd9#readme)**
+
 ## Examples
 
 - Examples Walkthrough video: [YouTube](https://youtu.be/YjeKgDP4rpg)
