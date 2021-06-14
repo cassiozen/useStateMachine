@@ -5,8 +5,7 @@ import { checkUsernameAvailability } from './fakeForm';
 import './index.css';
 
 /*
- * In this example we simulate a somewhat complicated UI:
- * there are multiple buttons but they can only appear when they can be used
+ * In this example we use events with payload to send data to the state machine
  */
 
 function App() {
@@ -33,7 +32,6 @@ function App() {
           INVALID: 'invalid',
         },
         effect({ send, context }) {
-          console.log(context);
           checkUsernameAvailability(context.input).then(usernameAvailable => {
             if (usernameAvailable) send('VALID');
             else send('INVALID');
@@ -58,14 +56,13 @@ function App() {
           value={machine.context.input}
           onChange={e => send({ type: 'UPDATE', value: e.target.value })}
         />
+        {machine.value === 'validating' && <div className="loader" />}
+        {machine.value === 'valid' && '✔'}
+        {machine.value === 'invalid' && '❌'}
         <button type="submit" disabled={machine.value !== 'valid'}>
           Create User
         </button>
       </form>
-
-      {machine.value === 'validating' && <div className="loader" />}
-      {machine.value === 'valid' && '✔'}
-      {machine.value === 'invalid' && '❌'}
     </div>
   );
 }
