@@ -60,6 +60,12 @@ interface MachineConfig<Context, Events, State extends string, EventString exten
   states: {
     [key in State]: MachineStateConfig<Context, Events, State, EventString>;
   };
+  /**
+   * Defines what the next state is, given the current state and event.
+   */
+  on?: {
+    [key in EventString]?: Transition<Context, Events, State, EventString>;
+  };
 }
 
 interface MachineState<Context, Events, State extends string, EventString extends string> {
@@ -114,7 +120,7 @@ function getState<Context, Events, State extends string, EventString extends str
   value: State,
   event?: Event<Events, EventString>
 ): MachineState<Context, Events, State, EventString> {
-  const on = config.states[value].on;
+  const on = { ...config.states[value].on, ...config.on };
 
   return {
     value,
@@ -149,7 +155,7 @@ function getReducer<Context, Events, State extends string, EventString extends s
       >;
 
       const nextState: Transition<Context, Events, State, EventString> | undefined =
-        currentState.on?.[eventObject.type];
+        currentState.on?.[eventObject.type] ?? config.on?.[eventObject.type];
 
       // If there is no defined next state, return early
       if (!nextState) {
