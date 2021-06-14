@@ -10,11 +10,14 @@
 
 <img width="400" alt="size_badge" src="https://user-images.githubusercontent.com/33676/120556214-ce2b9800-c3c1-11eb-9a55-f9fa4e1fbbe4.png">
 
+**This docs are for the 1.0.0 version (currently in beta). [Older 0.x.x docs](https://github.com/cassiozen/useStateMachine/tree/b2eea57d877d3b379aa2b86c5301ebbad7515fd9#readme)**
+
 ## Examples
 
-- Examples Walkthrough video: [YouTube](https://youtu.be/EHQu6PMeqIc)
+- Examples Walkthrough video: [YouTube](https://youtu.be/YjeKgDP4rpg)
 - Complex UI (Hiding and showing UI Elements based on the state) - [CodeSandbox](https://codesandbox.io/s/github/cassiozen/usestatemachine/tree/main/examples/timer?file=/index.tsx) - [Source](./examples/timer)
 - Async orchestration (Fetch data with limited retry) - [CodeSandbox](https://codesandbox.io/s/github/cassiozen/usestatemachine/tree/main/examples/fetch?file=/index.tsx) - [Source](./examples/fetch)
+- Sending data with events (Form) - [CodeSandbox](https://codesandbox.io/s/github/cassiozen/usestatemachine/tree/main/examples/form?file=/index.tsx) - [Source](./examples/form)
 
 ## Installation
 
@@ -138,7 +141,7 @@ const [state, send] = useStateMachine()({
   states: {
     active: {
       on: { TOGGLE: 'inactive' },
-      effect(send, update, event) {
+      effect({ send, setContext, event, context }) {
         console.log('Just entered the Active state');
         return () => console.log('Just Left the Active state');
       },
@@ -147,11 +150,12 @@ const [state, send] = useStateMachine()({
 });
 ```
 
-The effect function receives three params:
+The effect function receives an object as parameter with four keys:
 
 - `send`: Takes an event as argument, provided in shorthand string format (e.g. "TOGGLE") or as an event object (e.g. `{ type: "TOGGLE" }`)
-- `update`: Takes an updater function as parameter to update the context (more on context below). Returns an object with `send`, so you can update the context and send an event on a single line.
+- `setContext`: Takes an updater function as parameter to set a new context (more on context below). Returns an object with `send`, so you can set the context and send an event on a single line.
 - `event`: The event that triggered a transition to this state. (The event parameter always uses the object format (e.g. `{ type: 'TOGGLE' }`).).
+- `context` The context at the time the effect runs.
 
 In this example, the state machine will always send the "RETRY" event when entering the error state:
 
@@ -164,7 +168,7 @@ const [state, send] = useStateMachine()({
       on: {
         RETRY: 'load',
       },
-      effect(send) {
+      effect({ send }) {
         send('RETRY');
       },
     },
@@ -184,7 +188,7 @@ const [state, send] = useStateMachine()({
       on: {
         TOGGLE: {
           target: 'active',
-          guard(context, event) {
+          guard({ context, event }) {
             // Return a boolean to allow or block the transition
           },
         },
@@ -197,25 +201,25 @@ const [state, send] = useStateMachine()({
 });
 ```
 
-The guard function receives the current context and the event as arguments. The event parameter always uses the object format (e.g. `{ type: 'TOGGLE' }`).
+The guard function receives an object with the current context and the event. The event parameter always uses the object format (e.g. `{ type: 'TOGGLE' }`).
 
 ### Extended state (context)
 
 Besides the finite number of states, the state machine can have extended state (known as context).
 
-You can provide the initial context value as the first argument to the State Machine hook, and use the update function within your effects to change the context:
+You can provide the initial context value as the first argument to the State Machine hook, and use the `setContext` function within your effects to change the context:
 
 ```js
 const [state, send] = useStateMachine({ toggleCount: 0 })({
-  initial: 'idle',
+  initial: 'inactive',
   states: {
     inactive: {
       on: { TOGGLE: 'active' },
     },
     active: {
       on: { TOGGLE: 'inactive' },
-      effect(send, update, event) {
-        update(context => ({ toggleCount: context.toggleCount + 1 }));
+      effect({ setContext }) {
+        setContext(context => ({ toggleCount: context.toggleCount + 1 }));
       },
     },
   },
@@ -228,19 +232,21 @@ send('TOGGLE');
 console.log(state); // { context: { toggleCount: 1 }, value: 'active', nextEvents: ['TOGGLE'] }
 ```
 
+#### Context Typing
+
 The context types are inferred automatically in TypeScript, but you can provide you own typing if you want to be more specific:
 
 ```typescript
 const [state, send] = useStateMachine<{ toggleCount: number }>({ toggleCount: 0 })({
-  initial: 'idle',
+  initial: 'inactive',
   states: {
     inactive: {
       on: { TOGGLE: 'active' },
     },
     active: {
       on: { TOGGLE: 'inactive' },
-      effect(send, update, event) {
-        update(context => ({ toggleCount: context.toggleCount + 1 }));
+      effect({ setContext }) {
+        setContext(context => ({ toggleCount: context.toggleCount + 1 }));
       },
     },
   },
@@ -250,6 +256,7 @@ const [state, send] = useStateMachine<{ toggleCount: number }>({ toggleCount: 0 
 ## Wiki
 
 - [Sending data with events](https://github.com/cassiozen/useStateMachine/wiki/Sending-data-with-Events)
+- [Updating from version 0.x.x to 1.0](https://github.com/cassiozen/useStateMachine/wiki/Updating-from-0.X.X-to-1.0.0)
 - [Contributing](https://github.com/cassiozen/useStateMachine/wiki/Contributing-to-useStateMachine)
 - [Comparison with XState](https://github.com/cassiozen/useStateMachine/wiki/XState-comparison)
 - [Source code walkthrough video](https://github.com/cassiozen/useStateMachine/wiki/Source-code-walkthrough-video)

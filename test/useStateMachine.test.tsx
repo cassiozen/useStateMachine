@@ -60,6 +60,38 @@ describe('useStateMachine', () => {
       });
     });
 
+    it('should transition using a top-level `on`', () => {
+      const { result } = renderHook(() =>
+        useStateMachine()({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: { TOGGLE: 'active' },
+            },
+            active: {
+              on: { TOGGLE: 'inactive' },
+            },
+          },
+          on: {
+            ACTIVATE: 'active',
+          },
+        })
+      );
+
+      act(() => {
+        result.current[1]('ACTIVATE');
+      });
+
+      expect(result.current[0]).toStrictEqual({
+        context: undefined,
+        event: {
+          type: 'ACTIVATE',
+        },
+        value: 'active',
+        nextEvents: ['TOGGLE', 'ACTIVATE'],
+      });
+    });
+
     it('should transition using an object event', () => {
       const { result } = renderHook(() =>
         useStateMachine()({
@@ -202,7 +234,7 @@ describe('useStateMachine', () => {
           states: {
             inactive: {
               on: { TOGGLE: 'active' },
-              effect(send) {
+              effect({ send }) {
                 send('TOGGLE');
               },
             },
@@ -243,7 +275,34 @@ describe('useStateMachine', () => {
       act(() => {
         result.current[1]({ type: 'ACTIVATE', number: 10 });
       });
-      expect(effect.mock.calls[0][2]).toStrictEqual({ type: 'ACTIVATE', number: 10 });
+      expect(effect.mock.calls[0][0]['event']).toStrictEqual({ type: 'ACTIVATE', number: 10 });
+    });
+    it('should invoke effect with context as a parameter', () => {
+      const finalEffect = jest.fn();
+      const initialEffect = jest.fn(({ setContext }) => {
+        setContext((context: boolean) => !context).send('TOGGLE');
+      });
+
+      renderHook(() =>
+        useStateMachine(false)({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: { TOGGLE: 'active' },
+              effect: initialEffect,
+            },
+            active: {
+              effect: finalEffect,
+            },
+          },
+        })
+      );
+
+      expect(initialEffect).toHaveBeenCalledTimes(1);
+      expect(initialEffect.mock.calls[0][0]['context']).toBe(false);
+
+      expect(finalEffect).toHaveBeenCalledTimes(1);
+      expect(finalEffect.mock.calls[0][0]['context']).toBe(true);
     });
   });
   describe('guarded transitions', () => {
@@ -342,6 +401,36 @@ describe('useStateMachine', () => {
         nextEvents: ['TOGGLE'],
       });
     });
+
+    it('should get the context inside effects', () => {
+      const { result } = renderHook(() =>
+        useStateMachine<{ foo: string }>({ foo: 'bar' })({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: { TOGGLE: 'active' },
+              effect(params) {
+                expect(params.context).toStrictEqual({
+                  foo: 'bar',
+                });
+                expect(params.event).toBeUndefined();
+              },
+            },
+            active: {
+              on: { TOGGLE: 'inactive' },
+            },
+          },
+        })
+      );
+
+      expect(result.current[0]).toStrictEqual({
+        value: 'inactive',
+        context: { foo: 'bar' },
+        event: undefined,
+        nextEvents: ['TOGGLE'],
+      });
+    });
+
     it('should update context on entry', () => {
       const { result } = renderHook(() =>
         useStateMachine<{ toggleCount: number }>({ toggleCount: 0 })({
@@ -352,8 +441,8 @@ describe('useStateMachine', () => {
             },
             active: {
               on: { TOGGLE: 'inactive' },
-              effect(_, update) {
-                update((context) => ({ toggleCount: context.toggleCount + 1 }));
+              effect({ setContext }) {
+                setContext(c => ({ toggleCount: c.toggleCount + 1 }));
               },
             },
           },
@@ -380,8 +469,8 @@ describe('useStateMachine', () => {
           states: {
             inactive: {
               on: { TOGGLE: 'active' },
-              effect(_, update) {
-                return () => update((context) => ({ toggleCount: context.toggleCount + 1 }));
+              effect({ setContext }) {
+                return () => setContext(c => ({ toggleCount: c.toggleCount + 1 }));
               },
             },
             active: {
@@ -413,7 +502,7 @@ describe('useStateMachine', () => {
           initial: 'idle',
           states: {
             idle: {
-              effect: (send) => send('invalid'),
+              effect: ({ send }) => send('invalid'),
             },
           },
         })
@@ -430,7 +519,7 @@ describe('useStateMachine', () => {
           initial: 'idle',
           states: {
             idle: {
-              effect: (send) => send({ type: 'invalid' }),
+              effect: ({ send }) => send({ type: 'invalid' }),
             },
           },
         })

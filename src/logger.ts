@@ -1,9 +1,9 @@
-export default function log(message: string, ...optionalParams: any[]) {
+export default function log(groupLabel: string, ...nestedMessages: [string, any][]) {
   if (process.env.NODE_ENV === 'development') {
-    const logArguments = [`%cuseStateMachine %c${message}`, 'color: #888;', 'color: default;', ...optionalParams];
-
-    // Console.log clearly accepts parameters other than string, but TypeScript is complaining, so...
-    // @ts-ignore
-    console.log.apply(null, logArguments);
+    console.groupCollapsed('%cuseStateMachine', 'color: #888; font-weight: lighter;', groupLabel);
+    nestedMessages.forEach(message => {
+      console.log(message[0], message[1]);
+    });
+    console.groupEnd();
   }
 }

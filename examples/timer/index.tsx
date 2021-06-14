@@ -20,17 +20,17 @@ function App() {
             target: 'running',
           },
         },
-        effect(_, update) {
-          update(() => ({ time: 0 }));
+        effect({ setContext }) {
+          setContext(() => ({ time: 0 }));
         },
       },
       running: {
         on: {
           PAUSE: 'paused',
         },
-        effect(_, update) {
+        effect({ setContext }) {
           const interval = setInterval(() => {
-            update(context => ({ time: context.time + 1 }));
+            setContext(context => ({ time: context.time + 1 }));
           }, 100);
           return () => clearInterval(interval);
         },

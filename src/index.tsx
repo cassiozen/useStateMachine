@@ -9,41 +9,83 @@ const enum DispatchType {
 type Transition<Context, Events, State extends string, EventString extends string> =
   | State
   | {
+      /**
+       * The name of the state to transition to
+       */
       target: State;
-      guard?: (context: Context, event: Event<Events, EventString>) => boolean;
+      /**
+       * A guard function runs before the transition: If the guard returns false the transition will be denied.
+       */
+      guard?: (params: { context: Context; event: Event<Events, EventString> }) => boolean;
     };
 
 type ContextUpdater<Context> = (context: Context) => Context;
 
 interface MachineStateConfig<Context, Events, State extends string, EventString extends string> {
+  /**
+   * Defines what the next state is, given the current state and event.
+   */
   on?: {
     [key in EventString]?: Transition<Context, Events, State, EventString>;
   };
-  effect?: (
-    send: Dispatch<SendEvent<Events, EventString>>,
-    assign: (updater?: ContextUpdater<Context>) => { send: Dispatch<SendEvent<Events, EventString>> },
-    event?: Event<Events, EventString>
-  ) =>
+  /**
+   * Effects are triggered when the state machine enters a given state. If you return a function from your effect,
+   * it will be invoked when leaving that state (similarly to how useEffect works in React).
+   */
+  effect?: (params: {
+    send: Dispatch<SendEvent<Events, EventString>>;
+    setContext: (updater?: ContextUpdater<Context>) => { send: Dispatch<SendEvent<Events, EventString>> };
+    event?: Event<Events, EventString>;
+    context: Context;
+  }) =>
     | void
-    | ((
-        send: Dispatch<SendEvent<Events, EventString>>,
-        assign: (updater?: ContextUpdater<Context>) => { send: Dispatch<SendEvent<Events, EventString>> },
-        event?: Event<Events, EventString>
-      ) => void);
+    | ((params: {
+        send: Dispatch<SendEvent<Events, EventString>>;
+        setContext: (updater?: ContextUpdater<Context>) => { send: Dispatch<SendEvent<Events, EventString>> };
+        event?: Event<Events, EventString>;
+        context: Context;
+      }) => void);
 }
 
 interface MachineConfig<Context, Events, State extends string, EventString extends string> {
+  /**
+   * The initial state node this machine should be in.
+   */
   initial: State;
+  /**
+   * If true, will log every context & state changes. Log messages will be stripped out in the production build.
+   */
   verbose?: boolean;
+  /**
+   * Define each of the possible states the state machine can be in.
+   */
   states: {
     [key in State]: MachineStateConfig<Context, Events, State, EventString>;
+  };
+  /**
+   * Defines what the next state is, given the current state and event.
+   */
+  on?: {
+    [key in EventString]?: Transition<Context, Events, State, EventString>;
   };
 }
 
 interface MachineState<Context, Events, State extends string, EventString extends string> {
+  /**
+   * The name of the current state
+   */
   value: State;
+  /**
+   * The current state machine context (Extended State)
+   */
   context: Context;
+  /**
+   * The last sent event that led to this state
+   */
   event?: Event<Events, EventString>;
+  /**
+   * An array with the names of available events to trigger transitions from this state.
+   */
   nextEvents: EventString[];
 }
 
@@ -80,7 +122,7 @@ function getState<Context, Events, State extends string, EventString extends str
   value: State,
   event?: Event<Events, EventString>
 ): MachineState<Context, Events, State, EventString> {
-  const on = config.states[value].on;
+  const on = { ...config.states[value].on, ...config.on };
 
   return {
     value,
@@ -100,7 +142,7 @@ function getReducer<Context, Events, State extends string, EventString extends s
     if (event.type === DispatchType.Update) {
       // Internal action to update context
       const nextContext = event.updater(state.context);
-      if (config.verbose) log('Context update from %o to %o', state.context, nextContext);
+      if (config.verbose) log('Context update', ['Previous Context', state.context], ['Next Context', nextContext]);
       return {
         ...state,
         context: nextContext,
@@ -115,11 +157,16 @@ function getReducer<Context, Events, State extends string, EventString extends s
       >;
 
       const nextState: Transition<Context, Events, State, EventString> | undefined =
-        currentState.on?.[eventObject.type];
+        currentState.on?.[eventObject.type] ?? config.on?.[eventObject.type];
 
       // If there is no defined next state, return early
       if (!nextState) {
-        if (config.verbose) log(`Current state %o doesn't listen to event type "${eventObject.type}".`, state);
+        if (config.verbose)
+          log(
+            `Current state doesn't listen to event type "${eventObject.type}".`,
+            ['Current State', state],
+            ['Event', eventObject]
+          );
         return state;
       }
 
@@ -129,13 +176,18 @@ function getReducer<Context, Events, State extends string, EventString extends s
       } else {
         target = nextState.target;
         // If there are guards, invoke them and return early if the transition is denied
-        if (nextState.guard && !nextState.guard(state.context, eventObject)) {
-          if (config.verbose) log(`Transition from "${state.value}" to "${target}" denied by guard`);
+        if (nextState.guard && !nextState.guard({ context: state.context, event: eventObject })) {
+          if (config.verbose)
+            log(
+              `Transition from "${state.value}" to "${target}" denied by guard`,
+              ['Event', eventObject],
+              ['Context', state.context]
+            );
           return state;
         }
       }
 
-      if (config.verbose) log(`Transition from "${state.value}" to "${target}"`);
+      if (config.verbose) log(`Transition from "${state.value}" to "${target}"`, ['Event', eventObject]);
 
       return getState(state.context, config, target, eventObject);
     }
@@ -168,16 +220,15 @@ function useStateMachineImpl<Context, Events>(context: Context): UseStateMachine
     const [machine, dispatch] = useReducer(reducer, initialState);
 
     // The public dispatch/send function exposed to the user
-    const send: Dispatch<SendEvent<Events, EventString>> = useConstant(
-      () => (next) =>
-        dispatch({
-          type: DispatchType.Transition,
-          next,
-        })
+    const send: Dispatch<SendEvent<Events, EventString>> = useConstant(() => next =>
+      dispatch({
+        type: DispatchType.Transition,
+        next,
+      })
     );
 
     // The updater function sends an internal event to the reducer to trigger the actual update
-    const update = (updater?: ContextUpdater<Context>) => {
+    const setContext = (updater?: ContextUpdater<Context>) => {
       if (updater) {
         dispatch({
           type: DispatchType.Update,
@@ -188,16 +239,31 @@ function useStateMachineImpl<Context, Events>(context: Context): UseStateMachine
     };
 
     useEffect(() => {
-      const exit = config.states[machine.value]?.effect?.(send, update, machine.event);
-      return typeof exit === 'function' ? () => exit(send, update, machine.event) : undefined;
-      // We are bypassing the linter here because we deliberately want the effects to run on explicit machine state changes.
+      const exit = config.states[machine.value]?.effect?.({
+        send,
+        setContext,
+        event: machine.event,
+        context: machine.context,
+      });
+      return typeof exit === 'function'
+        ? () => exit({ send, setContext, event: machine.event, context: machine.context })
+        : undefined;
+      // We are bypassing the linter here because we deliberately want the effects to run:
+      // - When the machine state changes or
+      // - When a different event was sent (e.g. self-transition)
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [machine.value]);
+    }, [machine.value, machine.event]);
 
     return [machine, send];
   };
 }
 
+/**
+ * A finite state machine is always on one given state, and reacts to events by transitioning to a different state and triggering effects.
+ *
+ * @version 1.0.0-beta.1
+ * @see [github.com/cassiozen/useStateMachine](https://github.com/cassiozen/useStateMachine)
+ */
 export default function useStateMachine(): UseStateMachineWithContext<undefined, undefined>;
 export default function useStateMachine<Context>(context: Context): UseStateMachineWithContext<Context, undefined>;
 export default function useStateMachine<Context, Events>(context: Context): UseStateMachineWithContext<Context, Events>;
@@ -207,7 +273,6 @@ export default function useStateMachine<Context>(
 export default function useStateMachine<Context, Events>(
   context?: Context
 ): UseStateMachineWithContext<Context | undefined, Events>;
-
 export default function useStateMachine<Context, Events>(
   context?: Context
 ): UseStateMachineWithContext<Context | undefined, Events> {
