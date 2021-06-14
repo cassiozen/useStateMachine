@@ -261,7 +261,7 @@ function useStateMachineImpl<Context, Events>(context: Context): UseStateMachine
 /**
  * A finite state machine is always on one given state, and reacts to events by transitioning to a different state and triggering effects.
  *
- * @version 0.4.1
+ * @version 1.0.0-beta.1
  * @see [github.com/cassiozen/useStateMachine](https://github.com/cassiozen/useStateMachine)
  */
 export default function useStateMachine(): UseStateMachineWithContext<undefined, undefined>;
