@@ -14,7 +14,7 @@
 
 ## Examples
 
-- Examples Walkthrough video: [YouTube](https://youtu.be/YjeKgDP4rpg)
+- Examples Walkthrough video: [YouTube](https://youtu.be/1-cu8C8nCzE)
 - Complex UI (Hiding and showing UI Elements based on the state) - [CodeSandbox](https://codesandbox.io/s/github/cassiozen/usestatemachine/tree/main/examples/timer?file=/index.tsx) - [Source](./examples/timer)
 - Async orchestration (Fetch data with limited retry) - [CodeSandbox](https://codesandbox.io/s/github/cassiozen/usestatemachine/tree/main/examples/fetch?file=/index.tsx) - [Source](./examples/fetch)
 - Sending data with events (Form) - [CodeSandbox](https://codesandbox.io/s/github/cassiozen/usestatemachine/tree/main/examples/form?file=/index.tsx) - [Source](./examples/form)
