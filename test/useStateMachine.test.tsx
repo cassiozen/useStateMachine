@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react-hooks';
-import useStateMachine from '../src';
+import useStateMachine, { createSchema } from '../src';
 import logger from '../src/logger';
 
 jest.mock('../src/logger', () => jest.fn());
@@ -10,7 +10,7 @@ describe('useStateMachine', () => {
   describe('States & Transitions', () => {
     it('should set initial state', () => {
       const { result } = renderHook(() =>
-        useStateMachine()({
+        useStateMachine({
           initial: 'inactive',
           states: {
             inactive: {
@@ -33,7 +33,7 @@ describe('useStateMachine', () => {
 
     it('should transition', () => {
       const { result } = renderHook(() =>
-        useStateMachine()({
+        useStateMachine({
           initial: 'inactive',
           states: {
             inactive: {
@@ -62,7 +62,7 @@ describe('useStateMachine', () => {
 
     it('should transition using a top-level `on`', () => {
       const { result } = renderHook(() =>
-        useStateMachine()({
+        useStateMachine({
           initial: 'inactive',
           states: {
             inactive: {
@@ -94,7 +94,7 @@ describe('useStateMachine', () => {
 
     it('should transition using an object event', () => {
       const { result } = renderHook(() =>
-        useStateMachine()({
+        useStateMachine({
           initial: 'inactive',
           states: {
             inactive: {
@@ -123,7 +123,7 @@ describe('useStateMachine', () => {
 
     it('should ignore unexisting events', () => {
       const { result } = renderHook(() =>
-        useStateMachine()({
+        useStateMachine({
           initial: 'inactive',
           states: {
             inactive: {
@@ -152,7 +152,7 @@ describe('useStateMachine', () => {
 
     it('should transition with object syntax', () => {
       const { result } = renderHook(() =>
-        useStateMachine()({
+        useStateMachine({
           initial: 'inactive',
           states: {
             inactive: {
@@ -190,7 +190,7 @@ describe('useStateMachine', () => {
       const entry = jest.fn();
       const exit = jest.fn();
       const { result } = renderHook(() =>
-        useStateMachine()({
+        useStateMachine({
           initial: 'inactive',
           states: {
             inactive: {
@@ -229,7 +229,7 @@ describe('useStateMachine', () => {
 
     it('should transition from effect', () => {
       const { result } = renderHook(() =>
-        useStateMachine()({
+        useStateMachine({
           initial: 'inactive',
           states: {
             inactive: {
@@ -258,7 +258,14 @@ describe('useStateMachine', () => {
     it('should get payload sent with event object', () => {
       const effect = jest.fn();
       const { result } = renderHook(() =>
-        useStateMachine<undefined>()({
+        useStateMachine({
+          schema: {
+            event: createSchema<
+              | { type: 'ACTIVATE', number: number }
+              | { type: 'DEACTIVATE' }
+            >()
+          },
+          context: undefined,
           initial: 'inactive',
           states: {
             inactive: {
@@ -284,7 +291,7 @@ describe('useStateMachine', () => {
       });
 
       renderHook(() =>
-        useStateMachine(false)({
+        useStateMachine({
           initial: 'inactive',
           states: {
             inactive: {
@@ -310,7 +317,7 @@ describe('useStateMachine', () => {
       const guard = jest.fn(() => false);
 
       const { result } = renderHook(() =>
-        useStateMachine()({
+        useStateMachine({
           initial: 'inactive',
           states: {
             inactive: {
@@ -345,7 +352,7 @@ describe('useStateMachine', () => {
       const guard = jest.fn(() => true);
 
       const { result } = renderHook(() =>
-        useStateMachine()({
+        useStateMachine({
           initial: 'inactive',
           states: {
             inactive: {
@@ -381,7 +388,8 @@ describe('useStateMachine', () => {
   describe('Extended State', () => {
     it('should set initial context', () => {
       const { result } = renderHook(() =>
-        useStateMachine<{ foo: string }>({ foo: 'bar' })({
+        useStateMachine({
+          context: { foo: 'bar' },
           initial: 'inactive',
           states: {
             inactive: {
@@ -404,7 +412,8 @@ describe('useStateMachine', () => {
 
     it('should get the context inside effects', () => {
       const { result } = renderHook(() =>
-        useStateMachine<{ foo: string }>({ foo: 'bar' })({
+        useStateMachine({
+          context: { foo: 'bar' },
           initial: 'inactive',
           states: {
             inactive: {
@@ -433,7 +442,8 @@ describe('useStateMachine', () => {
 
     it('should update context on entry', () => {
       const { result } = renderHook(() =>
-        useStateMachine<{ toggleCount: number }>({ toggleCount: 0 })({
+        useStateMachine({
+          context: { toggleCount: 0 },
           initial: 'inactive',
           states: {
             inactive: {
@@ -464,7 +474,8 @@ describe('useStateMachine', () => {
     });
     it('should update context on exit', () => {
       const { result } = renderHook(() =>
-        useStateMachine<{ toggleCount: number }>({ toggleCount: 0 })({
+        useStateMachine({
+          context: { toggleCount: 0 },
           initial: 'inactive',
           states: {
             inactive: {
@@ -497,12 +508,15 @@ describe('useStateMachine', () => {
   describe('Verbose Mode (Logger)', () => {
     it('should log when invalid event is provided as string', () => {
       renderHook(() =>
-        useStateMachine()({
+        useStateMachine({
           verbose: true,
           initial: 'idle',
           states: {
             idle: {
-              effect: ({ send }) => send('invalid'),
+              _: null,
+              effect: ({ send }) =>
+                // @ts-expect-error
+                send('invalid'),
             },
           },
         })
@@ -514,12 +528,15 @@ describe('useStateMachine', () => {
 
     it('should log when invalid event is provided as object', () => {
       renderHook(() =>
-        useStateMachine()({
+        useStateMachine({
           verbose: true,
           initial: 'idle',
           states: {
             idle: {
-              effect: ({ send }) => send({ type: 'invalid' }),
+              _: null,
+              effect: ({ send }) =>
+                // @ts-expect-error
+                send({ type: 'invalid' }),
             },
           },
         })
@@ -532,7 +549,7 @@ describe('useStateMachine', () => {
   describe('React performance', () => {
     it('should provide a stable `send`', () => {
       const { result, rerender } = renderHook(() =>
-        useStateMachine()({
+        useStateMachine({
           initial: 'inactive',
           states: {
             inactive: {

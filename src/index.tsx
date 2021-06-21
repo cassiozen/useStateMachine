@@ -265,17 +265,8 @@ function useStateMachineImpl<Context, Events>(context: Context): UseStateMachine
  * @version 1.0.0-beta.1
  * @see [github.com/cassiozen/useStateMachine](https://github.com/cassiozen/useStateMachine)
  */
-export default function useStateMachine(): UseStateMachineWithContext<undefined, undefined>;
-export default function useStateMachine<Context>(context: Context): UseStateMachineWithContext<Context, undefined>;
-export default function useStateMachine<Context, Events>(context: Context): UseStateMachineWithContext<Context, Events>;
-export default function useStateMachine<Context>(
-  context?: Context
-): UseStateMachineWithContext<Context | undefined, undefined>;
-export default function useStateMachine<Context, Events>(
-  context?: Context
-): UseStateMachineWithContext<Context | undefined, Events>;
-export default function useStateMachine<Context, Events>(
-  context?: Context
-): UseStateMachineWithContext<Context | undefined, Events> {
-  return useStateMachineImpl(context);
-}
+export default (function useStateMachine(definition: any) {
+  useStateMachineImpl(definition)
+}) as UseStateMachine
+
+export const createSchema = <T extends unknown>() => null as T
