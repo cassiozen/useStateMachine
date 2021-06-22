@@ -270,187 +270,324 @@ describe("Machine.Definition", () => {
     })
   })
 
-  describe("Machine.Definition.StateNode", () => {
-    describe("Machine.Definition.StateNode['on']", () => {
-      it("expects only strings as key", () => {
-        useStateMachine({
-          initial: "a",
-          states: {
-            a: {
-              on: {
-                X: "a"
-              }
-            }
-          }
-        })
-  
-        useStateMachine({
-          initial: "a",
-          states: {
-            a: {
-              on: {
-                // @ts-expect-error
-                1: "a"
-              }
-            }
-          }
-        })
-      })
-    
-      it.manual("shows custom error in case of identifiers other than string", () => {
-        useStateMachine({
-          initial: "a",
-          states: {
-            a: {
-              on: {
-                // @ts-expect-error
-                1: "a"
-            //  ^?
-              }
-            }
-          }
-        })
-        expectQueryTextToInclude(`"Error: only string types allowed"`)
-  
-        useStateMachine({
-          initial: "a",
-          states: {
-            a: {
-              on: {
-                // @ts-expect-error
-                1: "Error: only string types allowed"
-              }
-            }
-          }
-        })
-      })
-
-      it("honours schema.event", () => {
-        useStateMachine({
-          schema: {
-            event: createSchema<
-              | { type: "X" }
-              | { type: "Y" }
-            >()
-          },
-          initial: "a",
-          states: {
-            a: {
-              on: {
-                X: "a",
-                Y: "a",
-                // @ts-expect-error
-                Z: "a"
-              }
-            }
-          }
-        })
-      })
-
-      it.manual.todo("shows completions based on schema.event", () => {
-        useStateMachine({
-          schema: {
-            event: createSchema<
-              | { type: "X" }
-              | { type: "Y" }
-            >()
-          },
-          initial: "a",
-          states: {
-            a: {
-              on: {
-                
-            //  ^|
-              }
-            }
-          }
-        })
-
-        expectCompletionsToBe(["X", "Y"])
-      })
-
-      it.manual("shows custom error in case of violation of schema.events", () => {
-        useStateMachine({
-          schema: {
-            event: createSchema<
-              | { type: "X" }
-              | { type: "Y" }
-            >()
-          },
-          initial: "a",
-          states: {
-            a: {
-              on: {
-                X: "a",
-                Y: "a",
-                // @ts-expect-error
-                Z: "a"
-            //  ^?
-              }
-            }
-          }
-        })
-        expectQueryTextToInclude("Error: Event type 'Z' is not found in schema.event")
-
-        useStateMachine({
-          schema: {
-            event: createSchema<
-              | { type: "X" }
-              | { type: "Y" }
-            >()
-          },
-          initial: "a",
-          states: {
-            a: {
-              on: {
-                X: "a",
-                Y: "a",
-                // @ts-expect-error
-                Z: "Error: Event type 'Z' is not found in schema.event"
-              }
-            }
-          }
-        })
-      })
-    })
-
-    describe("Machine.Definition.StateNode['effect']", () => {
+  describe("Machine.Definition.On", () => {
+    it("expects only strings as key", () => {
       useStateMachine({
-        schema: {
-          event: createSchema<
-            | { type: "X", foo: number }
-            | { type: "Y", bar?: number }
-            | { type: "Z", baz: string }
-          >(),
-          context: createSchema<{ foo?: number }>()
-        },
-        context: {},
         initial: "a",
-        on: {
-          Z: "b"
-        },
         states: {
           a: {
             on: {
-              X: "b",
+              X: "a"
             }
-          },
-          b: {
-            on: {
-              Y: "a"
-            },
-            effect: effectParameter => {
+          }
+        },
+        on: {
+          Y: "a"
+        }
+      })
 
-              describe("Machine.EntryEventForStateValue", () => {
+      useStateMachine({
+        initial: "a",
+        states: {
+          a: {
+            on: {
+              // @ts-expect-error
+              1: "a"
+            }
+          }
+        },
+        on: {
+          // @ts-expect-error
+          2: "a"
+        }
+      })
+    })
+  
+    it.manual("shows custom error in case of identifiers other than string", () => {
+      useStateMachine({
+        initial: "a",
+        states: {
+          a: {
+            on: {
+              // @ts-expect-error
+              1: "a"
+          //  ^?
+            }
+          }
+        }
+      })
+      expectQueryTextToInclude(`"Error: only string types allowed"`)
+
+      useStateMachine({
+        initial: "a",
+        states: {
+          a: {
+            on: {
+              // @ts-expect-error
+              1: "Error: only string types allowed"
+            }
+          }
+        }
+      })
+
+      useStateMachine({
+        initial: "a",
+        states: {
+          a: {}
+        },
+        on: {
+          // @ts-expect-error
+          1: "a"
+      //  ^?
+        }
+      })
+      expectQueryTextToInclude(`"Error: only string types allowed"`)
+
+      useStateMachine({
+        initial: "a",
+        states: {
+          a: {}
+        },
+        on: {
+          // @ts-expect-error
+          1: "Error: only string types allowed"
+        }
+      })
+    })
+
+    it("honours schema.event", () => {
+      useStateMachine({
+        schema: {
+          event: createSchema<
+            | { type: "X" }
+            | { type: "Y" }
+          >()
+        },
+        initial: "a",
+        states: {
+          a: {
+            on: {
+              X: "a",
+              Y: "a",
+              // @ts-expect-error
+              Z: "a"
+            }
+          }
+        },
+        on: {
+          X: "a",
+          Y: "a",
+          // @ts-expect-error
+          Z: "a"
+        }
+      })
+    })
+
+    it.manual.todo.maybeTsBug("shows completions based on schema.event", () => {
+      useStateMachine({
+        schema: {
+          event: createSchema<
+            | { type: "X" }
+            | { type: "Y" }
+          >()
+        },
+        initial: "a",
+        states: {
+          a: {
+            on: {
+              
+          //  ^|
+            }
+          }
+        }
+      })
+
+      expectCompletionsToBe(["X", "Y"])
+
+      useStateMachine({
+        schema: {
+          event: createSchema<
+            | { type: "X" }
+            | { type: "Y" }
+          >()
+        },
+        initial: "a",
+        states: {
+          a: {}
+        },
+        on: {
+          
+      //  ^|
+        }
+      })
+
+      expectCompletionsToBe(["X", "Y"])
+    })
+
+    it.manual("shows custom error in case of violation of schema.events", () => {
+      useStateMachine({
+        schema: {
+          event: createSchema<
+            | { type: "X" }
+            | { type: "Y" }
+          >()
+        },
+        initial: "a",
+        states: {
+          a: {
+            on: {
+              X: "a",
+              Y: "a",
+              // @ts-expect-error
+              Z: "a"
+          //  ^?
+            }
+          }
+        }
+      })
+      expectQueryTextToInclude("Error: Event type 'Z' is not found in schema.event")
+
+      useStateMachine({
+        schema: {
+          event: createSchema<
+            | { type: "X" }
+            | { type: "Y" }
+          >()
+        },
+        initial: "a",
+        states: {
+          a: {
+            on: {
+              X: "a",
+              Y: "a",
+              // @ts-expect-error
+              Z: "Error: Event type 'Z' is not found in schema.event"
+            }
+          }
+        }
+      })
+
+      useStateMachine({
+        schema: {
+          event: createSchema<
+            | { type: "X" }
+            | { type: "Y" }
+          >()
+        },
+        initial: "a",
+        states: {
+          a: {}
+        },
+        on: {
+          X: "a",
+          Y: "a",
+          // @ts-expect-error
+          Z: "a"
+      //  ^?
+        }
+      })
+      expectQueryTextToInclude("Error: Event type 'Z' is not found in schema.event")
+
+      useStateMachine({
+        schema: {
+          event: createSchema<
+            | { type: "X" }
+            | { type: "Y" }
+          >()
+        },
+        initial: "a",
+        states: {
+          a: {}
+        },
+        on: {
+          X: "a",
+          Y: "a",
+          // @ts-expect-error
+          Z: "Error: Event type 'Z' is not found in schema.event"
+        }
+      })
+    })
+  })
+
+  describe("Machine.Definition.Effect", () => {
+    useStateMachine({
+      schema: {
+        event: createSchema<
+          | { type: "X", foo: number }
+          | { type: "Y", bar?: number }
+          | { type: "Z", baz: string }
+        >(),
+        context: createSchema<{ foo?: number }>()
+      },
+      context: {},
+      initial: "a",
+      on: {
+        Z: "b"
+      },
+      states: {
+        a: {
+          on: {
+            X: "b",
+          }
+        },
+        b: {
+          on: {
+            Y: "a"
+          },
+          effect: effectParameter => {
+
+            describe("Machine.EntryEventForStateValue", () => {
+              A.test(A.areEqual<
+                typeof effectParameter.event,
+                | { type: "X", foo: number }
+                | { type: "Z", baz: string }
+              >())
+            })
+            
+            A.test(A.areEqual<
+              typeof effectParameter.send,
+              (sendable:
+                | "Y"
+                | { type: "X", foo: number }
+                | { type: "Y", bar?: number }
+                | { type: "Z", baz: string }
+              ) => void
+            >())
+
+            A.test(A.areEqual<
+              typeof effectParameter.context,
+              { foo?: number }  
+            >())
+
+            let { send } = effectParameter.setContext(context => {
+              A.test(A.areEqual<typeof context, { foo?: number }>())
+              return {}
+            })
+
+            // @ts-expect-error
+            effectParameter.setContext(() => ({ foo: "" }))
+            
+            A.test(A.areEqual<
+              typeof send,
+              (sendable:
+                | "Y"
+                | { type: "X", foo: number }
+                | { type: "Y", bar?: number }
+                | { type: "Z", baz: string }
+              ) => void
+            >())
+
+            return (cleanupParameter) => {
+
+              describe("Machine.ExitEventForStateValue", () => {
                 A.test(A.areEqual<
-                  typeof effectParameter.event,
-                  | { type: "X", foo: number }
-                  | { type: "Z", baz: string }
+                  typeof cleanupParameter.event,
+                  { type: "Y", bar?: number }
                 >())
               })
               
               A.test(A.areEqual<
-                typeof effectParameter.send,
+                typeof cleanupParameter.send,
                 (sendable:
                   | "Y"
                   | { type: "X", foo: number }
@@ -460,17 +597,17 @@ describe("Machine.Definition", () => {
               >())
 
               A.test(A.areEqual<
-                typeof effectParameter.context,
+                typeof cleanupParameter.context,
                 { foo?: number }  
               >())
 
-              let { send } = effectParameter.setContext(context => {
+              let { send } = cleanupParameter.setContext(context => {
                 A.test(A.areEqual<typeof context, { foo?: number }>())
                 return {}
               })
 
               // @ts-expect-error
-              effectParameter.setContext(() => ({ foo: "" }))
+              cleanupParameter.setContext(() => ({ foo: "" }))
               
               A.test(A.areEqual<
                 typeof send,
@@ -481,58 +618,15 @@ describe("Machine.Definition", () => {
                   | { type: "Z", baz: string }
                 ) => void
               >())
-
-              return (cleanupParameter) => {
-
-                describe("Machine.ExitEventForStateValue", () => {
-                  A.test(A.areEqual<
-                    typeof cleanupParameter.event,
-                    { type: "Y", bar?: number }
-                  >())
-                })
-                
-                A.test(A.areEqual<
-                  typeof cleanupParameter.send,
-                  (sendable:
-                    | "Y"
-                    | { type: "X", foo: number }
-                    | { type: "Y", bar?: number }
-                    | { type: "Z", baz: string }
-                  ) => void
-                >())
-  
-                A.test(A.areEqual<
-                  typeof cleanupParameter.context,
-                  { foo?: number }  
-                >())
-  
-                let { send } = cleanupParameter.setContext(context => {
-                  A.test(A.areEqual<typeof context, { foo?: number }>())
-                  return {}
-                })
-  
-                // @ts-expect-error
-                cleanupParameter.setContext(() => ({ foo: "" }))
-                
-                A.test(A.areEqual<
-                  typeof send,
-                  (sendable:
-                    | "Y"
-                    | { type: "X", foo: number }
-                    | { type: "Y", bar?: number }
-                    | { type: "Z", baz: string }
-                  ) => void
-                >())
-              }
             }
-          },
-          c: {
-            _: null,
-            // @ts-expect-error
-            effect: () => { return "foo" }
           }
+        },
+        c: {
+          _: null,
+          // @ts-expect-error
+          effect: () => { return "foo" }
         }
-      })
+      }
     })
 
     it.todo.maybeTsBug("effect alone as property works", () => {
