@@ -144,15 +144,22 @@ namespace Machine {
     U.Extract<
       Event<D>,
       { type:
-          { [S in keyof A.Get<D, "states">]:
-              { [E in keyof A.Get<D, ["states", S, "on"]>]:
-                  A.Get<D, ["states", S, "on", E]> extends infer T
-                    ? (T extends A.String ? T : A.Get<T, "target">) extends StateValue
-                        ? E
-                        : never
-                    : never
-              }[keyof A.Get<D, ["states", S, "on"]>]
-          }[keyof A.Get<D, "states">]
+          | { [S in keyof A.Get<D, "states">]:
+                { [E in keyof A.Get<D, ["states", S, "on"]>]:
+                    A.Get<D, ["states", S, "on", E]> extends infer T
+                      ? (T extends A.String ? T : A.Get<T, "target">) extends StateValue
+                          ? E
+                          : never
+                      : never
+                }[keyof A.Get<D, ["states", S, "on"]>]
+            }[keyof A.Get<D, "states">]
+          | { [E in keyof A.Get<D, ["on"]>]:
+                A.Get<D, ["on", E]> extends infer T
+                  ? (T extends A.String ? T : A.Get<T, "target">) extends StateValue
+                      ? E
+                      : never
+                  : never
+            }[keyof A.Get<D, ["on"]>]
       }
     >
 

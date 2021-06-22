@@ -420,11 +420,15 @@ describe("Machine.Definition", () => {
           event: createSchema<
             | { type: "X", foo: number }
             | { type: "Y", bar?: number }
+            | { type: "Z", baz: string }
           >(),
           context: createSchema<{ foo?: number }>()
         },
         context: {},
         initial: "a",
+        on: {
+          Z: "b"
+        },
         states: {
           a: {
             on: {
@@ -440,7 +444,8 @@ describe("Machine.Definition", () => {
               describe("Machine.EntryEventForStateValue", () => {
                 A.test(A.areEqual<
                   typeof effectParameter.event,
-                  { type: "X", foo: number }
+                  | { type: "X", foo: number }
+                  | { type: "Z", baz: string }
                 >())
               })
               
@@ -450,6 +455,7 @@ describe("Machine.Definition", () => {
                   | "Y"
                   | { type: "X", foo: number }
                   | { type: "Y", bar?: number }
+                  | { type: "Z", baz: string }
                 ) => void
               >())
 
@@ -472,6 +478,7 @@ describe("Machine.Definition", () => {
                   | "Y"
                   | { type: "X", foo: number }
                   | { type: "Y", bar?: number }
+                  | { type: "Z", baz: string }
                 ) => void
               >())
 
@@ -490,6 +497,7 @@ describe("Machine.Definition", () => {
                     | "Y"
                     | { type: "X", foo: number }
                     | { type: "Y", bar?: number }
+                    | { type: "Z", baz: string }
                   ) => void
                 >())
   
@@ -512,6 +520,7 @@ describe("Machine.Definition", () => {
                     | "Y"
                     | { type: "X", foo: number }
                     | { type: "Y", bar?: number }
+                    | { type: "Z", baz: string }
                   ) => void
                 >())
               }
