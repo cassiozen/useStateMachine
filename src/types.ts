@@ -49,9 +49,8 @@ namespace Machine {
 
   namespace Definition {
     export interface StateNode<D, P>
-      { on?: On<D, L.Concat<P, ["on"]>>
+      { on?: On<D, L.Concat<P, ["on"]>> | null
       , effect?: Effect<D, L.Concat<P, ["effect"]>>
-      , _?: null
       }
 
   export type On<D, P, On = A.Get<D, P>, EventTypeSchema = A.Get<D, ["schema", "event", "type"]>> =

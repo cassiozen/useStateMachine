@@ -513,7 +513,7 @@ describe('useStateMachine', () => {
           initial: 'idle',
           states: {
             idle: {
-              _: null,
+              on: null,
               effect: ({ send }) =>
                 // @ts-expect-error
                 send('invalid'),
@@ -533,7 +533,7 @@ describe('useStateMachine', () => {
           initial: 'idle',
           states: {
             idle: {
-              _: null,
+              on: null,
               effect: ({ send }) =>
                 // @ts-expect-error
                 send({ type: 'invalid' }),

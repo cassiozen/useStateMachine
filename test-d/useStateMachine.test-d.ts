@@ -622,7 +622,7 @@ describe("Machine.Definition", () => {
           }
         },
         c: {
-          _: null,
+          on: null,
           // @ts-expect-error
           effect: () => { return "foo" }
         }
