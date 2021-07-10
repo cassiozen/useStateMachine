@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import useStateMachine, { createSchema } from '../src';
-import { A } from '../src/types';
+import { A, LS } from '../src/types';
 
 describe("Machine.Definition", () => {
 
@@ -622,21 +622,33 @@ describe("Machine.Definition", () => {
           }
         },
         c: {
-          on: null,
+          on: {},
           // @ts-expect-error
           effect: () => { return "foo" }
         }
       }
     })
+  })
 
-    it.todo.maybeTsBug("effect alone as property works", () => {
+  describe.maybeTsBug("single-functional-property bug", () => {
+    // @ts-expect-error
+    useStateMachine({
+      initial: "a",
+      states: {
+        a: {
+          effect: p => {
+          }
+        }
+      }
+    })
+
+    it("workaround works", () => {
       useStateMachine({
-        // @ts-ignore
         initial: "a",
         states: {
           a: {
+            on: {},
             effect: parameter => {
-              // @ts-ignore
               A.test(A.areEqual<
                 keyof typeof parameter,
                 "event" | "send" | "context" | "setContext"
@@ -645,6 +657,33 @@ describe("Machine.Definition", () => {
           }
         }
       })
+    })
+
+    it.manual("shows custom error instructing required change", () => {
+      // @ts-expect-error
+      useStateMachine({
+      // ^?
+        initial: "a",
+        states: {
+          a: {
+            effect: p => {
+            }
+          }
+        }
+      })
+
+      expectQueryTextToInclude(
+        "Oops you have met a TypeScript limitation, " +
+        "please add `on: {}` to state nodes that only have an `effect` property. " +
+        "See the documentation to learn more."
+      )
+
+      // @ts-expect-error
+      useStateMachine({} as LS.ConcatAll<
+        [ "Oops you have met a TypeScript limitation, "
+        , "please add `on: {}` to state nodes that only have an `effect` property. "
+        , "See the documentation to learn more."
+        ]>)
     })
   })
 
@@ -848,7 +887,10 @@ describe("UseStateMachine", () => {
 })
 
 
-declare const describe: (label: string, f: () => void) => void
+declare const describe:
+  & ((label: string, f: () => void) => void)
+  & { maybeTsBug: (label: string, f: () => void) => void
+    }
 declare const it:
   & ((label: string, f: () => void) => void)
   & { todo: 

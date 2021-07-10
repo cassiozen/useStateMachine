@@ -4,11 +4,7 @@ export type UseStateMachine =
     , send: Machine.Send<D>
     ]
 
-
-
-
 namespace Machine {
-
   export type Definition<
     D,
     States = A.Get<D, "states">,
@@ -16,7 +12,13 @@ namespace Machine {
     ContextSchema = A.Get<D, ["schema", "context"]>,
     HasContextSchema = D extends { schema: { context: unknown } } ? true : false
   > =
-    & { initial:
+    A.IsUnknown<States> extends true
+      ? LS.ConcatAll<
+          [ "Oops you have met a TypeScript limitation, "
+          , "please add `on: {}` to state nodes that only have an `effect` property. "
+          , "See the documentation to learn more."
+          ]>
+    : { initial:
           [keyof States] extends [never]
             ? A.CustomError<`Error: no states defined`, A.Get<D, "initial">>
             : keyof States
@@ -49,15 +51,14 @@ namespace Machine {
 
   namespace Definition {
     export interface StateNode<D, P>
-      { on?: On<D, L.Concat<P, ["on"]>> | null
+      { on?: On<D, L.Concat<P, ["on"]>>
       , effect?: Effect<D, L.Concat<P, ["effect"]>>
       }
 
   export type On<D, P, On = A.Get<D, P>, EventTypeSchema = A.Get<D, ["schema", "event", "type"]>> =
     { [EventType in keyof On]:
         EventType extends A.String
-          ? // `EventType extends A.Fallback<EventTypeSchema, A.String>` doesn't work apparently
-            EventType extends (
+          ? EventType extends (
               EventTypeSchema extends undefined
                 ? A.String
                 : U.Extract<EventTypeSchema, A.String>
@@ -100,7 +101,6 @@ namespace Machine {
         | void
         | ((parameter: EffectCleanupParameterForStateValue<D, StateValue>) => void)
   }
-
 
 
   export type TargetString<D> =
@@ -167,7 +167,6 @@ namespace Machine {
       Event<D>,
       { type: keyof A.Get<D, ["states", StateValue, "on"]> }
     >
-    
 
   export type Sendable<D, E = Event<D>> =
     | ( E extends any
@@ -187,7 +186,7 @@ namespace Machine {
   export type ContextUpdater<D> =
     (context: Context<D>) => Context<D>
 
-  export interface State<D> // TODO: type-stated
+  export interface State<D>
     { value: keyof A.Get<D, "states">
     , context: Context<D>
     , event?: Event<D>
@@ -199,9 +198,15 @@ export namespace L {
   export type Assert<T> = A.Cast<T, A.Tuple>;
   export type Concat<A, B> = [...L.Assert<A>, ...L.Assert<B>]
   export type Popped<A> = A extends [] ? [] : A extends [...infer X, any] ? X : never;
-  export type Pop<A> = A extends [] ? undefined : A extends [...any[], infer X] ? X : never;
+  export type Pop<A> = A extends [] ? undefined : A extends [...any[], infer X] ? X : never; 
 }
-
+export namespace LS {
+  export type ConcatAll<L> =
+    L extends [] ? [] :
+    L extends [infer H] ? H :
+    L extends [infer H, ...infer T] ? `${S.Assert<H>}${S.Assert<ConcatAll<T>>}` :
+    never
+}
 
 export namespace S {
   export type Assert<T> = A.Cast<T, A.String>;
@@ -248,6 +253,13 @@ export namespace A {
 
   export type DoesExtend<A, B> =
     A extends B ? true : false;
+
+  export type IsUnknown<T> =
+    [T] extends [never]
+      ? false
+      : T extends unknown ? unknown extends T
+          ? true
+          : false : false;
 
   type _Get<T, P, F> =
     P extends [] ?
