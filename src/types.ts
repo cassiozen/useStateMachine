@@ -186,12 +186,14 @@ namespace Machine {
   export type ContextUpdater<D> =
     (context: Context<D>) => Context<D>
 
-  export interface State<D>
-    { value: keyof A.Get<D, "states">
-    , context: Context<D>
-    , event?: Event<D>
-    , nextEvents?: A.Get<Event<D>, "type">[]
-    }
+  export type State<D, StateValue = TargetString<D>> =
+    StateValue extends any
+      ? { value: StateValue
+        , context: Context<D>
+        , event?: EntryEventForStateValue<D, StateValue>
+        , nextEvents?: A.Get<ExitEventForStateValue<D, StateValue>, "type">[]
+        }
+      : never
 }
 
 export namespace L {

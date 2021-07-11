@@ -842,6 +842,7 @@ describe("UseStateMachine", () => {
       event: createSchema<
         | { type: "X", foo: number }
         | { type: "Y", bar?: number }
+        | { type: "Z" }
       >(),
       context: createSchema<{ foo?: number }>()
     },
@@ -858,19 +859,27 @@ describe("UseStateMachine", () => {
           Y: "a"
         }
       }
+    },
+    on: {
+      Z: "a"
     }
   })
 
   describe("Machine.State", () => {
     A.test(A.areEqual<
       typeof state,
-      { value: "a" | "b"
-      , context: { foo?: number }
-      , event?:
-        | { type: "X", foo: number }
-        | { type: "Y", bar?: number }
-      , nextEvents?: ("X" | "Y")[]
-      }
+      | { value: "a"
+        , context: { foo?: number }
+        , event?:
+            | { type: "Y", bar?: number }
+            | { type: "Z" }
+        , nextEvents?: "X"[]
+        }
+      | { value: "b"
+        , context: { foo?: number }
+        , event?: { type: "X", foo: number }
+        , nextEvents?: "Y"[]
+        }
     >())
   })
 
@@ -879,8 +888,10 @@ describe("UseStateMachine", () => {
       typeof send,
       (sendable:
         | "Y"
+        | "Z"
         | { type: "X", foo: number }
         | { type: "Y", bar?: number }
+        | { type: "Z" }
       ) => void
     >())
   })
