@@ -269,4 +269,4 @@ export default (function useStateMachine(definition: any) {
   useStateMachineImpl(definition)
 }) as UseStateMachine
 
-export const createSchema = <T extends unknown>() => null as T
+export const t = <T extends unknown>() => null as T

@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import useStateMachine, { createSchema } from '../src';
+import useStateMachine, { t } from '../src';
 import { A, LS } from '../src/types';
 
 describe("Machine.Definition", () => {
@@ -100,38 +100,7 @@ describe("Machine.Definition", () => {
       })
     })
 
-    describe("MachineDefinition['schema']['event']", () => {
-      it("expects to extend { type: string }", () => {
-        useStateMachine({
-          schema: {
-            event: createSchema<{ type: "FOO" } | { type: "BAR" }>()
-          },
-          initial: "a",
-          states: { a: {} }
-        })
-
-        useStateMachine({
-          schema: {
-            // @ts-expect-error
-            event: createSchema<{ type: 1 }>()
-          }
-        })
-
-        useStateMachine({
-          schema: {
-            // @ts-expect-error
-            event: createSchema<{}>()
-          }
-        })
-
-        useStateMachine({
-          schema: {
-            // @ts-expect-error
-            event: createSchema<"FOO">()
-          }
-        })
-      })
-
+    describe("MachineDefinition['schema']['events']", () => {
       it("is optional", () => {
         useStateMachine({
           schema: {},
@@ -140,21 +109,122 @@ describe("Machine.Definition", () => {
         })
       })
 
-      it.manual("shows custom error in case of not extending { type: string }", () => {
+      it("expects event payload to extend an object", () => {
         useStateMachine({
           schema: {
-            // @ts-expect-error
-            event: createSchema<"FOO">()
-            // ^?
-          }
+            events: {
+              X: t<{ foo: number }>()
+            }
+          },
+          initial: "a",
+          states: { a: {} }
         })
-        expectQueryTextToInclude("Error: schema.event should extend { type: string }")
 
         useStateMachine({
           schema: {
-            // @ts-expect-error
-            event: createSchema<"Error: schema.event should extend { type: string }">()
+            events: {
+              // @ts-expect-error
+              X: t<1>()
+            }
           }
+        })
+
+        useStateMachine({
+          schema: {
+            events: {
+              // @ts-expect-error
+              X: t<"FOO">()
+            }
+          }
+        })
+      })
+
+      it.manual("shows custom error in case of not extending an object", () => {
+        useStateMachine({
+          schema: {
+            events: {
+              // @ts-expect-error
+              X: t<"FOO">()
+          //  ^?
+            }
+          }
+        })
+        expectQueryTextToInclude("Error: An event payload should be an object, eg `t<{ foo: number }>()`")
+
+        useStateMachine({
+          schema: {
+            events: {
+              // @ts-expect-error
+              X: t<"Error: An event payload should be an object, eg `t<{ foo: number }>()`">()
+            }
+          }
+        })
+      })
+
+      it("expects event payload to not have `type` property", () => {
+        useStateMachine({
+          schema: {
+            events: {
+              // @ts-expect-error
+              X: t<{ type: number }>()
+            }
+          },
+          initial: "a",
+          states: { a: {} }
+        })
+      })
+
+      it("shows custom error when event payload has a `type` property", () => {
+        useStateMachine({
+          schema: {
+            events: {
+              // @ts-expect-error
+              X: t<{ type: number, foo: string }>()
+          //  ^?
+            }
+          },
+          initial: "a",
+          states: { a: {} }
+        })
+
+        expectQueryTextToInclude(
+          "Error: An event payload cannot have a property `type` as it's already defined. In this case as 'X'"
+        )
+
+        useStateMachine({
+          schema: {
+            events: {
+              // @ts-expect-error
+              X: t<
+                "Error: An event payload cannot have a property `type` as it's already defined. In this case as 'X'"
+              >()
+            }
+          },
+          initial: "a",
+          states: { a: {} }
+        })
+      })
+
+      it("expects $$exhaustive to be a boolean", () => {
+        useStateMachine({
+          schema: {
+            events: {
+              $$exhaustive: true
+            }
+          },
+          initial: "a",
+          states: { a: {} }
+        })
+
+        useStateMachine({
+          schema: {
+            events: {
+              // @ts-expect-error
+              $$exhaustive: 1
+            }
+          },
+          initial: "a",
+          states: { a: {} }
         })
       })
     })
@@ -170,14 +240,14 @@ describe("Machine.Definition", () => {
 
       it("expects any type", () => {
         useStateMachine({
-          schema: { context: createSchema<{ foo?: number }>() },
+          schema: { context: t<{ foo?: number }>() },
           context: { foo: 1 },
           initial: "a",
           states: { a: {} }
         })
 
         useStateMachine({
-          schema: { context: createSchema<"foo">() },
+          schema: { context: t<"foo">() },
           context: "foo",
           initial: "a",
           states: { a: {} }
@@ -191,7 +261,7 @@ describe("Machine.Definition", () => {
       // @ts-expect-error
       useStateMachine({
         schema: {
-          context: createSchema<{ foo: number }>()
+          context: t<{ foo: number }>()
         },
         initial: "a",
         states: { a: {} }
@@ -199,7 +269,7 @@ describe("Machine.Definition", () => {
 
       useStateMachine({
         schema: {
-          context: createSchema<{ foo: number }>()
+          context: t<{ foo: number }>()
         },
         context: {
           // @ts-expect-error
@@ -211,7 +281,7 @@ describe("Machine.Definition", () => {
 
       useStateMachine({
         schema: {
-          context: createSchema<{ foo: number }>()
+          context: t<{ foo: number }>()
         },
         context: { foo: 1 },
         initial: "a",
@@ -220,7 +290,7 @@ describe("Machine.Definition", () => {
 
       useStateMachine({
         schema: {
-          context: createSchema<undefined>()
+          context: t<undefined>()
         },
         // @ts-expect-error
         context: { foo: 1 },
@@ -355,13 +425,87 @@ describe("Machine.Definition", () => {
       })
     })
 
+    it("expects $$exhaustive to not be a key", () => {
+      useStateMachine({
+        initial: "a",
+        states: {
+          a: {
+            on: {
+              //@ts-expect-error
+              $$exhaustive: "a"
+            }
+          }
+        },
+        on: {
+          //@ts-expect-error
+          $$exhaustive: "a"
+        }
+      })
+    })
+    
+    it.manual("shows custom error in case of $$exhaustive as a key", () => {
+      useStateMachine({
+        initial: "a",
+        states: {
+          a: {
+            on: {
+              // @ts-expect-error
+              $$exhaustive: "a"
+              // ^?
+            }
+          }
+        }
+      })
+
+      expectQueryTextToInclude("Error: '$$exhaustive' is a reversed name")
+
+      useStateMachine({
+        initial: "a",
+        states: {
+          a: {
+            on: {
+              // @ts-expect-error
+              $$exhaustive: "Error: '$$exhaustive' is a reversed name"
+            }
+          }
+        }
+      })
+
+      useStateMachine({
+        initial: "a",
+        states: {
+          a: {}
+        },
+        on: {
+          // @ts-expect-error
+          $$exhaustive: "a"
+          // ^?
+        }
+      })
+
+      expectQueryTextToInclude("Error: '$$exhaustive' is a reversed name")
+
+      useStateMachine({
+        initial: "a",
+        states: {
+          a: {}
+        },
+        on: {
+          // @ts-expect-error
+          $$exhaustive: "Error: '$$exhaustive' is a reversed name"
+          // ^?
+        }
+      })
+    })
+
     it("honours schema.event", () => {
       useStateMachine({
         schema: {
-          event: createSchema<
-            | { type: "X" }
-            | { type: "Y" }
-          >()
+          events: {
+            $$exhaustive: true,
+            X: {},
+            Y: {}
+          }
         },
         initial: "a",
         states: {
@@ -381,15 +525,56 @@ describe("Machine.Definition", () => {
           Z: "a"
         }
       })
+      
+      useStateMachine({
+        schema: {
+          events: {
+            $$exhaustive: false,
+            X: {},
+            Y: {}
+          }
+        },
+        initial: "a",
+        states: {
+          a: {
+            on: {
+              Z: "a"
+            }
+          }
+        },
+        on: {
+          Z: "a"
+        }
+      })
+
+      useStateMachine({
+        schema: {
+          events: {
+            X: {},
+            Y: {}
+          }
+        },
+        initial: "a",
+        states: {
+          a: {
+            on: {
+              Z: "a"
+            }
+          }
+        },
+        on: {
+          Z: "a"
+        }
+      })
     })
 
     it.manual.todo.maybeTsBug("shows completions based on schema.event", () => {
       useStateMachine({
         schema: {
-          event: createSchema<
-            | { type: "X" }
-            | { type: "Y" }
-          >()
+          events: {
+            X: t<{}>(),
+            Y: t<{}>(),
+          }
         },
         initial: "a",
         states: {
@@ -406,10 +591,10 @@ describe("Machine.Definition", () => {
 
       useStateMachine({
         schema: {
-          event: createSchema<
-            | { type: "X" }
-            | { type: "Y" }
-          >()
+          events: {
+            X: t<{}>(),
+            Y: t<{}>(),
+          }
         },
         initial: "a",
         states: {
@@ -427,10 +612,11 @@ describe("Machine.Definition", () => {
     it.manual("shows custom error in case of violation of schema.events", () => {
       useStateMachine({
         schema: {
-          event: createSchema<
-            | { type: "X" }
-            | { type: "Y" }
-          >()
+          events: {
+            $$exhaustive: true,
+            X: {},
+            Y: {}
+          }
         },
         initial: "a",
         states: {
@@ -445,14 +631,17 @@ describe("Machine.Definition", () => {
           }
         }
       })
-      expectQueryTextToInclude("Error: Event type 'Z' is not found in schema.event")
+      expectQueryTextToInclude(
+        "Error: Event type 'Z' is not found in schema.events which is marked as exhaustive"
+      )
 
       useStateMachine({
         schema: {
-          event: createSchema<
-            | { type: "X" }
-            | { type: "Y" }
-          >()
+          events: {
+            $$exhaustive: true,
+            X: {},
+            Y: {}
+          }
         },
         initial: "a",
         states: {
@@ -461,7 +650,7 @@ describe("Machine.Definition", () => {
               X: "a",
               Y: "a",
               // @ts-expect-error
-              Z: "Error: Event type 'Z' is not found in schema.event"
+              Z: "Error: Event type 'Z' is not found in schema.events which is marked as exhaustive"
             }
           }
         }
@@ -469,10 +658,11 @@ describe("Machine.Definition", () => {
 
       useStateMachine({
         schema: {
-          event: createSchema<
-            | { type: "X" }
-            | { type: "Y" }
-          >()
+          events: {
+            $$exhaustive: true,
+            X: {},
+            Y: {}
+          }
         },
         initial: "a",
         states: {
@@ -486,14 +676,17 @@ describe("Machine.Definition", () => {
       //  ^?
         }
       })
-      expectQueryTextToInclude("Error: Event type 'Z' is not found in schema.event")
+      expectQueryTextToInclude(
+        "Error: Event type 'Z' is not found in schema.events which is marked as exhaustive"
+      )
 
       useStateMachine({
         schema: {
-          event: createSchema<
-            | { type: "X" }
-            | { type: "Y" }
-          >()
+          events: {
+            $$exhaustive: true,
+            X: {},
+            Y: {}
+          }
         },
         initial: "a",
         states: {
@@ -503,7 +696,7 @@ describe("Machine.Definition", () => {
           X: "a",
           Y: "a",
           // @ts-expect-error
-          Z: "Error: Event type 'Z' is not found in schema.event"
+          Z: "Error: Event type 'Z' is not found in schema.events which is marked as exhaustive"
         }
       })
     })
@@ -512,12 +705,12 @@ describe("Machine.Definition", () => {
   describe("Machine.Definition.Effect", () => {
     useStateMachine({
       schema: {
-        event: createSchema<
-          | { type: "X", foo: number }
-          | { type: "Y", bar?: number }
-          | { type: "Z", baz: string }
-        >(),
-        context: createSchema<{ foo?: number }>()
+        events: {
+          X: t<{ foo: number }>(),
+          Y: t<{ bar?: number }>(),
+          Z: t<{ baz: string }>()
+        },
+        context: t<{ foo?: number }>()
       },
       context: {},
       initial: "a",
@@ -795,10 +988,10 @@ describe("Machine.Definition", () => {
     describe("Machine.Definition.Transition['guard']", () => {
       useStateMachine({
         schema: {
-          event: createSchema<
-            | { type: "X", foo: string }
-            | { type: "Y" }
-          >()
+          events: {
+            X: t<{ foo: string }>(),
+            Y: t<{}>()
+          }
         },
         initial: "a",
         context: { foo: 1 },
@@ -839,12 +1032,12 @@ describe("Machine.Definition", () => {
 describe("UseStateMachine", () => {
   let [state, send] = useStateMachine({
     schema: {
-      event: createSchema<
-        | { type: "X", foo: number }
-        | { type: "Y", bar?: number }
-        | { type: "Z" }
-      >(),
-      context: createSchema<{ foo?: number }>()
+      events: {
+        X: t<{ foo: number }>(),
+        Y: t<{ bar?: number }>(),
+        Z: t<{}>()
+      },
+      context: t<{ foo?: number }>()
     },
     context: {},
     initial: "a",

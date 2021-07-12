@@ -6,11 +6,11 @@ export type UseStateMachine =
 
 namespace Machine {
   export type Definition<
-    D,
-    States = A.Get<D, "states">,
-    EventSchema = A.Get<D, ["schema", "event"]>,
-    ContextSchema = A.Get<D, ["schema", "context"]>,
-    HasContextSchema = D extends { schema: { context: unknown } } ? true : false
+    Self,
+    States = A.Get<Self, "states">,
+    ContextSchema = A.Get<Self, ["schema", "context"]>,
+    EventsSchema = A.Get<Self, ["schema", "events"]>,
+    HasContextSchema = Self extends { schema: { context: unknown } } ? true : false
   > =
     A.IsUnknown<States> extends true
       ? LS.ConcatAll<
@@ -20,24 +20,43 @@ namespace Machine {
           ]>
     : { initial:
           [keyof States] extends [never]
-            ? A.CustomError<`Error: no states defined`, A.Get<D, "initial">>
+            ? A.CustomError<"Error: no states defined", A.Get<Self, "initial">>
             : keyof States
       , states:
           { [StateIdentifier in keyof States]:
               StateIdentifier extends A.String
-                ? Definition.StateNode<D, ["states", StateIdentifier]>
-                : A.CustomError<`Error: only string identifiers allowed`, States[StateIdentifier]>
+                ? Definition.StateNode<Self, ["states", StateIdentifier]>
+                : A.CustomError<"Error: Only string identifiers allowed", States[StateIdentifier]>
           }
-      , on?: Definition.On<D, ["on"]>
+      , on?: Definition.On<Self, ["on"]>
       , schema?:
-          { event?:
-              EventSchema extends { type: string }
-                ? EventSchema
-                : A.CustomError<
-                    `Error: schema.event should extend { type: string }`,
-                    EventSchema
-                  >
-          , context?: ContextSchema
+          { context?: ContextSchema
+          , events?:
+              { [Type in keyof EventsSchema]:
+                  Type extends Definition.ExhaustiveIdentifier ? boolean :
+                  A.Get<EventsSchema, Type> extends infer Event
+                    ? A.DoesExtend<Type, A.String> extends false
+                        ? A.CustomError<
+                            "Error: Only string types allowed",
+                            A.Get<EventsSchema, Type>
+                          > :
+                      A.IsPlainObject<Event> extends false
+                        ? A.CustomError<
+                            "Error: An event payload should be an object, eg `t<{ foo: number }>()`",
+                            A.Get<EventsSchema, Type>
+                          > :
+                      "type" extends keyof Event
+                        ? A.CustomError<
+                            LS.ConcatAll<
+                              [ "Error: An event payload cannot have a property `type` as it's already defined. "
+                              , `In this case as '${S.Assert<Type>}'`
+                              ]>,
+                            A.Get<EventsSchema, Type>
+                          > :
+                        
+                      A.Get<EventsSchema, Type>
+                    : never
+              }
           }
       , verbose?: boolean
       }
@@ -45,7 +64,7 @@ namespace Machine {
       ContextSchema extends undefined
         ? HasContextSchema extends true
             ? { context?: undefined }
-            : { context?: A.Get<D, "context"> }
+            : { context?: A.Get<Self, "context"> }
         : { context: ContextSchema }
     )
 
@@ -55,53 +74,68 @@ namespace Machine {
       , effect?: Effect<D, L.Concat<P, ["effect"]>>
       }
 
-  export type On<D, P, On = A.Get<D, P>, EventTypeSchema = A.Get<D, ["schema", "event", "type"]>> =
-    { [EventType in keyof On]:
-        EventType extends A.String
-          ? EventType extends (
-              EventTypeSchema extends undefined
-                ? A.String
-                : U.Extract<EventTypeSchema, A.String>
-            )
-              ? Transition<D, L.Concat<P, ["on", EventType]>>
-              : A.CustomError<`Error: Event type '${EventType}' is not found in schema.event`, A.Get<On, EventType>>
-          : A.CustomError<`Error: only string types allowed`, A.Get<On, EventType>>
-    }
+    export type On<
+      D, P, Self = A.Get<D, P>,
+      EventsSchema = A.Get<D, ["schema", "events"], {}>,
+      EventTypeConstraint =
+        A.Get<EventsSchema, ExhaustiveIdentifier, false> extends true
+          ? U.Exclude<keyof EventsSchema, ExhaustiveIdentifier>
+          : A.String
+    > =
+      { [EventType in keyof Self]:
+          EventType extends A.String
+            ? EventType extends EventTypeConstraint
+                ? EventType extends ExhaustiveIdentifier
+                    ? A.CustomError<
+                        "Error: '$$exhaustive' is a reversed name",
+                        A.Get<Self, EventType>
+                      >
+                    : Transition<D, L.Concat<P, ["on", EventType]>>
+                : A.CustomError<
+                    LS.ConcatAll<
+                      [ `Error: Event type '${EventType}' is not found in schema.events `
+                      , "which is marked as exhaustive"
+                      ]>,
+                    A.Get<Self, EventType>
+                  >
+            : A.CustomError<"Error: only string types allowed", A.Get<Self, EventType>>
+      }
 
-  type Transition<D, P, S = A.Get<D, P>,
-    Guard = A.Get<S, "guard">,
-    TargetString = Machine.TargetString<D>,
-    Event = { type: L.Pop<P> }
-  > =
-    | TargetString
-    | { target: TargetString
-      , guard?:
-          [ A.DoesExtend<
-              F.Parameters<Guard>[0], 
-              { context: Machine.Context<D>
-              , event?: U.Extract<Machine.Event<D>, Event>
-              }
-            >
-          , A.DoesExtend<
-              F.Call<Guard>,
-              boolean
-            >
-          ] extends [true, true]
-            ? Guard
-            : ( parameter:
+    type Transition<D, P, Self = A.Get<D, P>,
+      Guard = A.Get<Self, "guard">,
+      TargetString = Machine.TargetString<D>,
+      Event = { type: L.Pop<P> }
+    > =
+      | TargetString
+      | { target: TargetString
+        , guard?:
+            [ A.DoesExtend<
+                F.Parameters<Guard>[0], 
                 { context: Machine.Context<D>
                 , event?: U.Extract<Machine.Event<D>, Event>
                 }
-              ) => boolean
-      }
-      
+              >
+            , A.DoesExtend<
+                F.Call<Guard>,
+                boolean
+              >
+            ] extends [true, true]
+              ? Guard
+              : ( parameter:
+                  { context: Machine.Context<D>
+                  , event?: U.Extract<Machine.Event<D>, Event>
+                  }
+                ) => boolean
+        }
+        
 
-    export type Effect<D, P, StateValue = L.Pop<L.Popped<P>>> = 
-      (parameter: EffectParameterForStateValue<D, StateValue>) =>
-        | void
-        | ((parameter: EffectCleanupParameterForStateValue<D, StateValue>) => void)
+      export type Effect<D, P, StateValue = L.Pop<L.Popped<P>>> = 
+        (parameter: EffectParameterForStateValue<D, StateValue>) =>
+          | void
+          | ((parameter: EffectCleanupParameterForStateValue<D, StateValue>) => void)
+
+    export type ExhaustiveIdentifier = "$$exhaustive"
   }
-
 
   export type TargetString<D> =
     keyof A.Get<D, "states">
@@ -109,19 +143,32 @@ namespace Machine {
   export type Context<D> =
     A.Get<D, ["schema", "context"], A.Get<D, "context">>
 
-  export type Event<D, EventSchema = A.Get<D, ["schema", "event"]>> = 
-    EventSchema extends undefined
-      ? | ( { [S in keyof A.Get<D, "states">]:
+  export type Event<D, EventsSchema = A.Get<D, ["schema", "events"], {}>> = 
+    | O.Value<{ [T in U.Exclude<keyof EventsSchema, Definition.ExhaustiveIdentifier>]:
+        A.Get<EventsSchema, T> extends infer E
+          ? E extends any ? O.Mergify<{ type: T } & E> : never
+          : never
+      }>
+    | ( A.Get<EventsSchema, Definition.ExhaustiveIdentifier, false> extends true ? never :
+        ( ( O.Value<
+            { [S in keyof A.Get<D, "states">]:
                 keyof A.Get<D, ["states", S, "on"]>
-            }[keyof A.Get<D, "states">] extends infer EventType
+            }> extends infer EventType
               ? EventType extends any ? { type: EventType } : never
-              : never
+            : never
           )
         | ( keyof A.Get<D, "on"> extends infer EventType
               ? EventType extends any ? { type: EventType } : never
               : never
           )
-      : EventSchema
+        ) extends infer InferredEvent
+          ? InferredEvent extends any
+              ? A.Get<InferredEvent, "type"> extends keyof EventsSchema ? never :
+                A.Get<InferredEvent, "type"> extends Definition.ExhaustiveIdentifier ? never :
+                InferredEvent
+              : never
+          : never
+      )
 
   export interface EffectParameterForStateValue<D, StateValue>
     extends BaseEffectParameter<D>
@@ -143,22 +190,22 @@ namespace Machine {
     U.Extract<
       Event<D>,
       { type:
-          | { [S in keyof A.Get<D, "states">]:
-                { [E in keyof A.Get<D, ["states", S, "on"]>]:
-                    A.Get<D, ["states", S, "on", E]> extends infer T
-                      ? (T extends A.String ? T : A.Get<T, "target">) extends StateValue
-                          ? E
-                          : never
-                      : never
-                }[keyof A.Get<D, ["states", S, "on"]>]
-            }[keyof A.Get<D, "states">]
-          | { [E in keyof A.Get<D, ["on"]>]:
-                A.Get<D, ["on", E]> extends infer T
+          | O.Value<{ [S in keyof A.Get<D, "states">]:
+              O.Value<{ [E in keyof A.Get<D, ["states", S, "on"]>]:
+                A.Get<D, ["states", S, "on", E]> extends infer T
                   ? (T extends A.String ? T : A.Get<T, "target">) extends StateValue
                       ? E
                       : never
                   : never
-            }[keyof A.Get<D, ["on"]>]
+              }>
+            }>
+          | O.Value<{ [E in keyof A.Get<D, ["on"]>]:
+              A.Get<D, ["on", E]> extends infer T
+                ? (T extends A.String ? T : A.Get<T, "target">) extends StateValue
+                    ? E
+                    : never
+                : never
+            }>
       }
     >
 
@@ -227,6 +274,12 @@ export namespace F {
 
 export namespace U {
   export type Extract<T, U> = T extends U ? T : never;
+  export type Exclude<T, U> = T extends U ? never : T;
+}
+
+export namespace O {
+  export type Value<T> = T[keyof T];
+  export type Mergify<T> = { [K in keyof T]: T[K] }
 }
 
 export namespace A {
@@ -262,6 +315,13 @@ export namespace A {
       : T extends unknown ? unknown extends T
           ? true
           : false : false;
+
+  export type IsPlainObject<T> =
+    T extends A.Object
+      ? T extends A.Function ? false :
+        T extends A.Tuple ? false :
+        true
+      : false
 
   type _Get<T, P, F> =
     P extends [] ?
