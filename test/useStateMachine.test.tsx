@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react-hooks';
-import useStateMachine, { createSchema } from '../src';
+import useStateMachine, { t } from '../src';
 import logger from '../src/logger';
 
 jest.mock('../src/logger', () => jest.fn());
@@ -260,10 +260,9 @@ describe('useStateMachine', () => {
       const { result } = renderHook(() =>
         useStateMachine({
           schema: {
-            event: createSchema<
-              | { type: 'ACTIVATE', number: number }
-              | { type: 'DEACTIVATE' }
-            >()
+            events: {
+              ACTIVATE: t<{ number: number }>()
+            }
           },
           context: undefined,
           initial: 'inactive',
