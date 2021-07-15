@@ -212,7 +212,10 @@ namespace Machine {
   export type ExitEventForStateValue<D, StateValue> =
     U.Extract<
       Event<D>,
-      { type: keyof A.Get<D, ["states", StateValue, "on"]> }
+      { type:
+          | keyof A.Get<D, ["states", StateValue, "on"], {}>
+          | keyof A.Get<D, "on", {}>
+      }
     >
 
   export type Sendable<D, E = Event<D>> =

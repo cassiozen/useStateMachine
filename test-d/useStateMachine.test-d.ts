@@ -775,7 +775,8 @@ describe("Machine.Definition", () => {
               describe("Machine.ExitEventForStateValue", () => {
                 A.test(A.areEqual<
                   typeof cleanupParameter.event,
-                  { type: "Y", bar?: number }
+                  | { type: "Y", bar?: number }
+                  | { type: "Z", baz: string }
                 >())
               })
               
@@ -1066,12 +1067,12 @@ describe("UseStateMachine", () => {
         , event?:
             | { type: "Y", bar?: number }
             | { type: "Z" }
-        , nextEvents?: "X"[]
+        , nextEvents?: ("X" | "Z")[]
         }
       | { value: "b"
         , context: { foo?: number }
         , event?: { type: "X", foo: number }
-        , nextEvents?: "Y"[]
+        , nextEvents?: ("Y" | "Z")[]
         }
     >())
   })
