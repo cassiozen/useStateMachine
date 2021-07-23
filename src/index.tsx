@@ -88,7 +88,7 @@ const createReducer = (definition: Machine.Definition.Impl) => {
 
       if ("isDenied" in selectedTransition && selectedTransition.isDenied) {
         log(
-          `Transition from "${machineState.value}" to "${selectedTransition}" denied by guard`,
+          `Transition from "${machineState.value}" to "${selectedTransition.target}" denied by guard`,
           ["Event", event],
           ["Context", context]
         )
