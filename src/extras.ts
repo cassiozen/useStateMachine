@@ -8,7 +8,7 @@ export const R = {
     r2: R2
   ) =>
     ({ ...r1, ...r2 }) as any as R.Concat<R1, R2>,
-  fromMaybe: <R extends R.Unknown>(r: R | undefined) => r || {} as R,
+  fromMaybe: <R extends R.Unknown>(r: R | undefined) => r ?? {} as R,
   keys: <R extends R.Unknown>(r: R) => Object.keys(r) as R.Key<R>[]
 }
 export namespace R {
