@@ -12,13 +12,16 @@ export const R = {
   keys: <R extends R.Unknown>(r: R) => Object.keys(r) as R.Key<R>[]
 }
 export namespace R {
-  export type Of<K extends string, V> = { [$$K]: K, [$$V]: V }
-  export declare const $$K: unique symbol;
-  export declare const $$V: unique symbol;
-  export type Unknown = Of<string, unknown>
-
-  export type Key<R extends R.Unknown> = R[$$K]
-  export type Value<R extends R.Unknown> = R[$$V]
+  export type Of<K extends string, V> =
+    { __V: V, __K: K }
+  
+  export type Unknown =
+  { __V: unknown, __K: string }
+  
+  export type Key<R extends R.Unknown> =
+    R extends { __K: infer K } ? K : never;
+  export type Value<R extends R.Unknown> =
+    R extends { __V: infer V } ? V : never
   export type Concat<R1 extends R.Unknown, R2 extends R.Unknown> =
     R.Of<
       R.Key<R1> | R.Key<R2>,
@@ -32,6 +35,6 @@ export const useConstant = <T>(compute: () => T): T => {
   return ref.current;
 }
 
-export const assertNever = (value: never): never => {
+export const assertNever = (_value: never): never => {
   throw new Error('Invariant: assertNever was called')
 }
