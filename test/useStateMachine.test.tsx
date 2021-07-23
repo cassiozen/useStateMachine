@@ -431,6 +431,32 @@ describe('useStateMachine', () => {
       });
     });
 
+    it('should ignore events with nullish values', () => {
+      const { result } = renderHook(() =>
+        useStateMachine()({
+          initial: 'inactive',
+          states: {
+            inactive: {
+              on: {
+                TOGGLE: 'active',
+                ACTIVATE: undefined,
+              },
+            },
+            active: {
+              on: { TOGGLE: 'inactive' },
+            },
+          },
+        })
+      );
+
+      expect(result.current[0]).toStrictEqual({
+        value: 'inactive',
+        context: undefined,
+        event: undefined,
+        nextEvents: ['TOGGLE'],
+      });
+    });
+
     it('should update context on entry', () => {
       const { result } = renderHook(() =>
         useStateMachine<{ toggleCount: number }>({ toggleCount: 0 })({
