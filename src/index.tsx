@@ -80,17 +80,17 @@ const createReducer = (definition: Machine.Definition.Impl) => {
         return machineState;
       }
 
-      let nextStateValue =
-        typeof resolvedTransition === "string" ? resolvedTransition :
-        resolvedTransition.guard === undefined ? resolvedTransition.target :
-        resolvedTransition.guard({ context, event }) ? resolvedTransition.target :
-        undefined;
+      let selectedTransition =
+        typeof resolvedTransition === "string" ? { target: resolvedTransition } :
+        resolvedTransition.guard === undefined ? { target: resolvedTransition.target } :
+        resolvedTransition.guard({ context, event }) ? { target: resolvedTransition.target } :
+        { target: resolvedTransition.target, isDenied: true };
 
-      if (nextStateValue === undefined) {
+      if ("isDenied" in selectedTransition && selectedTransition.isDenied) {
         log(
-          `Current state doesn"t listen to event type "${event.type}".`,
-          ["Current State", machineState],
-          ["Event", event]
+          `Transition from "${machineState.value}" to "${selectedTransition}" denied by guard`,
+          ["Event", event],
+          ["Context", context]
         )
         return machineState;
       }
