@@ -73,7 +73,7 @@ const createReducer = (definition: Machine.Definition.Impl) => {
 
       if (!resolvedTransition) {
         log(
-          `Current state doesn"t listen to event type "${event.type}".`,
+          `Current state doesn't listen to event type "${event.type}".`,
           ["Current State", machineState],
           ["Event", event]
         );
