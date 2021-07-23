@@ -62,8 +62,6 @@
   },
   "prettier": {
     "printWidth": 120,
-    "semi": true,
-    "singleQuote": true,
     "trailingComma": "es5"
   },
   "size-limit": [
