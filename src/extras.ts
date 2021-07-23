@@ -32,4 +32,6 @@ export const useConstant = <T>(compute: () => T): T => {
   return ref.current;
 }
 
-export const assertNever = (value: never): never => {}
+export const assertNever = (value: never): never => {
+  throw new Error('Invariant: assertNever was called')
+}

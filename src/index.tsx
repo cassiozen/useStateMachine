@@ -94,10 +94,10 @@ const createReducer = (definition: Machine.Definition.Impl) => {
         )
         return machineState;
       }
-      log(`Transition from "${machineState.value}" to "${nextStateValue}"`, ['Event', eventObject])
+      log(`Transition from "${machineState.value}" to "${selectedTransition.target}"`, ['Event', event])
       
       return {
-        value: nextStateValue,
+        value: selectedTransition.target,
         context,
         event,
         nextEvents:
