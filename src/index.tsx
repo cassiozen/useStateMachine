@@ -122,13 +122,16 @@ function getState<Context, Events, State extends string, EventString extends str
   value: State,
   event?: Event<Events, EventString>
 ): MachineState<Context, Events, State, EventString> {
-  const on = { ...config.states[value].on, ...config.on };
+  const on: Record<string, unknown> = {
+    ...config.states[value].on,
+    ...config.on,
+  };
 
   return {
     value,
     context,
     event,
-    nextEvents: on ? (Object.keys(on) as EventString[]) : [],
+    nextEvents: on ? (Object.keys(on).filter(key => !!on[key]) as EventString[]) : [],
   };
 }
 
