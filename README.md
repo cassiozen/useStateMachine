@@ -2,20 +2,19 @@
 <img src="https://user-images.githubusercontent.com/33676/111815108-4695b900-88a9-11eb-8b61-3c45b40d4df6.png" width="250" alt=""/>
 </p>
 
-**The ½ kb _state machine_ hook for React:**
+**The <1 kb _state machine_ hook for React:**
 
 - Feature complete (Entry/exit callbacks, Guarded transitions & Extended State - Context)
 - Heavy focus on type inference (you get auto completion for both TypeScript & JavaScript users without having to manually define the typings)
 - Idiomatic React patterns (Since it's built on top of React's useReducer & useEffect, might as well...)
 
-<img width="400" alt="size_badge" src="https://user-images.githubusercontent.com/33676/120556214-ce2b9800-c3c1-11eb-9a55-f9fa4e1fbbe4.png">
+<img width="354" alt="size badge" src="https://user-images.githubusercontent.com/33676/126902516-51f46526-3023-43c7-afd4-17df2e89a3a1.png">
 
 **This docs are for the 1.0.0 version (currently in beta). [Older 0.x.x docs](https://github.com/cassiozen/useStateMachine/tree/b2eea57d877d3b379aa2b86c5301ebbad7515fd9#readme)**
 
 ## Examples
 
-- Examples Walkthrough video: [YouTube](https://youtu.be/1-cu8C8nCzE)
-- Complex UI (Hiding and showing UI Elements based on the state) - [CodeSandbox](https://codesandbox.io/s/github/cassiozen/usestatemachine/tree/main/examples/timer?file=/index.tsx) - [Source](./examples/timer)
+- State-driven UI (Hiding and showing UI Elements based on the state) - [CodeSandbox](https://codesandbox.io/s/github/cassiozen/usestatemachine/tree/main/examples/timer?file=/index.tsx) - [Source](./examples/timer)
 - Async orchestration (Fetch data with limited retry) - [CodeSandbox](https://codesandbox.io/s/github/cassiozen/usestatemachine/tree/main/examples/fetch?file=/index.tsx) - [Source](./examples/fetch)
 - Sending data with events (Form) - [CodeSandbox](https://codesandbox.io/s/github/cassiozen/usestatemachine/tree/main/examples/form?file=/index.tsx) - [Source](./examples/form)
 
@@ -28,7 +27,7 @@ $ npm install @cassiozen/usestatemachine
 ## Sample Usage
 
 ```typescript
-const [state, send] = useStateMachine()({
+const [state, send] = useStateMachine({
   initial: 'inactive',
   states: {
     inactive: {
@@ -57,20 +56,16 @@ send('TOGGLE');
 console.log(state); // { value: 'active', nextEvents: ['TOGGLE'] }
 ```
 
-## What's up with the double parenthesis?
-
-useStateMachine is a curried function (Yummm tasty!) because TypeScript doesn't yet support [partial generics type inference](https://github.com/microsoft/TypeScript/issues/14400).
-This workaround allows TypeScript developers to provide a custom type for the context while still having TypeScript infer all the types used in the configuration (Like the state & transitions names, etc...).
 
 # API
 
 ## useStateMachine
 
 ```typescript
-const [state, send] = useStateMachine(/* Optional Context */)(/* Configuration */);
+const [state, send] = useStateMachine(/* State Machine Definition */);
 ```
 
-`useStateMachine` takes a JavaScript object as context (optional, see below) and one as the state machine configuration. It returns an array consisting of a `current machine state` object and a `send` function to trigger transitions.
+`useStateMachine` takes a JavaScript object as the state machine definition. It returns an array consisting of a `current machine state` object and a `send` function to trigger transitions.
 
 ### Machine state
 
@@ -78,7 +73,7 @@ The `state` consists of 4 properties: `value`, `event`, `nextEvents` and `contex
 
 `value` (string): Returns the name of the current state.
 
-`event` (eventObject: `{type: string}`; Optional): The name of the last sent event that led to this state.
+`event` (`{type: string}`; Optional): The name of the last sent event that led to this state.
 
 `nextEvents` (`string[]`): An array with the names of available events to trigger transitions from this state.
 
@@ -90,21 +85,25 @@ The `state` consists of 4 properties: `value`, `event`, `nextEvents` and `contex
 
 If the transition exists in the configuration object for that state, and is allowed (see guard), it will change the state machine state and execute effects.
 
-## State Machine configuration
+## State Machine definition
 
-The configuration object should contain:
+The definition object should contain:
 
 - initial: The initial state node this machine should be in
 - verbose(optional): If true, will log every context & state changes. Log messages will be stripped out in the production build.
 - states: Define each of the possible states:
 
 ```typescript
-const [state, send] = useStateMachine()({
+const [state, send] = useStateMachine({
   initial: 'inactive',
   verbose: true,
   states: {
-    inactive: {},
-    active: {},
+    inactive: {
+      on: {}
+    },
+    active: {
+      on: {}
+    },
   },
 });
 ```
@@ -136,7 +135,7 @@ on: {
 Effects are triggered when the state machine enters a given state. If you return a function from your effect, it will be invoked when leaving that state (similarly to how useEffect works in React).
 
 ```typescript
-const [state, send] = useStateMachine()({
+const [state, send] = useStateMachine({
   initial: 'active',
   states: {
     active: {
@@ -160,7 +159,7 @@ The effect function receives an object as parameter with four keys:
 In this example, the state machine will always send the "RETRY" event when entering the error state:
 
 ```typescript
-const [state, send] = useStateMachine()({
+const [state, send] = useStateMachine({
   initial: 'loading',
   states: {
     /* Other states here... */
@@ -181,7 +180,7 @@ const [state, send] = useStateMachine()({
 You can set up a guard per transition, using the transition object syntax. Guard run before actually running the transition: If the guard returns false the transition will be denied.
 
 ```js
-const [state, send] = useStateMachine()({
+const [state, send] = useStateMachine({
   initial: 'inactive',
   states: {
     inactive: {
@@ -207,10 +206,11 @@ The guard function receives an object with the current context and the event. Th
 
 Besides the finite number of states, the state machine can have extended state (known as context).
 
-You can provide the initial context value as the first argument to the State Machine hook, and use the `setContext` function within your effects to change the context:
+You can provide the initial context value in the state machine definition, then use the `setContext` function within your effects to change the context:
 
 ```js
-const [state, send] = useStateMachine({ toggleCount: 0 })({
+const [state, send] = useStateMachine({
+  context: { toggleCount: 0 },
   initial: 'inactive',
   states: {
     inactive: {
@@ -232,12 +232,18 @@ send('TOGGLE');
 console.log(state); // { context: { toggleCount: 1 }, value: 'active', nextEvents: ['TOGGLE'] }
 ```
 
-#### Context Typing
+#### Schema: Context & Event Typing
 
-The context types are inferred automatically in TypeScript, but you can provide you own typing if you want to be more specific:
+The context types and event types are inferred automatically by TypeScript, but you can provide you own typing using the `t` whithin `schema` if you want to be more specific:
+
+*Typed Context example*
 
 ```typescript
-const [state, send] = useStateMachine<{ toggleCount: number }>({ toggleCount: 0 })({
+const [state, send] = useStateMachine({
+  schema: {
+    context: t<{ toggleCount: number }>()
+  },
+  context: { toggleCount: 0 },
   initial: 'inactive',
   states: {
     inactive: {
@@ -251,6 +257,12 @@ const [state, send] = useStateMachine<{ toggleCount: number }>({ toggleCount: 0 
     },
   },
 });
+```
+
+*Typed Events*
+
+```typescript
+...
 ```
 
 ## Wiki
