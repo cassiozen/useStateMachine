@@ -1,6 +1,10 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import useStateMachine, { t } from '../src';
-import { A, LS } from '../src/types';
+import { A, LS, UseStateMachine } from "../src/types";
+
+const useStateMachine = (() => []) as any as UseStateMachine;
+const t = <T>() => null as any as T
+
+const query = () => (global as any).twoSlashQueries.shift()
 
 describe("Machine.Definition", () => {
 
@@ -24,27 +28,27 @@ describe("Machine.Definition", () => {
       })
     })
 
-    it.manual("shows child state identifiers as completions", () => {
+    it("shows child state identifiers as completions", () => {
       useStateMachine({
         // @ts-expect-error
-        initial: "",
-        //        ^|
+        initial: "  ",
+        //         ^|
         states: {
           a: {},
           b: {}
         }
       })
 
-      expectCompletionsToBe(["a", "b"])
+      expect(query().completions).toStrictEqual(["a", "b"])
     })
   
-    it.manual("shows custom error in case of no states", () => {
+    it("shows custom error in case of no states", () => {
       useStateMachine({
         // @ts-expect-error
         initial: ""
         // ^?
       })
-      expectQueryTextToInclude(`"Error: no states defined"`)
+      expect(query().text).toContain(`"Error: no states defined"`)
 
       useStateMachine({
         // @ts-expect-error
@@ -71,7 +75,7 @@ describe("Machine.Definition", () => {
       })
     })
   
-    it.manual("shows custom error in case of identifiers other than string", () => {
+    it("shows custom error in case of identifiers other than string", () => {
       useStateMachine({
         initial: 1,
         states: {
@@ -80,13 +84,13 @@ describe("Machine.Definition", () => {
       //  ^?
         }
       })
-      expectQueryTextToInclude(`"Error: only string identifiers allowed"`)
+      expect(query().text).toContain(`"Error: Only string identifiers allowed"`)
 
       useStateMachine({
         initial: 1,
         states: {
           // @ts-expect-error
-          1: "Error: only string identifiers allowed"
+          1: "Error: Only string identifiers allowed"
         }
       })
     })
@@ -139,7 +143,7 @@ describe("Machine.Definition", () => {
         })
       })
 
-      it.manual("shows custom error in case of not extending an object", () => {
+      it("shows custom error in case of not extending an object", () => {
         useStateMachine({
           schema: {
             events: {
@@ -149,7 +153,7 @@ describe("Machine.Definition", () => {
             }
           }
         })
-        expectQueryTextToInclude("Error: An event payload should be an object, eg `t<{ foo: number }>()`")
+        expect(query().text).toContain("Error: An event payload should be an object, eg `t<{ foo: number }>()`")
 
         useStateMachine({
           schema: {
@@ -187,7 +191,7 @@ describe("Machine.Definition", () => {
           states: { a: {} }
         })
 
-        expectQueryTextToInclude(
+        expect(query().text).toContain(
           "Error: An event payload cannot have a property `type` as it's already defined. In this case as 'X'"
         )
 
@@ -319,7 +323,7 @@ describe("Machine.Definition", () => {
         initial: "a",
         states: { a: {} }
       })
-      state.context.foo === "world"
+      A.test(A.areEqual<typeof state.context.foo, string>())
     })
   })
 
@@ -373,7 +377,7 @@ describe("Machine.Definition", () => {
       })
     })
   
-    it.manual("shows custom error in case of identifiers other than string", () => {
+    it("shows custom error in case of identifiers other than string", () => {
       useStateMachine({
         initial: "a",
         states: {
@@ -386,7 +390,7 @@ describe("Machine.Definition", () => {
           }
         }
       })
-      expectQueryTextToInclude(`"Error: only string types allowed"`)
+      expect(query().text).toContain(`"Error: only string types allowed"`)
 
       useStateMachine({
         initial: "a",
@@ -411,7 +415,7 @@ describe("Machine.Definition", () => {
       //  ^?
         }
       })
-      expectQueryTextToInclude(`"Error: only string types allowed"`)
+      expect(query().text).toContain(`"Error: only string types allowed"`)
 
       useStateMachine({
         initial: "a",
@@ -443,7 +447,7 @@ describe("Machine.Definition", () => {
       })
     })
     
-    it.manual("shows custom error in case of $$exhaustive as a key", () => {
+    it("shows custom error in case of $$exhaustive as a key", () => {
       useStateMachine({
         initial: "a",
         states: {
@@ -457,7 +461,7 @@ describe("Machine.Definition", () => {
         }
       })
 
-      expectQueryTextToInclude("Error: '$$exhaustive' is a reversed name")
+      expect(query().text).toContain("Error: '$$exhaustive' is a reversed name")
 
       useStateMachine({
         initial: "a",
@@ -483,7 +487,7 @@ describe("Machine.Definition", () => {
         }
       })
 
-      expectQueryTextToInclude("Error: '$$exhaustive' is a reversed name")
+      expect(query().text).toContain("Error: '$$exhaustive' is a reversed name")
 
       useStateMachine({
         initial: "a",
@@ -493,7 +497,6 @@ describe("Machine.Definition", () => {
         on: {
           // @ts-expect-error
           $$exhaustive: "Error: '$$exhaustive' is a reversed name"
-          // ^?
         }
       })
     })
@@ -568,48 +571,7 @@ describe("Machine.Definition", () => {
       })
     })
 
-    it.manual.todo.maybeTsBug("shows completions based on schema.event", () => {
-      useStateMachine({
-        schema: {
-          events: {
-            X: t<{}>(),
-            Y: t<{}>(),
-          }
-        },
-        initial: "a",
-        states: {
-          a: {
-            on: {
-              
-          //  ^|
-            }
-          }
-        }
-      })
-
-      expectCompletionsToBe(["X", "Y"])
-
-      useStateMachine({
-        schema: {
-          events: {
-            X: t<{}>(),
-            Y: t<{}>(),
-          }
-        },
-        initial: "a",
-        states: {
-          a: {}
-        },
-        on: {
-          
-      //  ^|
-        }
-      })
-
-      expectCompletionsToBe(["X", "Y"])
-    })
-
-    it.manual("shows custom error in case of violation of schema.events", () => {
+    it("shows custom error in case of violation of schema.events", () => {
       useStateMachine({
         schema: {
           events: {
@@ -631,7 +593,7 @@ describe("Machine.Definition", () => {
           }
         }
       })
-      expectQueryTextToInclude(
+      expect(query().text).toContain(
         "Error: Event type 'Z' is not found in schema.events which is marked as exhaustive"
       )
 
@@ -676,7 +638,7 @@ describe("Machine.Definition", () => {
       //  ^?
         }
       })
-      expectQueryTextToInclude(
+      expect(query().text).toContain(
         "Error: Event type 'Z' is not found in schema.events which is marked as exhaustive"
       )
 
@@ -824,12 +786,13 @@ describe("Machine.Definition", () => {
     })
   })
 
-  describe.maybeTsBug("single-functional-property bug", () => {
-    // @ts-expect-error
+  describe("single-functional-property bug", () => {
     useStateMachine({
+      // @ts-ignore
       initial: "a",
       states: {
         a: {
+          // @ts-ignore
           effect: p => {
           }
         }
@@ -853,20 +816,21 @@ describe("Machine.Definition", () => {
       })
     })
 
-    it.manual("shows custom error instructing required change", () => {
-      // @ts-expect-error
+    it("shows custom error instructing required change", () => {
       useStateMachine({
-      // ^?
+        // @ts-expect-error
         initial: "a",
+        // ^?
         states: {
           a: {
+            // @ts-ignore
             effect: p => {
             }
           }
         }
       })
 
-      expectQueryTextToInclude(
+      expect(query().text).toContain(
         "Oops you have met a TypeScript limitation, " +
         "please add `on: {}` to state nodes that only have an `effect` property. " +
         "See the documentation to learn more."
@@ -918,8 +882,8 @@ describe("Machine.Definition", () => {
           a: {
             on: {
               // @ts-expect-error
-              X: ""
-              //  ^|
+              X: "  "
+              //   ^|
             }
           },
           b: {},
@@ -927,7 +891,7 @@ describe("Machine.Definition", () => {
         }
       })
 
-      expectCompletionsToBe(["a", "b", "c"])
+      expect(query().completions).toStrictEqual(["a", "b", "c"])
     })
 
     describe("Machine.Definition.Transition['target']", () => {
@@ -972,8 +936,8 @@ describe("Machine.Definition", () => {
               on: {
                 X: {
                   // @ts-expect-error
-                  target: ""
-                  //       ^|
+                  target: "  "
+                  //        ^|
                 }
               }
             },
@@ -982,7 +946,7 @@ describe("Machine.Definition", () => {
           }
         })
   
-        expectCompletionsToBe(["a", "b", "c"])
+        expect(query().completions).toStrictEqual(["a", "b", "c"])
       })
     })
 
@@ -1091,20 +1055,39 @@ describe("UseStateMachine", () => {
   })
 })
 
+describe("Machine.Definition.FromTypeParamter", () => {
+  let [state, send] = useStateMachine({
+    context: { toggleCount: 0 },
+    initial: "inactive",
+    states: {
+      inactive: {
+        on: { TOGGLE: "active" },
+      },
+      active: {
+        on: { TOGGLE: "inactive" },
+        effect({ setContext }) {
+          setContext(c => ({ toggleCount: c.toggleCount + 1 }));
+        },
+      },
+    },
+  })
 
-declare const describe:
-  & ((label: string, f: () => void) => void)
-  & { maybeTsBug: (label: string, f: () => void) => void
-    }
-declare const it:
-  & ((label: string, f: () => void) => void)
-  & { todo: 
-        & ((label: string, f: () => void) => void)
-        & { maybeTsBug: (label: string, f: () => void) => void
-          }
-    , manual:
-        & ((label: string, f: () => void) => void)
-        & Omit<typeof it, "manual">
-    }
-declare const expectCompletionsToBe: (completions: string[]) => void
-declare const expectQueryTextToInclude: (text: string) => void
+  A.test(A.areEqual<
+    typeof state,
+    | { value: "inactive"
+      , context: { toggleCount: number }
+      , event?: { type: "TOGGLE" }
+      , nextEvents?: "TOGGLE"[]
+      }
+    | { value: "active"
+      , context: { toggleCount: number }
+      , event?: { type: "TOGGLE" }
+      , nextEvents?: "TOGGLE"[]
+      }
+  >())
+
+  A.test(A.areEqual<
+    typeof send,
+    (sendable: "TOGGLE" | { type: "TOGGLE" }) => void
+  >())
+})

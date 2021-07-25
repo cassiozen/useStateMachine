@@ -17,7 +17,7 @@
   "scripts": {
     "start": "tsdx watch",
     "build": "tsdx build",
-    "test": "tsd && tsdx test",
+    "test": "node twoslash-tester/generate && tsdx test",
     "lint": "tsdx lint",
     "prepare": "tsdx build",
     "size": "size-limit",
@@ -30,6 +30,7 @@
     "@size-limit/preset-small-lib": "^4.10.1",
     "@testing-library/react-hooks": "^5.1.0",
     "@types/react": "^17.0.3",
+    "@typescript/twoslash": "^2.1.0",
     "eslint-plugin-react-hooks": "^4.2.0",
     "husky": "^5.1.3",
     "react": ">=16.8.0",
@@ -38,7 +39,14 @@
     "tsd": "^0.15.1",
     "tsdx": "^0.14.1",
     "tslib": "^2.1.0",
-    "typescript": "^4.3.2"
+    "typescript": "^4.3.5"
+  },
+  "resolutions": {
+    "**/@typescript-eslint/eslint-plugin": "^4.28.4",
+    "**/@typescript-eslint/parser": "^4.28.4",
+    "**/jest": "^27.0.6",
+    "**/ts-jest": "^27.0.4",
+    "**/typescript": "^4.3.5"
   },
   "jest": {
     "resetMocks": true

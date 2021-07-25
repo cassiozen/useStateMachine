@@ -1,7 +1,8 @@
 export type UseStateMachine =
-  <D extends Machine.Definition<D>>(definition: A.InferNarrowest<D>) =>
-    [ state: Machine.State<D>
-    , send: Machine.Send<D>
+  <D extends Machine.Definition<D>>(definition: A.InferNarrowestObject<D>) =>
+    [ state: Machine.State<Machine.Definition.FromTypeParamter<D>>
+    , send: Machine.Send<Machine.Definition.FromTypeParamter<D>>
+    , definition: D
     ]
 
 namespace Machine {
@@ -12,16 +13,16 @@ namespace Machine {
     EventsSchema = A.Get<Self, ["schema", "events"]>,
     HasContextSchema = Self extends { schema: { context: unknown } } ? true : false
   > =
-    A.IsUnknown<States> extends true
-      ? LS.ConcatAll<
-          [ "Oops you have met a TypeScript limitation, "
-          , "please add `on: {}` to state nodes that only have an `effect` property. "
-          , "See the documentation to learn more."
-          ]>
-    : { initial:
-          [keyof States] extends [never]
-            ? A.CustomError<"Error: no states defined", A.Get<Self, "initial">>
-            : keyof States
+    & { initial:
+        A.IsUnknown<States> extends true
+          ? LS.ConcatAll<
+              [ "Oops you have met a TypeScript limitation, "
+              , "please add `on: {}` to state nodes that only have an `effect` property. "
+              , "See the documentation to learn more."
+              ]> :
+        [keyof States] extends [never]
+          ? A.CustomError<"Error: no states defined", A.Get<Self, "initial">>
+          : keyof States
       , states:
           { [StateIdentifier in keyof States]:
               StateIdentifier extends A.String
@@ -59,16 +60,22 @@ namespace Machine {
               }
           }
       , verbose?: boolean
+      , __internalIsConstraint?: never
       }
     & (
       ContextSchema extends undefined
         ? HasContextSchema extends true
             ? { context?: undefined }
-            : { context?: A.Get<Self, "context"> }
+            : { context?: unknown }
         : { context: ContextSchema }
     )
 
-  namespace Definition {
+  export namespace Definition {
+    export type FromTypeParamter<D> =
+      "__internalIsConstraint" extends keyof D
+        ? D extends infer X ? X extends Definition<infer X> ? X : never : never
+        : D
+
     export interface StateNode<D, P>
       { on?: On<D, L.Concat<P, ["on"]>>
       , effect?: Effect<D, L.Concat<P, ["effect"]>>
@@ -90,7 +97,7 @@ namespace Machine {
                         "Error: '$$exhaustive' is a reversed name",
                         A.Get<Self, EventType>
                       >
-                    : Transition<D, L.Concat<P, ["on", EventType]>>
+                    : Transition<D, L.Concat<P, [EventType]>>
                 : A.CustomError<
                     LS.ConcatAll<
                       [ `Error: Event type '${EventType}' is not found in schema.events `
@@ -101,31 +108,18 @@ namespace Machine {
             : A.CustomError<"Error: only string types allowed", A.Get<Self, EventType>>
       }
 
-    type Transition<D, P, Self = A.Get<D, P>,
-      Guard = A.Get<Self, "guard">,
+    type Transition<D, P,
       TargetString = Machine.TargetString<D>,
       Event = { type: L.Pop<P> }
     > =
       | TargetString
       | { target: TargetString
         , guard?:
-            [ A.DoesExtend<
-                F.Parameters<Guard>[0], 
-                { context: Machine.Context<D>
-                , event?: U.Extract<Machine.Event<D>, Event>
-                }
-              >
-            , A.DoesExtend<
-                F.Call<Guard>,
-                boolean
-              >
-            ] extends [true, true]
-              ? Guard
-              : ( parameter:
-                  { context: Machine.Context<D>
-                  , event?: U.Extract<Machine.Event<D>, Event>
-                  }
-                ) => boolean
+            ( parameter:
+              { context: Machine.Context<D>
+              , event?: U.Extract<Machine.Event<D>, Event>
+              }
+            ) => boolean
         }
         
 
@@ -359,6 +353,6 @@ export namespace A {
           : `${S.Assert<Error>} `
       : Error
 
-  export declare const test: (o: true) => void;
-  export declare const areEqual: <A, B>(debug?: (value: A) => void) => A.AreEqual<A, B>
+  export const test = (_o: true) => {};
+  export const areEqual = <A, B>(_debug?: (value: A) => void) => undefined as any as A.AreEqual<A, B>
 }
