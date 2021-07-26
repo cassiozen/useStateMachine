@@ -1,3 +1,5 @@
+import { R } from "./extras"
+
 export type UseStateMachine =
   <D extends Machine.Definition<D>>(definition: A.InferNarrowestObject<D>) =>
     [ state: Machine.State<Machine.Definition.FromTypeParamter<D>>
@@ -5,7 +7,7 @@ export type UseStateMachine =
     , definition: D
     ]
 
-namespace Machine {
+export namespace Machine {
   export type Definition<
     Self,
     States = A.Get<Self, "states">,
@@ -71,15 +73,31 @@ namespace Machine {
     )
 
   export namespace Definition {
+    
     export type FromTypeParamter<D> =
       "__internalIsConstraint" extends keyof D
         ? D extends infer X ? X extends Definition<infer X> ? X : never : never
         : D
 
+    export type Impl =
+      { initial: StateValue.Impl
+      , states: R.Of<StateValue.Impl, StateNode.Impl>
+      , on?: On.Impl
+      , schema?: { context?: null, events?: R.Of<Event.Impl["type"], null> }
+      , verbose?: boolean
+      , context?: Context.Impl
+      }
+
     export interface StateNode<D, P>
       { on?: On<D, L.Concat<P, ["on"]>>
       , effect?: Effect<D, L.Concat<P, ["effect"]>>
       }
+    export namespace StateNode {
+      export interface Impl
+        { on?: On.Impl
+        , effect?: Effect.Impl
+        }
+    }
 
     export type On<
       D, P, Self = A.Get<D, P>,
@@ -107,9 +125,12 @@ namespace Machine {
                   >
             : A.CustomError<"Error: only string types allowed", A.Get<Self, EventType>>
       }
+    export namespace On {
+      export type Impl = R.Of<Event.Impl["type"], Transition.Impl>
+    }
 
-    type Transition<D, P,
-      TargetString = Machine.TargetString<D>,
+    export type Transition<D, P,
+      TargetString = Machine.StateValue<D>,
       Event = { type: L.Pop<P> }
     > =
       | TargetString
@@ -121,21 +142,46 @@ namespace Machine {
               }
             ) => boolean
         }
+    export namespace Transition {
+      export type Impl =
+        | State.Impl["value"]
+        | { target: State.Impl["value"]
+          , guard?:
+              ( parameter:
+                { context: State.Impl["context"]
+                , event: State.Impl["event"]
+                }
+              ) => boolean
+          }
+    }
         
 
-      export type Effect<D, P, StateValue = L.Pop<L.Popped<P>>> = 
-        (parameter: EffectParameterForStateValue<D, StateValue>) =>
+    export type Effect<D, P, StateValue = L.Pop<L.Popped<P>>> = 
+      (parameter: EffectParameterForStateValue<D, StateValue>) =>
+        | void
+        | ((parameter: EffectCleanupParameterForStateValue<D, StateValue>) => void)
+    
+    export namespace Effect {
+      export type Impl =
+        (parameter: EffectParameter.Impl) =>
           | void
-          | ((parameter: EffectCleanupParameterForStateValue<D, StateValue>) => void)
+          | ((parameter: EffectParameter.Cleanup.Impl) => void)
+    }
 
     export type ExhaustiveIdentifier = "$$exhaustive"
   }
 
-  export type TargetString<D> =
+  export type StateValue<D> =
     keyof A.Get<D, "states">
+  export namespace StateValue {
+    export type Impl = string & A.Tag<"Machine.StateValue">
+  }
   
   export type Context<D> =
     A.Get<D, ["schema", "context"], A.Get<D, "context">>
+  export namespace Context {
+    export type Impl = {} & A.Tag<"Machine.Context">
+  }
 
   export type Event<D, EventsSchema = A.Get<D, ["schema", "events"], {}>> = 
     | O.Value<{ [T in U.Exclude<keyof EventsSchema, Definition.ExhaustiveIdentifier>]:
@@ -163,10 +209,43 @@ namespace Machine {
               : never
           : never
       )
+  export namespace Event {
+    export type Impl =
+      { type: string & A.Tag<"Machine.Event['type']"> }
+  }
+
+  export namespace EffectParameter {
+    export interface EffectParameterForStateValue<D, StateValue>
+      extends Base<D>
+      { event: Machine.EntryEventForStateValue<D, StateValue>
+      }
+
+    export namespace Cleanup {
+      export interface ForStateValue<D, StateValue>
+        extends Base<D>
+        { event: Machine.ExitEventForStateValue<D, StateValue>
+        }
+      
+      export type Impl = EffectParameter.Impl
+    }
+
+    export interface Base<D>
+      { send: Machine.Send<D>
+      , context: Machine.Context<D>
+      , setContext: Machine.SetContext<D>
+      }
+  
+    export interface Impl
+      { event?: Event.Impl
+      , send: Send.Impl
+      , context: Context.Impl
+      , setContext: SetContext.Impl
+      }
+  }
 
   export interface EffectParameterForStateValue<D, StateValue>
     extends BaseEffectParameter<D>
-    { event: Machine.EntryEventForStateValue<D, StateValue>
+    { event?: Machine.EntryEventForStateValue<D, StateValue>
     }
 
   export interface EffectCleanupParameterForStateValue<D, StateValue>
@@ -220,24 +299,47 @@ namespace Machine {
           : never
       )
     | E
+  export namespace Sendable {
+    export type Impl =
+      | Event.Impl["type"]
+      | Event.Impl
+  }
 
   export type Send<D> =
     (sendable: Sendable<D>) => void
+  export namespace Send {
+    export type Impl = (send: Sendable.Impl) => void
+  }
 
   export type SetContext<D> =
     (contextUpdater: ContextUpdater<D>) => ({ send: Send<D> })
+  export namespace SetContext {
+    export type Impl = (context: ContextUpdater.Impl) => ({ send: Send.Impl })
+  }
 
   export type ContextUpdater<D> =
     (context: Context<D>) => Context<D>
+  export namespace ContextUpdater {
+    export type Impl = (context: Context.Impl) => Context.Impl
+  }
 
-  export type State<D, StateValue = TargetString<D>> =
-    StateValue extends any
-      ? { value: StateValue
+  export type State<D, Value = StateValue<D>> =
+    Value extends any
+      ? { value: Value
         , context: Context<D>
-        , event?: EntryEventForStateValue<D, StateValue>
-        , nextEvents?: A.Get<ExitEventForStateValue<D, StateValue>, "type">[]
+        , event?: EntryEventForStateValue<D, Value>
+        , nextEvents?: A.Get<ExitEventForStateValue<D, Value>, "type">[]
         }
       : never
+  
+  export namespace State {
+    export interface Impl
+      { value: StateValue.Impl
+      , context: Context.Impl
+      , event?: Event.Impl
+      , nextEvents: Event.Impl["type"][]
+      }
+  }
 }
 
 export namespace L {
@@ -352,6 +454,9 @@ export namespace A {
           ? Error
           : `${S.Assert<Error>} `
       : Error
+
+  export type Tag<N extends A.String> =
+    { [_ in N]: void }
 
   export const test = (_o: true) => {};
   export const areEqual = <A, B>(_debug?: (value: A) => void) => undefined as any as A.AreEqual<A, B>
