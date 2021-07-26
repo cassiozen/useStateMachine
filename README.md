@@ -87,40 +87,36 @@ If the transition exists in the configuration object for that state, and is allo
 
 ## State Machine definition
 
-The definition object should contain:
+| Key         | Required | Description |
+| ----------- | ---- |----------- |
+| verbose     |   | If true, will log every context & state changes. Log messages will be stripped out in the production build. |
+| schema      |   | For usage with TypeScript only. Optional strongly-typed context & events. More on schema [below](#schema-context--event-typing) |
+| context     |   | Extended state initial value. More on extended state [below](#extended-state-context) |
+| initial     | * | The initial state node this machine should be in |
+| states      | * | Define the possible finite states the state machine can be in. |
 
-- initial: The initial state node this machine should be in
-- verbose(optional): If true, will log every context & state changes. Log messages will be stripped out in the production build.
-- states: Define each of the possible states:
+### Defining States
+
+A finite state machine can be in only one of a finite number of states at any given time. As an application is interacted with, events cause it to change state.
+
+States are defined with the state name as a key and an object describing which events this state responds to (and to which other state the machine should transition to):
 
 ```typescript
-const [state, send] = useStateMachine({
-  initial: 'inactive',
-  verbose: true,
-  states: {
-    inactive: {
-      on: {}
-    },
-    active: {
-      on: {}
-    },
+states: {
+  inactive: {
+    on: {
+      TOGGLE: 'active';
+    }
   },
-});
+  active: {
+    on: {
+      TOGGLE: 'inactive';
+    }
+  },
+},
 ```
 
-### Events & Transition Syntax
-
-A state transition defines what the next state is, given the current state and event. State transitions are defined on state nodes, in the `on` property:
-
-```js
-on: {
-  TOGGLE: 'active';
-}
-
-// (Where TOGGLE stands for an event name that will trigger a transition.)
-```
-
-Or using the extended, object syntax, which allows for more control over the transition (like adding guards):
+The event definition can also use the extended, object syntax, which allows for more control over the transition (like adding guards):
 
 ```js
 on: {
@@ -232,7 +228,7 @@ send('TOGGLE');
 console.log(state); // { context: { toggleCount: 1 }, value: 'active', nextEvents: ['TOGGLE'] }
 ```
 
-#### Schema: Context & Event Typing
+### Schema: Context & Event Typing
 
 The context types and event types are inferred automatically by TypeScript, but you can provide you own typing using the `t` whithin `schema` if you want to be more specific:
 
@@ -261,9 +257,36 @@ const [state, send] = useStateMachine({
 
 *Typed Events*
 
+Typing the event inside schema is specially useful if you want to send arbitrary data with the event. Here's a quick example:
+
 ```typescript
-...
+const [machine, send] = useStateMachine({
+  schema: {
+    context: t<{ timeout?: number }>(),
+    events: {
+      PING: t<{ value: number }>()
+    }
+  },
+  context: {timeout: undefined},
+  initial: 'waiting',
+  states: {
+    waiting: {
+      on: {
+        PING: 'pinged'
+      }
+    },
+    pinged: {
+      effect({ setContext, event }) {
+        setContext(c => ({ timeout: event?.value ?? 0 }));
+      },
+    }
+  },
+});
+
+send({ type: 'PING', value: 150 })
 ```
+
+More information about [Sending data with events](https://github.com/cassiozen/useStateMachine/wiki/Sending-data-with-Events).
 
 ## Wiki
 
