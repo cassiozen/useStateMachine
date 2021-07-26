@@ -74,32 +74,34 @@ export namespace Machine {
         : { context: ContextSchema }
     )
 
+  interface DefinitionImp
+    { initial: StateValue.Impl
+    , states: R.Of<StateValue.Impl, Definition.StateNode.Impl>
+    , on?: Definition.On.Impl
+    , schema?: { context?: null, events?: R.Of<Event.Impl["type"], null> }
+    , verbose?: boolean
+    , console?: Console
+    , context?: Context.Impl
+    }
   export namespace Definition {
+    export type Impl = DefinitionImp
     
     export type FromTypeParamter<D> =
       "__internalIsConstraint" extends keyof D
         ? D extends infer X ? X extends Definition<infer X> ? X : never : never
         : D
 
-    export type Impl =
-      { initial: StateValue.Impl
-      , states: R.Of<StateValue.Impl, StateNode.Impl>
-      , on?: On.Impl
-      , schema?: { context?: null, events?: R.Of<Event.Impl["type"], null> }
-      , verbose?: boolean
-      , console?: Console
-      , context?: Context.Impl
-      }
-
     export interface StateNode<D, P>
       { on?: On<D, L.Concat<P, ["on"]>>
       , effect?: Effect<D, L.Concat<P, ["effect"]>>
       }
+
+    interface StateNodeImpl
+      { on?: On.Impl
+      , effect?: Effect.Impl
+      }
     export namespace StateNode {
-      export interface Impl
-        { on?: On.Impl
-        , effect?: Effect.Impl
-        }
+      export type Impl = StateNodeImpl
     }
 
     export type On<
@@ -128,8 +130,10 @@ export namespace Machine {
                   >
             : A.CustomError<"Error: only string types allowed", A.Get<Self, EventType>>
       }
+    
+    type OnImpl = R.Of<Event.Impl["type"], Transition.Impl>
     export namespace On {
-      export type Impl = R.Of<Event.Impl["type"], Transition.Impl>
+      export type Impl = OnImpl;
     }
 
     export type Transition<D, P,
@@ -145,8 +149,8 @@ export namespace Machine {
               }
             ) => boolean
         }
-    export namespace Transition {
-      export type Impl =
+
+    type TransitionImpl =
         | State.Impl["value"]
         | { target: State.Impl["value"]
           , guard?:
@@ -156,6 +160,8 @@ export namespace Machine {
                 }
               ) => boolean
           }
+    export namespace Transition {
+      export type Impl = TransitionImpl
     }
         
 
@@ -164,11 +170,12 @@ export namespace Machine {
         | void
         | ((parameter: EffectCleanupParameterForStateValue<D, StateValue>) => void)
     
-    export namespace Effect {
-      export type Impl =
-        (parameter: EffectParameter.Impl) =>
+    type EffectImpl =
+      (parameter: EffectParameter.Impl) =>
           | void
           | ((parameter: EffectParameter.Cleanup.Impl) => void)
+    export namespace Effect {
+      export type Impl = EffectImpl;  
     }
 
     export type ExhaustiveIdentifier = "$$exhaustive"
@@ -176,14 +183,18 @@ export namespace Machine {
 
   export type StateValue<D> =
     keyof A.Get<D, "states">
+
+  type StateValueImpl = string & A.Tag<"Machine.StateValue">
   export namespace StateValue {
-    export type Impl = string & A.Tag<"Machine.StateValue">
+    export type Impl = StateValueImpl;
   }
   
   export type Context<D> =
     A.Get<D, ["schema", "context"], A.Get<D, "context">>
+
+  type ContextImpl = {} & A.Tag<"Machine.Context">
   export namespace Context {
-    export type Impl = {} & A.Tag<"Machine.Context">
+    export type Impl = ContextImpl;
   }
 
   export type Event<D, EventsSchema = A.Get<D, ["schema", "events"], {}>> = 
@@ -212,9 +223,10 @@ export namespace Machine {
               : never
           : never
       )
+    
+  type EventImpl = { type: string & A.Tag<"Machine.Event['type']"> }
   export namespace Event {
-    export type Impl =
-      { type: string & A.Tag<"Machine.Event['type']"> }
+    export type Impl = EventImpl
   }
 
   export namespace EffectParameter {
@@ -238,13 +250,14 @@ export namespace Machine {
       , setContext: Machine.SetContext<D>
       }
   
-    export interface Impl
-      { event?: Event.Impl
-      , send: Send.Impl
-      , context: Context.Impl
-      , setContext: SetContext.Impl
-      }
+    export type Impl = EffectParameterImpl;
   }
+  export interface EffectParameterImpl
+    { event?: Event.Impl
+    , send: Send.Impl
+    , context: Context.Impl
+    , setContext: SetContext.Impl
+    }
 
   export interface EffectParameterForStateValue<D, StateValue>
     extends BaseEffectParameter<D>
@@ -302,28 +315,35 @@ export namespace Machine {
           : never
       )
     | E
+  type SendableImpl = 
+    | Event.Impl["type"]
+    | Event.Impl
   export namespace Sendable {
-    export type Impl =
-      | Event.Impl["type"]
-      | Event.Impl
+    export type Impl = SendableImpl;  
   }
 
   export type Send<D> =
     (sendable: Sendable<D>) => void
+
+  type SendImpl = (send: Sendable.Impl) => void
   export namespace Send {
-    export type Impl = (send: Sendable.Impl) => void
+    export type Impl = SendImpl;
   }
 
   export type SetContext<D> =
-    (contextUpdater: ContextUpdater<D>) => ({ send: Send<D> })
+    (contextUpdater: ContextUpdater<D>) => { send: Send<D> }
+  
+  export type SetContextImpl =
+    (context: ContextUpdater.Impl) => { send: Send.Impl }
   export namespace SetContext {
-    export type Impl = (context: ContextUpdater.Impl) => ({ send: Send.Impl })
+    export type Impl = SetContextImpl;
   }
 
-  export type ContextUpdater<D> =
-    (context: Context<D>) => Context<D>
+  export type ContextUpdater<D> = (context: Context<D>) => Context<D>
+
+  type ContextUpdaterImpl = (context: Context.Impl) => Context.Impl
   export namespace ContextUpdater {
-    export type Impl = (context: Context.Impl) => Context.Impl
+    export type Impl = ContextUpdaterImpl;
   }
 
   export type State<D, Value = StateValue<D>> =
@@ -334,14 +354,15 @@ export namespace Machine {
         , nextEvents?: A.Get<ExitEventForStateValue<D, Value>, "type">[]
         }
       : never
-  
+    
+  interface StateImpl
+    { value: StateValue.Impl
+    , context: Context.Impl
+    , event?: Event.Impl
+    , nextEvents: Event.Impl["type"][]
+    }
   export namespace State {
-    export interface Impl
-      { value: StateValue.Impl
-      , context: Context.Impl
-      , event?: Event.Impl
-      , nextEvents: Event.Impl["type"][]
-      }
+    export type Impl = StateImpl
   }
 }
 
