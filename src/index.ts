@@ -33,7 +33,7 @@ const useStateMachineImpl = (definition: Machine.Definition.Impl) => {
 const createInitialState = (definition: Machine.Definition.Impl): Machine.State.Impl => ({
   value: definition.initial,
   context: definition.context as Machine.Context.Impl,
-  event: undefined,
+  event: { type: "$$initial" } as Machine.Event.Impl,
   nextEvents: R.keys(
     R.concat(R.fromMaybe(R.get(definition.states, definition.initial)!.on), R.fromMaybe(definition.on))
   ),

@@ -34,7 +34,7 @@ describe("useStateMachine", () => {
 
       expect(result.current[0]).toStrictEqual({
         context: undefined,
-        event: undefined,
+        event: { type: "$$initial" },
         value: "inactive",
         nextEvents: ["TOGGLE"],
       });
@@ -153,7 +153,7 @@ describe("useStateMachine", () => {
 
       expect(result.current[0]).toStrictEqual({
         context: undefined,
-        event: undefined,
+        event: { type: "$$initial" },
         value: "inactive",
         nextEvents: ["TOGGLE"],
       });
@@ -351,7 +351,7 @@ describe("useStateMachine", () => {
       expect(guard).toHaveBeenCalled();
       expect(result.current[0]).toStrictEqual({
         context: undefined,
-        event: undefined,
+        event: { type: "$$initial" },
         value: "inactive",
         nextEvents: ["TOGGLE"],
       });
@@ -414,7 +414,7 @@ describe("useStateMachine", () => {
       expect(result.current[0]).toStrictEqual({
         value: "inactive",
         context: { foo: "bar" },
-        event: undefined,
+        event: { type: "$$initial" },
         nextEvents: ["TOGGLE"],
       });
     });
@@ -431,7 +431,9 @@ describe("useStateMachine", () => {
                 expect(params.context).toStrictEqual({
                   foo: "bar",
                 });
-                expect(params.event).toBeUndefined();
+                expect(params.event).toStrictEqual({
+                  type: "$$initial"
+                })
               },
             },
             active: {
@@ -444,7 +446,7 @@ describe("useStateMachine", () => {
       expect(result.current[0]).toStrictEqual({
         value: "inactive",
         context: { foo: "bar" },
-        event: undefined,
+        event: { type: "$$initial" },
         nextEvents: ["TOGGLE"],
       });
     });
