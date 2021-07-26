@@ -4,7 +4,8 @@ import { A, LS, UseStateMachine } from "../src/types";
 const useStateMachine = (() => []) as any as UseStateMachine;
 const t = <T>() => null as any as T
 
-const query = () => (global as any).twoSlashQueries.shift()
+const query = () => 
+  ((global as any).twoSlashQueries.shift()) as { completions: string[], text: string }
 
 describe("Machine.Definition", () => {
 

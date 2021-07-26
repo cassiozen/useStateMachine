@@ -1,6 +1,5 @@
 // @ts-check
 
-// @ts-ignore
 const { twoslasher } = require("@typescript/twoslash")
 const path = require("path")
 const fs = require("fs/promises")
