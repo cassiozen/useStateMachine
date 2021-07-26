@@ -59,7 +59,7 @@ console.log(state); // { value: 'active', nextEvents: ['TOGGLE'] }
 
 # API
 
-## useStateMachine
+# useStateMachine
 
 ```typescript
 const [state, send] = useStateMachine(/* State Machine Definition */);
@@ -67,7 +67,7 @@ const [state, send] = useStateMachine(/* State Machine Definition */);
 
 `useStateMachine` takes a JavaScript object as the state machine definition. It returns an array consisting of a `current machine state` object and a `send` function to trigger transitions.
 
-### Machine state
+## Machine state
 
 The `state` consists of 4 properties: `value`, `event`, `nextEvents` and `context`.
 
@@ -79,13 +79,13 @@ The `state` consists of 4 properties: `value`, `event`, `nextEvents` and `contex
 
 `context`: The state machine extended state. See "Extended State" below.
 
-### Send events
+## Send events
 
 `send` takes an event as argument, provided in shorthand string format (e.g. "TOGGLE") or as an event object (e.g. `{ type: "TOGGLE" }`)
 
-If the transition exists in the configuration object for that state, and is allowed (see guard), it will change the state machine state and execute effects.
+If the current state accepts this event, and it is allowed (see guard), it will change the state machine state and execute effects.
 
-## State Machine definition
+# State Machine definition
 
 | Key         | Required | Description |
 | ----------- | ---- |----------- |
@@ -95,11 +95,15 @@ If the transition exists in the configuration object for that state, and is allo
 | initial     | * | The initial state node this machine should be in |
 | states      | * | Define the possible finite states the state machine can be in. |
 
-### Defining States
+## Defining States
 
 A finite state machine can be in only one of a finite number of states at any given time. As an application is interacted with, events cause it to change state.
 
-States are defined with the state name as a key and an object describing which events this state responds to (and to which other state the machine should transition to):
+States are defined with the state name as a key and an object with two possible keys: `on` (which events this state responds to) and `effect` (run arbitrary code when entering or exiting this state):
+
+## On (Events & transitions)
+
+Describes which events this state responds to (and to which other state the machine should transition to when this event is sent):
 
 ```typescript
 states: {
@@ -126,7 +130,34 @@ on: {
 };
 ```
 
-### Effects (entry/exit callbacks)
+### Guards
+
+Guards are functions that run before actually making the state transition: If the guard returns false the transition will be denied.
+
+```js
+const [state, send] = useStateMachine({
+  initial: 'inactive',
+  states: {
+    inactive: {
+      on: {
+        TOGGLE: {
+          target: 'active',
+          guard({ context, event }) {
+            // Return a boolean to allow or block the transition
+          },
+        },
+      },
+    },
+    active: {
+      on: { TOGGLE: 'inactive' },
+    },
+  },
+});
+```
+
+The guard function receives an object with the current context and the event. The event parameter always uses the object format (e.g. `{ type: 'TOGGLE' }`).
+
+## Effects (entry/exit callbacks)
 
 Effects are triggered when the state machine enters a given state. If you return a function from your effect, it will be invoked when leaving that state (similarly to how useEffect works in React).
 
@@ -171,34 +202,7 @@ const [state, send] = useStateMachine({
 });
 ```
 
-### Guards
-
-You can set up a guard per transition, using the transition object syntax. Guard run before actually running the transition: If the guard returns false the transition will be denied.
-
-```js
-const [state, send] = useStateMachine({
-  initial: 'inactive',
-  states: {
-    inactive: {
-      on: {
-        TOGGLE: {
-          target: 'active',
-          guard({ context, event }) {
-            // Return a boolean to allow or block the transition
-          },
-        },
-      },
-    },
-    active: {
-      on: { TOGGLE: 'inactive' },
-    },
-  },
-});
-```
-
-The guard function receives an object with the current context and the event. The event parameter always uses the object format (e.g. `{ type: 'TOGGLE' }`).
-
-### Extended state (context)
+## Extended state (context)
 
 Besides the finite number of states, the state machine can have extended state (known as context).
 
@@ -228,9 +232,11 @@ send('TOGGLE');
 console.log(state); // { context: { toggleCount: 1 }, value: 'active', nextEvents: ['TOGGLE'] }
 ```
 
-### Schema: Context & Event Typing
+## Schema: Context & Event Typing
 
-The context types and event types are inferred automatically by TypeScript, but you can provide you own typing using the `t` whithin `schema` if you want to be more specific:
+TypeScript will automatically infer your context type; event types are generated automatically.
+
+Still, there are situations where you might want explicit control over the `context` and `event` types: You can provide you own typing using the `t` whithin `schema`:
 
 *Typed Context example*
 
@@ -288,7 +294,7 @@ send({ type: 'PING', value: 150 })
 
 More information about [Sending data with events](https://github.com/cassiozen/useStateMachine/wiki/Sending-data-with-Events).
 
-## Wiki
+# Wiki
 
 - [Sending data with events](https://github.com/cassiozen/useStateMachine/wiki/Sending-data-with-Events)
 - [Updating from version 0.x.x to 1.0](https://github.com/cassiozen/useStateMachine/wiki/Updating-from-0.X.X-to-1.0.0)
@@ -297,7 +303,7 @@ More information about [Sending data with events](https://github.com/cassiozen/u
 - [Source code walkthrough video](https://github.com/cassiozen/useStateMachine/wiki/Source-code-walkthrough-video)
 - [Usage with Preact](https://github.com/cassiozen/useStateMachine/wiki/Usage-with-Preact)
 
-## Contributors ✨
+# Contributors ✨
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
 
