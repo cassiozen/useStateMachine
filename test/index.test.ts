@@ -23,10 +23,10 @@ describe("useStateMachine", () => {
           initial: "inactive",
           states: {
             inactive: {
-              on: { TOGGLE: "active" },
+              on: { ACTIVATE: "active" },
             },
             active: {
-              on: { TOGGLE: "inactive" },
+              on: { DEACTIVATE: "inactive" },
             },
           },
         })
@@ -36,7 +36,7 @@ describe("useStateMachine", () => {
         context: undefined,
         event: { type: "$$initial" },
         value: "inactive",
-        nextEvents: ["TOGGLE"],
+        nextEvents: ["ACTIVATE"],
       });
     });
 
@@ -46,43 +46,11 @@ describe("useStateMachine", () => {
           initial: "inactive",
           states: {
             inactive: {
-              on: { TOGGLE: "active" },
+              on: { ACTIVATE: "active" },
             },
             active: {
-              on: { TOGGLE: "inactive" },
+              on: { DEACTIVATE: "inactive" },
             },
-          },
-        })
-      );
-
-      act(() => {
-        result.current[1]("TOGGLE");
-      });
-
-      expect(result.current[0]).toStrictEqual({
-        context: undefined,
-        event: {
-          type: "TOGGLE",
-        },
-        value: "active",
-        nextEvents: ["TOGGLE"],
-      });
-    });
-
-    it("should transition using a top-level `on`", () => {
-      const { result } = renderHook(() =>
-        useStateMachine({
-          initial: "inactive",
-          states: {
-            inactive: {
-              on: { TOGGLE: "active" },
-            },
-            active: {
-              on: { TOGGLE: "inactive" },
-            },
-          },
-          on: {
-            ACTIVATE: "active",
           },
         })
       );
@@ -97,7 +65,39 @@ describe("useStateMachine", () => {
           type: "ACTIVATE",
         },
         value: "active",
-        nextEvents: ["TOGGLE", "ACTIVATE"],
+        nextEvents: ["DEACTIVATE"],
+      });
+    });
+
+    it("should transition using a top-level `on`", () => {
+      const { result } = renderHook(() =>
+        useStateMachine({
+          initial: "inactive",
+          states: {
+            inactive: {
+              on: { ACTIVATE: "active" },
+            },
+            active: {
+              on: { DEACTIVATE: "inactive" },
+            },
+          },
+          on: {
+            FORCE_ACTIVATE: "active",
+          },
+        })
+      );
+
+      act(() => {
+        result.current[1]("FORCE_ACTIVATE");
+      });
+
+      expect(result.current[0]).toStrictEqual({
+        context: undefined,
+        event: {
+          type: "FORCE_ACTIVATE",
+        },
+        value: "active",
+        nextEvents: ["DEACTIVATE", "FORCE_ACTIVATE"],
       });
     });
 
@@ -107,26 +107,26 @@ describe("useStateMachine", () => {
           initial: "inactive",
           states: {
             inactive: {
-              on: { TOGGLE: "active" },
+              on: { ACTIVATE: "active" },
             },
             active: {
-              on: { TOGGLE: "inactive" },
+              on: { DEACTIVATE: "inactive" },
             },
           },
         })
       );
 
       act(() => {
-        result.current[1]({ type: "TOGGLE" });
+        result.current[1]({ type: "ACTIVATE" });
       });
 
       expect(result.current[0]).toStrictEqual({
         context: undefined,
         event: {
-          type: "TOGGLE",
+          type: "ACTIVATE",
         },
         value: "active",
-        nextEvents: ["TOGGLE"],
+        nextEvents: ["DEACTIVATE"],
       });
     });
 

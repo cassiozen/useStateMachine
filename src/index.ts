@@ -83,11 +83,13 @@ const createReducer = (definition: Machine.Definition.Impl) => {
       }
       log(`Transition from "${machineState.value}" to "${nextStateValue}"`, ["Event", event]);
 
+      let resolvedStateNode = R.get(definition.states, nextStateValue)!;
+
       return {
         value: nextStateValue,
         context,
         event,
-        nextEvents: R.keys(R.concat(R.fromMaybe(stateNode.on), R.fromMaybe(definition.on))),
+        nextEvents: R.keys(R.concat(R.fromMaybe(resolvedStateNode.on), R.fromMaybe(definition.on))),
       };
     }
 
