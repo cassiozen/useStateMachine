@@ -107,14 +107,25 @@ interface SendEvent {
 
 type InternalEvent = SetContextEvent | SendEvent;
 
-const createLogger = (definition: Machine.Definition.Impl) => (groupLabel: string, ...nested: [string, any][]) => {
+export type Console =
+  { log: (a: string, b: string | object) => void
+  , groupCollapsed?: (...l: string[]) => void
+  , groupEnd?: () => void
+  }
+
+// test sub-typing
+const defaultConsole: Console = console
+
+const createLogger = (definition: Machine.Definition.Impl) => (groupLabel: string, ...nested: [string, string | object][]) => {
   if (!definition.verbose) return;
-  if (process.env.NODE_ENV === "development") {
-    console.groupCollapsed("%cuseStateMachine", "color: #888; font-weight: lighter;", groupLabel);
+  
+  let console = definition.console || defaultConsole
+  if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
+    console.groupCollapsed?.("%cuseStateMachine", "color: #888; font-weight: lighter;", groupLabel);
     nested.forEach(message => {
       console.log(message[0], message[1]);
     });
-    console.groupEnd();
+    console.groupEnd?.();
   }
 };
 

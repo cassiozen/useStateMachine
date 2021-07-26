@@ -1,3 +1,4 @@
+import { Console } from "."
 import { R } from "./extras"
 
 export type UseStateMachine =
@@ -62,6 +63,7 @@ export namespace Machine {
               }
           }
       , verbose?: boolean
+      , console?: Console
       , __internalIsConstraint?: never
       }
     & (
@@ -85,6 +87,7 @@ export namespace Machine {
       , on?: On.Impl
       , schema?: { context?: null, events?: R.Of<Event.Impl["type"], null> }
       , verbose?: boolean
+      , console?: Console
       , context?: Context.Impl
       }
 

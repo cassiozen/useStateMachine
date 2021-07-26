@@ -1,9 +1,19 @@
 import { renderHook, act } from "@testing-library/react-hooks";
-import useStateMachine, { t } from "../src";
+import _useStateMachine, { t, Console } from "../src";
 
-jest.mock("../src/logger", () => jest.fn());
+let log = "";
+const logger: Console["log"] = (...xs) =>
+  log += xs.reduce(
+    (a, x) => a + (typeof x === "string" ? x : JSON.stringify(x)),
+    ""
+  )
+const clearLog = () =>
+  log = "";
 
-const loggerMock = logger as jest.Mock;
+const useStateMachine =
+  ((d: any) =>
+    _useStateMachine({ ...d, console: { log: logger } })
+  ) as typeof _useStateMachine
 
 describe("useStateMachine", () => {
   describe("States & Transitions", () => {
@@ -290,6 +300,7 @@ describe("useStateMachine", () => {
 
       renderHook(() =>
         useStateMachine({
+          context: false,
           initial: "inactive",
           states: {
             inactive: {
@@ -505,6 +516,7 @@ describe("useStateMachine", () => {
   });
   describe("Verbose Mode (Logger)", () => {
     it("should log when invalid event is provided as string", () => {
+      clearLog();
       renderHook(() =>
         useStateMachine({
           verbose: true,
@@ -520,11 +532,11 @@ describe("useStateMachine", () => {
         })
       );
 
-      expect(loggerMock).toHaveBeenCalledTimes(1);
-      expect(loggerMock.mock.calls[0][0]).toMatch(/invalid/);
+      expect(log).toMatch(/invalid/);
     });
 
     it("should log when invalid event is provided as object", () => {
+      clearLog();
       renderHook(() =>
         useStateMachine({
           verbose: true,
@@ -540,8 +552,7 @@ describe("useStateMachine", () => {
         })
       );
 
-      expect(loggerMock).toHaveBeenCalledTimes(1);
-      expect(loggerMock.mock.calls[0][0]).toMatch(/invalid/);
+      expect(log).toMatch(/invalid/);
     });
   });
   describe("React performance", () => {
