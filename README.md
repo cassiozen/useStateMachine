@@ -101,7 +101,7 @@ A finite state machine can be in only one of a finite number of states at any gi
 
 States are defined with the state name as a key and an object with two possible keys: `on` (which events this state responds to) and `effect` (run arbitrary code when entering or exiting this state):
 
-## On (Events & transitions)
+### On (Events & transitions)
 
 Describes which events this state responds to (and to which other state the machine should transition to when this event is sent):
 
@@ -130,7 +130,7 @@ on: {
 };
 ```
 
-### Guards
+#### Guards
 
 Guards are functions that run before actually making the state transition: If the guard returns false the transition will be denied.
 
@@ -157,7 +157,7 @@ const [state, send] = useStateMachine({
 
 The guard function receives an object with the current context and the event. The event parameter always uses the object format (e.g. `{ type: 'TOGGLE' }`).
 
-## Effects (entry/exit callbacks)
+### Effects (entry/exit callbacks)
 
 Effects are triggered when the state machine enters a given state. If you return a function from your effect, it will be invoked when leaving that state (similarly to how useEffect works in React).
 
