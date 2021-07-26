@@ -24,8 +24,8 @@ const useStateMachineImpl = (definition: Machine.Definition.Impl) => {
     return typeof exit === "function"
       ? () => exit?.({ send, setContext, event: state.event, context: state.context })
       : undefined;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.value, state.event]); 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.value, state.event]);
 
   return [state, send];
 };
@@ -66,27 +66,25 @@ const createReducer = (definition: Machine.Definition.Impl) => {
         return machineState;
       }
 
-      let selectedTransition =
-        typeof resolvedTransition === "string"
-          ? { target: resolvedTransition }
-          : resolvedTransition.guard === undefined
-          ? { target: resolvedTransition.target }
-          : resolvedTransition.guard({ context, event })
-          ? { target: resolvedTransition.target }
-          : { target: resolvedTransition.target, isDenied: true };
+      let [nextStateValue, didGuardDeny = false] = (() => {
+        if (typeof resolvedTransition === "string") return [resolvedTransition];
+        if (resolvedTransition.guard === undefined) return [resolvedTransition.target];
+        if (resolvedTransition.guard({ context, event })) return [resolvedTransition.target];
+        return [resolvedTransition.target, true]
+      })() as [Machine.StateValue.Impl, true?]
 
-      if ("isDenied" in selectedTransition && selectedTransition.isDenied) {
+      if (didGuardDeny) {
         log(
-          `Transition from "${machineState.value}" to "${selectedTransition.target}" denied by guard`,
+          `Transition from "${machineState.value}" to "${nextStateValue}" denied by guard`,
           ["Event", event],
           ["Context", context]
         );
         return machineState;
       }
-      log(`Transition from "${machineState.value}" to "${selectedTransition.target}"`, ["Event", event]);
+      log(`Transition from "${machineState.value}" to "${nextStateValue}"`, ["Event", event]);
 
       return {
-        value: selectedTransition.target,
+        value: nextStateValue,
         context,
         event,
         nextEvents: R.keys(R.concat(R.fromMaybe(stateNode.on), R.fromMaybe(definition.on))),
