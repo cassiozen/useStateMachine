@@ -19,6 +19,18 @@
       ]
     },
     {
+      "login": "devanshj",
+      "name": "Devansh Jethmalani",
+      "avatar_url": "https://avatars.githubusercontent.com/u/30295578?v=4",
+      "profile": "https://github.com/devanshj",
+      "contributions": [
+        "code",
+        "test"
+        "ideas",
+        "bug",
+      ]
+    },
+    {
       "login": "RunDevelopment",
       "name": "Michael Schmidt",
       "avatar_url": "https://avatars.githubusercontent.com/u/20878432?v=4",
@@ -75,18 +87,6 @@
         "bug",
         "test",
         "ideas"
-      ]
-    },
-    {
-      "login": "devanshj",
-      "name": "Devansh Jethmalani",
-      "avatar_url": "https://avatars.githubusercontent.com/u/30295578?v=4",
-      "profile": "https://github.com/devanshj",
-      "contributions": [
-        "bug",
-        "code",
-        "ideas",
-        "test"
       ]
     }
   ],
