@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import useStateMachine from '@cassiozen/usestatemachine';
+import useStateMachine, {t} from '@cassiozen/usestatemachine';
 import './index.css';
 import Cup from './Cup';
 
@@ -16,7 +16,11 @@ type Coffee = {
 };
 
 function App() {
-  const [machine, send] = useStateMachine<{ retryCount: number; data?: Coffee[]; error?: string }>({ retryCount: 0 })({
+  const [machine, send] = useStateMachine({
+    schema: {
+      context: t<{ retryCount: number; data?: Coffee[]; error?: string }>()
+    },
+    context: { retryCount: 0 },
     initial: 'loading',
     verbose: true,
     states: {
