@@ -1149,12 +1149,14 @@ describe("UseStateMachine", () => {
             | { type: "$$initial" }
             | { type: "Y", bar?: number }
             | { type: "Z" }
-        , nextEvents?: ("X" | "Z")[]
+        , nextEventsT: ("X" | "Z")[]
+        , nextEvents: ("X" | "Y" | "Z")[]
         }
       | { value: "b"
         , context: { foo?: number }
         , event: { type: "X", foo: number }
-        , nextEvents?: ("Y" | "Z")[]
+        , nextEventsT: ("Y" | "Z")[]
+        , nextEvents: ("X" | "Y" | "Z")[]
         }
     >())
   })
@@ -1197,12 +1199,14 @@ describe("Machine.Definition.FromTypeParamter", () => {
       , event:
           | { type: "$$initial" }
           | { type: "TOGGLE" }
-      , nextEvents?: "TOGGLE"[]
+      , nextEventsT: "TOGGLE"[]
+      , nextEvents: "TOGGLE"[]
       }
     | { value: "active"
       , context: { toggleCount: number }
       , event: { type: "TOGGLE" }
-      , nextEvents?: "TOGGLE"[]
+      , nextEventsT: "TOGGLE"[]
+      , nextEvents: "TOGGLE"[]
       }
   >())
 

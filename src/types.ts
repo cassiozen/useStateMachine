@@ -396,7 +396,8 @@ export namespace Machine {
       ? { value: Value
         , context: Context<D>
         , event: EntryEventForStateValue<D, Value>
-        , nextEvents?: A.Get<ExitEventForStateValue<D, Value>, "type">[]
+        , nextEventsT: A.Get<ExitEventForStateValue<D, Value>, "type">[]
+        , nextEvents: A.Get<Event<D>, "type">[]
         }
       : never
     
@@ -405,6 +406,7 @@ export namespace Machine {
     , context: Context.Impl
     , event: Event.Impl
     , nextEvents: Event.Impl["type"][]
+    , nextEventsT: Event.Impl["type"][]
     }
   export namespace State {
     export type Impl = StateImpl

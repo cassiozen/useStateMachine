@@ -37,6 +37,7 @@ describe("useStateMachine", () => {
         event: { type: "$$initial" },
         value: "inactive",
         nextEvents: ["ACTIVATE"],
+        nextEventsT: ["ACTIVATE"],
       });
     });
 
@@ -66,6 +67,7 @@ describe("useStateMachine", () => {
         },
         value: "active",
         nextEvents: ["DEACTIVATE"],
+        nextEventsT: ["DEACTIVATE"],
       });
     });
 
@@ -98,6 +100,7 @@ describe("useStateMachine", () => {
         },
         value: "active",
         nextEvents: ["DEACTIVATE", "FORCE_ACTIVATE"],
+        nextEventsT: ["DEACTIVATE", "FORCE_ACTIVATE"],
       });
     });
 
@@ -127,6 +130,7 @@ describe("useStateMachine", () => {
         },
         value: "active",
         nextEvents: ["DEACTIVATE"],
+        nextEventsT: ["DEACTIVATE"],
       });
     });
 
@@ -156,6 +160,7 @@ describe("useStateMachine", () => {
         event: { type: "$$initial" },
         value: "inactive",
         nextEvents: ["TOGGLE"],
+        nextEventsT: ["TOGGLE"],
       });
     });
 
@@ -193,6 +198,7 @@ describe("useStateMachine", () => {
         },
         value: "active",
         nextEvents: ["TOGGLE"],
+        nextEventsT: ["TOGGLE"],
       });
     });
     it("should invoke effect callbacks", () => {
@@ -261,6 +267,7 @@ describe("useStateMachine", () => {
         },
         value: "active",
         nextEvents: ["TOGGLE"],
+        nextEventsT: ["TOGGLE"],
       });
     });
 
@@ -354,6 +361,7 @@ describe("useStateMachine", () => {
         event: { type: "$$initial" },
         value: "inactive",
         nextEvents: ["TOGGLE"],
+        nextEventsT: ["TOGGLE"],
       });
     });
 
@@ -391,6 +399,7 @@ describe("useStateMachine", () => {
         },
         value: "active",
         nextEvents: ["TOGGLE"],
+        nextEventsT: ["TOGGLE"],
       });
     });
   });
@@ -416,6 +425,7 @@ describe("useStateMachine", () => {
         context: { foo: "bar" },
         event: { type: "$$initial" },
         nextEvents: ["TOGGLE"],
+        nextEventsT: ["TOGGLE"],
       });
     });
 
@@ -448,6 +458,7 @@ describe("useStateMachine", () => {
         context: { foo: "bar" },
         event: { type: "$$initial" },
         nextEvents: ["TOGGLE"],
+        nextEventsT: ["TOGGLE"],
       });
     });
 
@@ -481,6 +492,7 @@ describe("useStateMachine", () => {
           type: "TOGGLE",
         },
         nextEvents: ["TOGGLE"],
+        nextEventsT: ["TOGGLE"],
       });
     });
     it("should update context on exit", () => {
@@ -513,6 +525,7 @@ describe("useStateMachine", () => {
           type: "TOGGLE",
         },
         nextEvents: ["TOGGLE"],
+        nextEventsT: ["TOGGLE"],
       });
     });
   });

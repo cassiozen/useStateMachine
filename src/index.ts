@@ -30,14 +30,19 @@ const useStateMachineImpl = (definition: Machine.Definition.Impl) => {
   return [state, send];
 };
 
-const createInitialState = (definition: Machine.Definition.Impl): Machine.State.Impl => ({
-  value: definition.initial,
-  context: definition.context as Machine.Context.Impl,
-  event: { type: "$$initial" } as Machine.Event.Impl,
-  nextEvents: R.keys(
-    R.concat(R.fromMaybe(R.get(definition.states, definition.initial)!.on), R.fromMaybe(definition.on))
-  ),
-});
+const createInitialState = (definition: Machine.Definition.Impl): Machine.State.Impl => {
+  let nextEvents = R.keys(R.concat(
+    R.fromMaybe(R.get(definition.states, definition.initial)!.on),
+    R.fromMaybe(definition.on)
+  ))
+  return {
+    value: definition.initial,
+    context: definition.context as Machine.Context.Impl,
+    event: { type: "$$initial" } as Machine.Event.Impl,
+    nextEvents: nextEvents,
+    nextEventsT: nextEvents
+  }
+}
 
 const createReducer = (definition: Machine.Definition.Impl) => {
   let log = createLogger(definition);
@@ -85,11 +90,16 @@ const createReducer = (definition: Machine.Definition.Impl) => {
 
       let resolvedStateNode = R.get(definition.states, nextStateValue)!;
 
+      let nextEvents = R.keys(R.concat(
+        R.fromMaybe(resolvedStateNode.on),
+        R.fromMaybe(definition.on)
+      ));
       return {
         value: nextStateValue,
         context,
         event,
-        nextEvents: R.keys(R.concat(R.fromMaybe(resolvedStateNode.on), R.fromMaybe(definition.on))),
+        nextEvents,
+        nextEventsT: nextEvents
       };
     }
 
@@ -131,7 +141,7 @@ const createLogger = (definition: Machine.Definition.Impl) => (groupLabel: strin
   }
 };
 
-const useStateMachine = useStateMachineImpl as UseStateMachine;
+const useStateMachine = useStateMachineImpl as unknown as UseStateMachine;
 export default useStateMachine;
 
 export const t = <T extends unknown>() => ({ [$$t]: undefined as T })
