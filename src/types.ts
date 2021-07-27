@@ -5,7 +5,6 @@ export type UseStateMachine =
   <D extends Machine.Definition<D>>(definition: A.InferNarrowestObject<D>) =>
     [ state: Machine.State<Machine.Definition.FromTypeParamter<D>>
     , send: Machine.Send<Machine.Definition.FromTypeParamter<D>>
-    , definition: D
     ]
 
 export const $$t = Symbol("$$t");
