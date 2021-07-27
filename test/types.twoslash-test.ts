@@ -1215,3 +1215,19 @@ describe("Machine.Definition.FromTypeParamter", () => {
     (sendable: "TOGGLE" | { type: "TOGGLE" }) => void
   >())
 })
+
+describe("fix(Machine.State['nextEvents']): only normalize don't widen", () => {
+  let [state] = useStateMachine({
+    schema: {
+      events: { Y: t<{}>() }
+    },
+    context: {},
+    initial: "a",
+    states: {
+      a: { on: { X: "b" } },
+      b: {}
+    }
+  })
+
+  A.test(A.areEqual<typeof state.nextEvents, "X"[]>())
+})
