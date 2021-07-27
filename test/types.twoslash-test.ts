@@ -1,8 +1,8 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import { A, LS, UseStateMachine } from "../src/types";
+import { A, LS, UseStateMachine, CreateType } from "../src/types";
 
 const useStateMachine = (() => []) as any as UseStateMachine;
-const t = <T>() => null as any as T
+const t = (() => {}) as CreateType
 
 const query = () => 
   ((global as any).twoSlashQueries.shift()) as { completions: string[], text: string }
@@ -114,6 +114,46 @@ describe("Machine.Definition", () => {
         })
       })
 
+      it("expects event payload type be created from t", () => {
+        useStateMachine({
+          schema: {
+            events: {
+              // @ts-expect-error
+              X: {}
+            }
+          },
+          initial: "a",
+          states: { a: {} }
+        })
+      })
+
+      it("shows custom error when event payload type is not created from t", () => {
+        useStateMachine({
+          schema: {
+            events: {
+              // @ts-expect-error
+              X: {}
+          //  ^?
+            }
+          },
+          initial: "a",
+          states: { a: {} }
+        })
+
+        expect(query().text).toContain("Error: Use `t` to define payload type, eg `t<{ foo: number }>()`")
+
+        useStateMachine({
+          schema: {
+            events: {
+              // @ts-expect-error
+              X: "Error: Use `t` to define payload type, eg `t<{ foo: number }>()`"
+            }
+          },
+          initial: "a",
+          states: { a: {} }
+        })
+      })
+
       it("expects event payload to extend an object", () => {
         useStateMachine({
           schema: {
@@ -144,7 +184,7 @@ describe("Machine.Definition", () => {
         })
       })
 
-      it("shows custom error in case of not extending an object", () => {
+      it("shows custom error in case of event payload not extending an object", () => {
         useStateMachine({
           schema: {
             events: {
@@ -232,12 +272,86 @@ describe("Machine.Definition", () => {
           states: { a: {} }
         })
       })
+
+      it("expects $$initial to not be a type", () => {
+        useStateMachine({
+          schema: {
+            events: {
+              // @ts-expect-error
+              $$initial: t<{}>()
+            }
+          },
+          initial: "a",
+          states: { a: {} }
+        })
+      })
+      
+      it("shows custom error in case of $$initial as a type", () => {
+        useStateMachine({
+          schema: {
+            events: {
+              // @ts-expect-error
+              $$initial: t<{}>()
+              // ^?
+            }
+          },
+          initial: "a",
+          states: { a: {} }
+        })
+  
+        expect(query().text).toContain("Error: '$$initial' is a reserved type")
+  
+        useStateMachine({
+          schema: {
+            events: {
+              // @ts-expect-error
+              $$initial: "Error: '$$initial' is a reserved type"
+            }
+          },
+          initial: "a",
+          states: { a: {} }
+        })
+      })
     })
 
     describe("MachineDefinition['schema']['context']", () => {
       it("is optional", () => {
         useStateMachine({
           schema: {},
+          initial: "a",
+          states: { a: {} }
+        })
+      })
+
+      it("expects type be created from t", () => {
+        useStateMachine({
+          schema: {
+            // @ts-expect-error
+            context: {}
+          },
+          initial: "a",
+          states: { a: {} }
+        })
+      })
+
+      it("shows custom error when type is not created from t", () => {
+        useStateMachine({
+          schema: {
+            // @ts-expect-error
+            context: {}
+            // ^?
+          },
+          initial: "a",
+          states: { a: {} }
+        })
+
+        expect(query().text).toContain("Error: Use `t` to define type, eg `t<{ foo: number }>()`")
+
+        useStateMachine({
+          schema: {
+            // @ts-expect-error
+            context: "Error: Use `t` to define type, eg `t<{ foo: number }>()`"
+          },
           initial: "a",
           states: { a: {} }
         })
@@ -462,7 +576,7 @@ describe("Machine.Definition", () => {
         }
       })
 
-      expect(query().text).toContain("Error: '$$exhaustive' is a reversed name")
+      expect(query().text).toContain("Error: '$$exhaustive' is a reserved name")
 
       useStateMachine({
         initial: "a",
@@ -470,7 +584,7 @@ describe("Machine.Definition", () => {
           a: {
             on: {
               // @ts-expect-error
-              $$exhaustive: "Error: '$$exhaustive' is a reversed name"
+              $$exhaustive: "Error: '$$exhaustive' is a reserved name"
             }
           }
         }
@@ -488,7 +602,7 @@ describe("Machine.Definition", () => {
         }
       })
 
-      expect(query().text).toContain("Error: '$$exhaustive' is a reversed name")
+      expect(query().text).toContain("Error: '$$exhaustive' is a reserved name")
 
       useStateMachine({
         initial: "a",
@@ -497,7 +611,7 @@ describe("Machine.Definition", () => {
         },
         on: {
           // @ts-expect-error
-          $$exhaustive: "Error: '$$exhaustive' is a reversed name"
+          $$exhaustive: "Error: '$$exhaustive' is a reserved name"
         }
       })
     })
@@ -507,8 +621,8 @@ describe("Machine.Definition", () => {
         schema: {
           events: {
             $$exhaustive: true,
-            X: {},
-            Y: {}
+            X: t<{}>(),
+            Y: t<{}>()
           }
         },
         initial: "a",
@@ -534,8 +648,8 @@ describe("Machine.Definition", () => {
         schema: {
           events: {
             $$exhaustive: false,
-            X: {},
-            Y: {}
+            X: t<{}>(),
+            Y: t<{}>()
           }
         },
         initial: "a",
@@ -554,8 +668,8 @@ describe("Machine.Definition", () => {
       useStateMachine({
         schema: {
           events: {
-            X: {},
-            Y: {}
+            X: t<{}>(),
+            Y: t<{}>()
           }
         },
         initial: "a",
@@ -577,8 +691,8 @@ describe("Machine.Definition", () => {
         schema: {
           events: {
             $$exhaustive: true,
-            X: {},
-            Y: {}
+            X: t<{}>(),
+            Y: t<{}>()
           }
         },
         initial: "a",
@@ -602,8 +716,8 @@ describe("Machine.Definition", () => {
         schema: {
           events: {
             $$exhaustive: true,
-            X: {},
-            Y: {}
+            X: t<{}>(),
+            Y: t<{}>()
           }
         },
         initial: "a",
@@ -623,8 +737,8 @@ describe("Machine.Definition", () => {
         schema: {
           events: {
             $$exhaustive: true,
-            X: {},
-            Y: {}
+            X: t<{}>(),
+            Y: t<{}>()
           }
         },
         initial: "a",
@@ -647,8 +761,8 @@ describe("Machine.Definition", () => {
         schema: {
           events: {
             $$exhaustive: true,
-            X: {},
-            Y: {}
+            X: t<{}>(),
+            Y: t<{}>()
           }
         },
         initial: "a",
@@ -693,6 +807,8 @@ describe("Machine.Definition", () => {
           effect: effectParameter => {
 
             describe("Machine.EntryEventForStateValue", () => {
+              effectParameter.event?.type
+
               A.test(A.areEqual<
                 typeof effectParameter.event,
                 | { type: "X", foo: number }
@@ -970,7 +1086,7 @@ describe("Machine.Definition", () => {
                   A.test(A.areEqual<
                     typeof parameter,
                     { context: { foo: number }
-                    , event?: { type: "X", foo: string }
+                    , event: { type: "X", foo: string }
                     }
                   >())
 
@@ -1029,14 +1145,15 @@ describe("UseStateMachine", () => {
       typeof state,
       | { value: "a"
         , context: { foo?: number }
-        , event?:
+        , event:
+            | { type: "$$initial" }
             | { type: "Y", bar?: number }
             | { type: "Z" }
         , nextEvents?: ("X" | "Z")[]
         }
       | { value: "b"
         , context: { foo?: number }
-        , event?: { type: "X", foo: number }
+        , event: { type: "X", foo: number }
         , nextEvents?: ("Y" | "Z")[]
         }
     >())
@@ -1077,12 +1194,14 @@ describe("Machine.Definition.FromTypeParamter", () => {
     typeof state,
     | { value: "inactive"
       , context: { toggleCount: number }
-      , event?: { type: "TOGGLE" }
+      , event:
+          | { type: "$$initial" }
+          | { type: "TOGGLE" }
       , nextEvents?: "TOGGLE"[]
       }
     | { value: "active"
       , context: { toggleCount: number }
-      , event?: { type: "TOGGLE" }
+      , event: { type: "TOGGLE" }
       , nextEvents?: "TOGGLE"[]
       }
   >())

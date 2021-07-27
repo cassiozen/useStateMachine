@@ -1,5 +1,5 @@
 import { useEffect, useReducer } from "react";
-import { UseStateMachine, Machine } from "./types";
+import { UseStateMachine, Machine, $$t } from "./types";
 import { assertNever, R, useConstant } from "./extras";
 
 const useStateMachineImpl = (definition: Machine.Definition.Impl) => {
@@ -133,4 +133,5 @@ const createLogger = (definition: Machine.Definition.Impl) => (groupLabel: strin
 
 const useStateMachine = useStateMachineImpl as UseStateMachine;
 export default useStateMachine;
-export const t = <T extends unknown>() => null as T;
+
+export const t = <T extends unknown>() => ({ [$$t]: undefined as T })

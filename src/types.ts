@@ -8,12 +8,16 @@ export type UseStateMachine =
     , definition: D
     ]
 
+export const $$t = Symbol("$$t");
+type $$t = typeof $$t;
+export type CreateType =
+  <T>() => { [$$t]: T }
+
 export namespace Machine {
   export type Definition<
     Self,
     States = A.Get<Self, "states">,
-    ContextSchema = A.Get<Self, ["schema", "context"]>,
-    EventsSchema = A.Get<Self, ["schema", "events"]>,
+    ContextSchema = A.Get<Self, ["schema", "context", $$t]>,
     HasContextSchema = Self extends { schema: { context: unknown } } ? true : false
   > =
     & { initial:
@@ -33,46 +37,21 @@ export namespace Machine {
                 : A.CustomError<"Error: Only string identifiers allowed", States[StateIdentifier]>
           }
       , on?: Definition.On<Self, ["on"]>
-      , schema?:
-          { context?: ContextSchema
-          , events?:
-              { [Type in keyof EventsSchema]:
-                  Type extends Definition.ExhaustiveIdentifier ? boolean :
-                  A.Get<EventsSchema, Type> extends infer Event
-                    ? A.DoesExtend<Type, A.String> extends false
-                        ? A.CustomError<
-                            "Error: Only string types allowed",
-                            A.Get<EventsSchema, Type>
-                          > :
-                      A.IsPlainObject<Event> extends false
-                        ? A.CustomError<
-                            "Error: An event payload should be an object, eg `t<{ foo: number }>()`",
-                            A.Get<EventsSchema, Type>
-                          > :
-                      "type" extends keyof Event
-                        ? A.CustomError<
-                            LS.ConcatAll<
-                              [ "Error: An event payload cannot have a property `type` as it's already defined. "
-                              , `In this case as '${S.Assert<Type>}'`
-                              ]>,
-                            A.Get<EventsSchema, Type>
-                          > :
-                        
-                      A.Get<EventsSchema, Type>
-                    : never
-              }
-          }
+      , schema?: Definition.Schema<Self, ["schema"]>
       , verbose?: boolean
       , console?: Console
-      , __internalIsConstraint?: never
+      , $$internalIsConstraint?:
+          A.CustomError<
+            "Error: Ignore, it's for internal types usage",
+            A.Get<Self, "$$internalIsConstraint">
+          >
       }
-    & (
-      ContextSchema extends undefined
-        ? HasContextSchema extends true
-            ? { context?: undefined }
-            : { context?: unknown }
-        : { context: ContextSchema }
-    )
+    & ( ContextSchema extends undefined
+          ? HasContextSchema extends true
+              ? { context?: undefined }
+              : { context?: unknown }
+          : { context: ContextSchema }
+      )
 
   interface DefinitionImp
     { initial: StateValue.Impl
@@ -83,11 +62,12 @@ export namespace Machine {
     , console?: Console
     , context?: Context.Impl
     }
+
   export namespace Definition {
     export type Impl = DefinitionImp
     
     export type FromTypeParamter<D> =
-      "__internalIsConstraint" extends keyof D
+      "$$internalIsConstraint" extends keyof D
         ? D extends infer X ? X extends Definition<infer X> ? X : never : never
         : D
 
@@ -113,22 +93,27 @@ export namespace Machine {
           : A.String
     > =
       { [EventType in keyof Self]:
-          EventType extends A.String
-            ? EventType extends EventTypeConstraint
-                ? EventType extends ExhaustiveIdentifier
-                    ? A.CustomError<
-                        "Error: '$$exhaustive' is a reversed name",
-                        A.Get<Self, EventType>
-                      >
-                    : Transition<D, L.Concat<P, [EventType]>>
-                : A.CustomError<
-                    LS.ConcatAll<
-                      [ `Error: Event type '${EventType}' is not found in schema.events `
-                      , "which is marked as exhaustive"
-                      ]>,
-                    A.Get<Self, EventType>
-                  >
-            : A.CustomError<"Error: only string types allowed", A.Get<Self, EventType>>
+          A.DoesExtend<EventType, A.String> extends false
+            ? A.CustomError<"Error: only string types allowed", A.Get<Self, EventType>> :
+          EventType extends ExhaustiveIdentifier
+            ? A.CustomError<
+                `Error: '${ExhaustiveIdentifier}' is a reserved name`,
+                A.Get<Self, EventType>
+              > :
+          EventType extends InitialEventType
+            ? A.CustomError<
+                `Error: '${InitialEventType}' is a reserved type`,
+                A.Get<Self, EventType>
+              > :
+          A.DoesExtend<EventType, EventTypeConstraint> extends false
+            ? A.CustomError<
+                LS.ConcatAll<
+                  [ `Error: Event type '${S.Assert<EventType>}' is not found in schema.events `
+                  , "which is marked as exhaustive"
+                  ]>,
+                A.Get<Self, EventType>
+              > :
+          Transition<D, L.Concat<P, [EventType]>>
       }
     
     type OnImpl = R.Of<Event.Impl["type"], Transition.Impl>
@@ -145,7 +130,7 @@ export namespace Machine {
         , guard?:
             ( parameter:
               { context: Machine.Context<D>
-              , event?: U.Extract<Machine.Event<D>, Event>
+              , event: U.Extract<Machine.Event<D>, Event>
               }
             ) => boolean
         }
@@ -178,11 +163,67 @@ export namespace Machine {
       export type Impl = EffectImpl;  
     }
 
+
+    export type Schema<D, P, Self = A.Get<D, P>,
+      ContextSchema = A.Get<Self, "context">,
+      EventsSchema = A.Get<Self, "events">
+    > =
+      { context?:
+          A.DoesExtend<ContextSchema, { [$$t]: unknown }> extends false
+            ? A.CustomError<
+              "Error: Use `t` to define type, eg `t<{ foo: number }>()`",
+              ContextSchema
+            > :
+            ContextSchema
+      , events?:
+          { [Type in keyof EventsSchema]:
+              Type extends Definition.ExhaustiveIdentifier
+                ? boolean :
+              Type extends Definition.InitialEventType
+                ? A.CustomError<
+                    `Error: '${Definition.InitialEventType}' is a reserved type`,
+                    A.Get<EventsSchema, Type>
+                  > :
+              A.DoesExtend<Type, A.String> extends false
+                ? A.CustomError<
+                    "Error: Only string types allowed",
+                    A.Get<EventsSchema, Type>
+                  > :
+              A.Get<EventsSchema, Type> extends infer PayloadWrapped
+                ? A.DoesExtend<PayloadWrapped, { [$$t]: unknown }> extends false
+                    ? A.CustomError<
+                        "Error: Use `t` to define payload type, eg `t<{ foo: number }>()`",
+                        A.Get<EventsSchema, Type>
+                      > :
+                  A.Get<PayloadWrapped, $$t> extends infer Payload
+                    ? A.IsPlainObject<Payload> extends false
+                        ? A.CustomError<
+                            "Error: An event payload should be an object, eg `t<{ foo: number }>()`",
+                            A.Get<EventsSchema, Type>
+                          > :
+                      "type" extends keyof Payload
+                        ? A.CustomError<
+                            LS.ConcatAll<
+                              [ "Error: An event payload cannot have a property `type` as it's already defined. "
+                              , `In this case as '${S.Assert<Type>}'`
+                              ]>,
+                            A.Get<EventsSchema, Type>
+                          > :
+                        A.Get<EventsSchema, Type>
+                    : never
+                : never
+          }
+      }
+
     export type ExhaustiveIdentifier = "$$exhaustive"
+    export type InitialEventType = "$$initial";
   }
 
   export type StateValue<D> =
     keyof A.Get<D, "states">
+
+  export type InitialStateValue<D> =
+    A.Get<D, "initial">
 
   type StateValueImpl = string & A.Tag<"Machine.StateValue">
   export namespace StateValue {
@@ -190,7 +231,7 @@ export namespace Machine {
   }
   
   export type Context<D> =
-    A.Get<D, ["schema", "context"], A.Get<D, "context">>
+    A.Get<D, ["schema", "context", $$t], A.Get<D, "context">>
 
   type ContextImpl = {} & A.Tag<"Machine.Context">
   export namespace Context {
@@ -199,8 +240,8 @@ export namespace Machine {
 
   export type Event<D, EventsSchema = A.Get<D, ["schema", "events"], {}>> = 
     | O.Value<{ [T in U.Exclude<keyof EventsSchema, Definition.ExhaustiveIdentifier>]:
-        A.Get<EventsSchema, T> extends infer E
-          ? E extends any ? O.Mergify<{ type: T } & E> : never
+        A.Get<EventsSchema, [T, $$t]> extends infer E
+          ? E extends any ? O.ShallowClean<{ type: T } & E> : never
           : never
       }>
     | ( A.Get<EventsSchema, Definition.ExhaustiveIdentifier, false> extends true ? never :
@@ -219,6 +260,7 @@ export namespace Machine {
           ? InferredEvent extends any
               ? A.Get<InferredEvent, "type"> extends keyof EventsSchema ? never :
                 A.Get<InferredEvent, "type"> extends Definition.ExhaustiveIdentifier ? never :
+                A.Get<InferredEvent, "type"> extends Definition.InitialEventType ? never :
                 InferredEvent
               : never
           : never
@@ -253,7 +295,7 @@ export namespace Machine {
     export type Impl = EffectParameterImpl;
   }
   export interface EffectParameterImpl
-    { event?: Event.Impl
+    { event: Event.Impl
     , send: Send.Impl
     , context: Context.Impl
     , setContext: SetContext.Impl
@@ -261,7 +303,7 @@ export namespace Machine {
 
   export interface EffectParameterForStateValue<D, StateValue>
     extends BaseEffectParameter<D>
-    { event?: Machine.EntryEventForStateValue<D, StateValue>
+    { event: Machine.EntryEventForStateValue<D, StateValue>
     }
 
   export interface EffectCleanupParameterForStateValue<D, StateValue>
@@ -276,7 +318,11 @@ export namespace Machine {
     }
 
   export type EntryEventForStateValue<D, StateValue> =
-    U.Extract<
+  | ( StateValue extends InitialStateValue<D>
+        ? { type: Definition.InitialEventType }
+        : never
+    )
+  | U.Extract<
       Event<D>,
       { type:
           | O.Value<{ [S in keyof A.Get<D, "states">]:
@@ -350,7 +396,7 @@ export namespace Machine {
     Value extends any
       ? { value: Value
         , context: Context<D>
-        , event?: EntryEventForStateValue<D, Value>
+        , event: EntryEventForStateValue<D, Value>
         , nextEvents?: A.Get<ExitEventForStateValue<D, Value>, "type">[]
         }
       : never
@@ -358,7 +404,7 @@ export namespace Machine {
   interface StateImpl
     { value: StateValue.Impl
     , context: Context.Impl
-    , event?: Event.Impl
+    , event: Event.Impl
     , nextEvents: Event.Impl["type"][]
     }
   export namespace State {
@@ -402,7 +448,7 @@ export namespace U {
 
 export namespace O {
   export type Value<T> = T[keyof T];
-  export type Mergify<T> = { [K in keyof T]: T[K] }
+  export type ShallowClean<T> = { [K in keyof T]: T[K] }
 }
 
 export namespace A {
