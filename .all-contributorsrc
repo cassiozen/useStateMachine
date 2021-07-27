@@ -76,6 +76,18 @@
         "test",
         "ideas"
       ]
+    },
+    {
+      "login": "devanshj",
+      "name": "Devansh Jethmalani",
+      "avatar_url": "https://avatars.githubusercontent.com/u/30295578?v=4",
+      "profile": "https://github.com/devanshj",
+      "contributions": [
+        "bug",
+        "code",
+        "ideas",
+        "test"
+      ]
     }
   ],
   "contributorsPerLine": 5,
