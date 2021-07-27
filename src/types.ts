@@ -391,13 +391,20 @@ export namespace Machine {
     export type Impl = ContextUpdaterImpl;
   }
 
-  export type State<D, Value = StateValue<D>> =
+  export type State<D,
+    Value = StateValue<D>,
+    NextEvents =
+      ( Value extends any
+          ? A.Get<ExitEventForStateValue<D, Value>, "type">
+          : never
+      )[]
+  > =
     Value extends any
       ? { value: Value
         , context: Context<D>
         , event: EntryEventForStateValue<D, Value>
         , nextEventsT: A.Get<ExitEventForStateValue<D, Value>, "type">[]
-        , nextEvents: A.Get<Event<D>, "type">[]
+        , nextEvents: NextEvents
         }
       : never
     
