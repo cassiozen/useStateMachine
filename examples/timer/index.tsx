@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import useStateMachine from '@cassiozen/usestatemachine';
+import useStateMachine, {t} from '@cassiozen/usestatemachine';
 import './index.css';
 import formatTime from './formatTime';
 
@@ -10,7 +10,11 @@ import formatTime from './formatTime';
  */
 
 function App() {
-  const [machine, send] = useStateMachine<{ time: number }>({ time: 0 })({
+  const [machine, send] = useStateMachine({
+    schema: {
+      context: t<{time: number}>(),
+    },
+    context: {time: 0},
     initial: 'idle',
     verbose: true,
     states: {
@@ -51,19 +55,19 @@ function App() {
       <div className="display">{formatTime(machine.context.time)}</div>
 
       <div className="controls">
-        {machine.nextEvents.includes('START') && (
-          <button type="button" onClick={() => send('START')}>
+        {machine.nextEvents?.includes('START') && (
+          <button type="button" onClick={() => send('START') }>
             Start
           </button>
         )}
 
-        {machine.nextEvents.includes('PAUSE') && (
+        {machine.nextEvents?.includes('PAUSE') && (
           <button type="button" onClick={() => send('PAUSE')}>
             Pause
           </button>
         )}
 
-        {machine.nextEvents.includes('RESET') && (
+        {machine.nextEvents?.includes('RESET') && (
           <button type="button" onClick={() => send('RESET')}>
             Reset
           </button>

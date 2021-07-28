@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import useStateMachine from '@cassiozen/usestatemachine';
+import useStateMachine, {t} from '@cassiozen/usestatemachine';
 import { checkUsernameAvailability } from './fakeForm';
 import './index.css';
 
@@ -9,9 +9,16 @@ import './index.css';
  */
 
 function App() {
-  const [machine, send] = useStateMachine({ input: '' })({
-    initial: 'pristine',
+  const [machine, send] = useStateMachine({
+    schema: {
+      context: t<{ input: string }>(),
+      events: {
+        UPDATE: t<{ value: string }>()
+      }
+    },
+    context: {input: ''},
     verbose: true,
+    initial: 'pristine',
     states: {
       pristine: {},
       editing: {
@@ -19,7 +26,7 @@ function App() {
           VALIDATE: 'validating',
         },
         effect({ send, setContext, event }) {
-          setContext(c => ({ input: event?.value }));
+          setContext(c => ({ input: event?.value ?? '' }));
           const timeout = setTimeout(() => {
             send({ type: 'VALIDATE' });
           }, 300);
