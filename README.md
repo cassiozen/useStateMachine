@@ -302,7 +302,6 @@ send({ type: 'PING', value: 150 })
 
 # Wiki
 
-- [Sending data with events](https://github.com/cassiozen/useStateMachine/wiki/Sending-data-with-Events)
 - [Updating from version 0.x.x to 1.0](https://github.com/cassiozen/useStateMachine/wiki/Updating-from-0.X.X-to-1.0.0)
 - [Contributing](https://github.com/cassiozen/useStateMachine/wiki/Contributing-to-useStateMachine)
 - [Comparison with XState](https://github.com/cassiozen/useStateMachine/wiki/XState-comparison)
