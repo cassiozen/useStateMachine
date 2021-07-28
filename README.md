@@ -5,7 +5,7 @@
 **The <1 kb _state machine_ hook for React:**
 
 - Feature complete (Entry/exit callbacks, Guarded transitions & Extended State - Context)
-- Amazing TypeScript support: you get precise error reporting, automatic type inference (auto completion for both TypeScript & JavaScript users without having to manually define the typings) but you can also manually specify and augment the types for context & events. 
+- Amazing TypeScript support: you get precise error reporting, automatic type inference (auto completion for both TypeScript & JavaScript users without having to manually define the typings) with the option to manually specify and augment the types for context & events. 
 - Idiomatic React patterns (Since it's built on top of React's useReducer & useEffect, might as well...)
 
 <img width="354" alt="size badge" src="https://user-images.githubusercontent.com/33676/126902516-51f46526-3023-43c7-afd4-17df2e89a3a1.png">
