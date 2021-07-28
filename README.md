@@ -263,7 +263,8 @@ const [state, send] = useStateMachine({
 
 *Typed Events*
 
-Typing the event inside schema is specially useful if you want to send arbitrary data with the event. Here's a quick example:
+
+By default, all events are typed and you can send them by using the string notation (`send("UPDATE")`) or object notation (`send({ type: "UPDATE"})`). To augment an already typed event to include arbitrary data, you need to define it in the `schema`:
 
 ```typescript
 const [machine, send] = useStateMachine({
@@ -291,6 +292,9 @@ const [machine, send] = useStateMachine({
 
 send({ type: 'PING', value: 150 })
 ```
+
+**Note** that you don't need to declare all your events in the schema, only the ones you're adding arbitrary keys and values.
+
 
 More information about [Sending data with events](https://github.com/cassiozen/useStateMachine/wiki/Sending-data-with-Events).
 
