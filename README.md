@@ -85,6 +85,8 @@ The machine's `state` consists of 4 properties: `value`, `event`, `nextEvents` a
 
 If the current state accepts this event, and it is allowed (see guard), it will change the state machine state and execute effects.
 
+You can also send additional data with your event using the object notation (e.g. `{ type: "UPDATE" value: 10 }`). Check [schema](#schema-context--event-typing) for more information about strong typing the additional data.
+
 # State Machine definition
 
 | Key         | Required | Description |
