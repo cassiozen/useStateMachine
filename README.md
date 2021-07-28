@@ -67,9 +67,9 @@ const [state, send] = useStateMachine(/* State Machine Definition */);
 
 `useStateMachine` takes a JavaScript object as the state machine definition. It returns an array consisting of a `current machine state` object and a `send` function to trigger transitions.
 
-### Machine state
+### state
 
-The `state` consists of 4 properties: `value`, `event`, `nextEvents` and `context`.
+The machine's `state` consists of 4 properties: `value`, `event`, `nextEvents` and `context`.
 
 `value` (string): Returns the name of the current state.
 
