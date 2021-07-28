@@ -5,7 +5,7 @@
 **The <1 kb _state machine_ hook for React:**
 
 - Feature complete (Entry/exit callbacks, Guarded transitions & Extended State - Context)
-- Heavy focus on type inference (you get auto completion for both TypeScript & JavaScript users without having to manually define the typings)
+- Amazing TypeScript support: you get precise error reporting, automatic type inference (auto completion for both TypeScript & JavaScript users without having to manually define the typings) but you can also manually specify and augment the types for context & events. 
 - Idiomatic React patterns (Since it's built on top of React's useReducer & useEffect, might as well...)
 
 <img width="354" alt="size badge" src="https://user-images.githubusercontent.com/33676/126902516-51f46526-3023-43c7-afd4-17df2e89a3a1.png">
@@ -67,7 +67,7 @@ const [state, send] = useStateMachine(/* State Machine Definition */);
 
 `useStateMachine` takes a JavaScript object as the state machine definition. It returns an array consisting of a `current machine state` object and a `send` function to trigger transitions.
 
-## Machine state
+### Machine state
 
 The `state` consists of 4 properties: `value`, `event`, `nextEvents` and `context`.
 
@@ -79,7 +79,7 @@ The `state` consists of 4 properties: `value`, `event`, `nextEvents` and `contex
 
 `context`: The state machine extended state. See "Extended State" below.
 
-## Send events
+### Send events
 
 `send` takes an event as argument, provided in shorthand string format (e.g. "TOGGLE") or as an event object (e.g. `{ type: "TOGGLE" }`)
 
@@ -91,7 +91,7 @@ If the current state accepts this event, and it is allowed (see guard), it will 
 | ----------- | ---- |----------- |
 | verbose     |   | If true, will log every context & state changes. Log messages will be stripped out in the production build. |
 | schema      |   | For usage with TypeScript only. Optional strongly-typed context & events. More on schema [below](#schema-context--event-typing) |
-| context     |   | Extended state initial value. More on extended state [below](#extended-state-context) |
+| context     |   | Context is the machine's extended state. More on extended state [below](#extended-state-context) |
 | initial     | * | The initial state node this machine should be in |
 | states      | * | Define the possible finite states the state machine can be in. |
 
