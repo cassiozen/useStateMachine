@@ -368,7 +368,9 @@ export namespace Machine {
   }
 
   export type Send<D> =
-    (sendable: Sendable<D>) => void
+    { (sendable: U.Exclude<Sendable<D>, A.String>): void
+    , (sendable: U.Extract<Sendable<D>, A.String>): void
+    }
 
   type SendImpl = (send: Sendable.Impl) => void
   export namespace Send {

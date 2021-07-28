@@ -818,12 +818,15 @@ describe("Machine.Definition", () => {
             
             A.test(A.areEqual<
               typeof effectParameter.send,
-              (sendable:
-                | "Y"
-                | { type: "X", foo: number }
-                | { type: "Y", bar?: number }
-                | { type: "Z", baz: string }
-              ) => void
+              { ( sendable:
+                  | { type: "X", foo: number }
+                  | { type: "Y", bar?: number }
+                  | { type: "Z", baz: string }
+                ): void
+              , ( sendable:
+                  | "Y"
+                ): void
+              }
             >())
 
             A.test(A.areEqual<
@@ -841,12 +844,15 @@ describe("Machine.Definition", () => {
             
             A.test(A.areEqual<
               typeof send,
-              (sendable:
-                | "Y"
-                | { type: "X", foo: number }
-                | { type: "Y", bar?: number }
-                | { type: "Z", baz: string }
-              ) => void
+              { ( sendable:
+                  | { type: "X", foo: number }
+                  | { type: "Y", bar?: number }
+                  | { type: "Z", baz: string }
+                ): void
+              , ( sendable:
+                  | "Y"
+                ): void
+              }
             >())
 
             return (cleanupParameter) => {
@@ -861,12 +867,15 @@ describe("Machine.Definition", () => {
               
               A.test(A.areEqual<
                 typeof cleanupParameter.send,
-                (sendable:
-                  | "Y"
-                  | { type: "X", foo: number }
-                  | { type: "Y", bar?: number }
-                  | { type: "Z", baz: string }
-                ) => void
+                { ( sendable:
+                    | { type: "X", foo: number }
+                    | { type: "Y", bar?: number }
+                    | { type: "Z", baz: string }
+                  ): void
+                , ( sendable:
+                    | "Y"
+                  ): void
+                }
               >())
 
               A.test(A.areEqual<
@@ -884,12 +893,15 @@ describe("Machine.Definition", () => {
               
               A.test(A.areEqual<
                 typeof send,
-                (sendable:
-                  | "Y"
-                  | { type: "X", foo: number }
-                  | { type: "Y", bar?: number }
-                  | { type: "Z", baz: string }
-                ) => void
+                { ( sendable:
+                    | { type: "X", foo: number }
+                    | { type: "Y", bar?: number }
+                    | { type: "Z", baz: string }
+                  ): void
+                , ( sendable:
+                    | "Y"
+                  ): void
+                }
               >())
             }
           }
@@ -1164,13 +1176,16 @@ describe("UseStateMachine", () => {
   describe("Machine.Send", () => {
     A.test(A.areEqual<
       typeof send,
-      (sendable:
-        | "Y"
-        | "Z"
-        | { type: "X", foo: number }
-        | { type: "Y", bar?: number }
-        | { type: "Z" }
-      ) => void
+      { ( sendable:
+          | { type: "X", foo: number }
+          | { type: "Y", bar?: number }
+          | { type: "Z" }
+        ): void
+      , ( sendable:
+          | "Y"
+          | "Z"
+        ): void
+      }
     >())
   })
 })
@@ -1212,7 +1227,9 @@ describe("Machine.Definition.FromTypeParamter", () => {
 
   A.test(A.areEqual<
     typeof send,
-    (sendable: "TOGGLE" | { type: "TOGGLE" }) => void
+    { (sendable: { type: "TOGGLE" }): void
+    , (sendable: "TOGGLE"): void
+    }
   >())
 })
 
@@ -1230,4 +1247,29 @@ describe("fix(Machine.State['nextEvents']): only normalize don't widen", () => {
   })
 
   A.test(A.areEqual<typeof state.nextEvents, "X"[]>())
+})
+
+describe("workaround for #65", () => {
+  let [_, send] = useStateMachine({
+    schema: {
+      events: {
+        A: t<{ value: string }>()
+      }
+    },
+    initial: "a",
+    states: {
+      a: {
+        on: {
+          B: "a"
+        }
+      }
+    }
+  })
+
+  A.test(A.areEqual<
+    typeof send,
+    { (sendable: { type: "A", value: string } | { type: "B" }): void
+    , (sendable: "B"): void
+    }
+  >())
 })
