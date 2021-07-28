@@ -264,7 +264,9 @@ const [state, send] = useStateMachine({
 *Typed Events*
 
 
-By default, all events are typed and you can send them by using the string notation (`send("UPDATE")`) or object notation (`send({ type: "UPDATE"})`). To augment an already typed event to include arbitrary data, you need to define it in the `schema`:
+All events are type-infered by default, both in the string notation (`send("UPDATE")`) and the object notation (`send({ type: "UPDATE"})`). 
+
+If you want, though, you can augment an already typed event to include arbitrary data (which can be useful to provide values to be used inside effects or to update the context). Example:
 
 ```typescript
 const [machine, send] = useStateMachine({
@@ -295,8 +297,6 @@ send({ type: 'PING', value: 150 })
 
 **Note** that you don't need to declare all your events in the schema, only the ones you're adding arbitrary keys and values.
 
-
-More information about [Sending data with events](https://github.com/cassiozen/useStateMachine/wiki/Sending-data-with-Events).
 
 # Wiki
 
