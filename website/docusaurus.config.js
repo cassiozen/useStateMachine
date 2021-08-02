@@ -18,8 +18,6 @@ module.exports = {
       switchConfig: {
         darkIcon: '🌙',
         lightIcon: '\u2600',
-        // React inline style object
-        // see https://reactjs.org/docs/dom-elements.html#style
         darkIconStyle: {
           marginLeft: '2px',
         },
@@ -71,4 +69,5 @@ module.exports = {
       },
     ],
   ],
+  plugins: [require.resolve('docusaurus-lunr-search')],
 };

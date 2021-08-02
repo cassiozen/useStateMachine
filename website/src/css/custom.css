@@ -19,6 +19,11 @@ html[data-theme='dark'] .docusaurus-highlight-code-line {
   background-color: rgba(0, 0, 0, 0.3);
 }
 
+.navbar__search {
+  padding-left: 7px;
+}
+
+
 [data-theme="light"] .shiki.nord {
   display: none;
 }

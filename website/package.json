@@ -19,6 +19,7 @@
     "@docusaurus/preset-classic": "2.0.0-beta.4",
     "@mdx-js/react": "^1.6.21",
     "@svgr/webpack": "^5.5.0",
+    "docusaurus-lunr-search": "^2.1.14",
     "docusaurus-preset-shiki-twoslash": "^1.1.19",
     "file-loader": "^6.2.0",
     "react": "^17.0.1",
