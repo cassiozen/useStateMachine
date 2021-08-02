@@ -1,6 +1,3 @@
-const lightCodeTheme = require("prism-react-renderer/themes/github");
-const darkCodeTheme = require("prism-react-renderer/themes/dracula");
-
 
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
 module.exports = {
@@ -39,48 +36,20 @@ module.exports = {
       },
       items: [
         {
+          type: 'doc',
+          docId: 'api',
+          position: 'left',
+          label: 'API Docs',
+        },
+        {
           href: "https://github.com/cassiozen/useStateMachine",
           label: "GitHub",
           position: "right",
         },
       ],
     },
-    footer: {
-      style: "dark",
-      links: [
-        {
-          title: "Docs",
-          items: [
-            {
-              label: "Tutorial",
-              to: "/docs/intro",
-            },
-          ],
-        },
-        {
-          title: "Community",
-          items: [
-            {
-              label: "Twitter",
-              href: "https://twitter.com/docusaurus",
-            },
-          ],
-        },
-        {
-          title: "More",
-          items: [
-            {
-              label: "GitHub",
-              href: "https://github.com/facebook/docusaurus",
-            },
-          ],
-        },
-      ]
-    },
-    prism: {
-      theme: lightCodeTheme,
-      darkTheme: darkCodeTheme,
-    },
+
+
   },
   presets: [
     [

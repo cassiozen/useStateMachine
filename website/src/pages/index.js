@@ -84,7 +84,7 @@ function Home() {
                   
                   Instead of introducing many new concepts, useStateMachine follow idiomatic React patterns you and 
                   your team are already familiar with. <br/>
-                  The library itself is actually a thin wrapper around Idiomatic React's useReducer & useEffect.
+                  The library itself is actually a thin wrapper around React's useReducer & useEffect.
                   
                 </p>
               </div>
