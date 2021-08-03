@@ -4,7 +4,7 @@ module.exports = {
   title: "useStateMachine",
   tagline: "The <1 kb state machine hook for React",
   url: "https://cassiozen.github.io",
-  baseUrl: "/useStateMachine/",
+  baseUrl: "/",
   trailingSlash: true,
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
