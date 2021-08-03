@@ -4,8 +4,8 @@ module.exports = {
   title: "useStateMachine",
   tagline: "The <1 kb state machine hook for React",
   url: "https://cassiozen.github.io",
-  baseUrl: "/useStateMachine/",
-  trailingSlash: false,
+  baseUrl: "/",
+  trailingSlash: true,
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.svg",
@@ -13,7 +13,7 @@ module.exports = {
   projectName: "useStateMachine", // Usually your repo name.
   themeConfig: {
     colorMode: {
-      defaultMode: 'light',
+      defaultMode: 'dark',
       disableSwitch: false,
       respectPrefersColorScheme: true,
       switchConfig: {
