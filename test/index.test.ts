@@ -6,7 +6,7 @@ const logger: Console["log"] = (...xs) =>
   log += xs.reduce(
     (a, x) => a + (typeof x === "string" ? x : JSON.stringify(x)),
     ""
-  )
+  ) + "\n"
 const clearLog = () =>
   log = "";
 
