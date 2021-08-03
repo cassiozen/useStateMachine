@@ -4,13 +4,17 @@
 
 **The <1 kb _state machine_ hook for React:**
 
-- Feature complete (Entry/exit callbacks, Guarded transitions & Extended State - Context)
-- Amazing TypeScript support: you get precise error reporting, automatic type inference (auto completion for both TypeScript & JavaScript users without having to manually define the typings) with the option to manually specify and augment the types for context & events. 
-- Idiomatic React patterns (Since it's built on top of React's useReducer & useEffect, might as well...)
+See the user-facing docs at: [usestatemachine.js.org](https://usestatemachine.js.org/)
+
+- Batteries Included: Despite the tiny size, useStateMachine is feature complete (Entry/exit callbacks, Guarded transitions & Extended State - Context)
+- Amazing TypeScript experience: Focus on automatic type inference (auto completion for both TypeScript & JavaScript users without having to manually define the typings) while giving you the option to specify and augment the types for context & events.
+- Made for React: useStateMachine follow idiomatic React patterns you and your team are already familiar with. (The library itself is actually a thin wrapper around React's useReducer & useEffect.)
 
 <img width="354" alt="size badge" src="https://user-images.githubusercontent.com/33676/126902516-51f46526-3023-43c7-afd4-17df2e89a3a1.png">
 
-**This docs are for the 1.0.0 version (currently in beta). [Older 0.x.x docs](https://github.com/cassiozen/useStateMachine/tree/b2eea57d877d3b379aa2b86c5301ebbad7515fd9#readme)**
+
+
+(This readme is for the 1.0.0 version (currently in beta). [Older 0.x.x readme](https://github.com/cassiozen/useStateMachine/tree/b2eea57d877d3b379aa2b86c5301ebbad7515fd9#readme))
 
 ## Examples
 
@@ -21,7 +25,7 @@
 ## Installation
 
 ```bash
-$ npm install @cassiozen/usestatemachine
+npm install @cassiozen/usestatemachine
 ```
 
 ## Sample Usage
