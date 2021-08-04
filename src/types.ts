@@ -11,7 +11,7 @@ export type CreateType =
   <T>() => { [$$t]: T }
 
 export type Machine<D,
-  State = Machine.State<D>,
+  State = Machine.StateIdentifier<D>,
   NextEvents =
     ( State extends any
         ? A.Get<Machine.ExitEventForState<D, State>, "type">
@@ -31,7 +31,7 @@ export type Machine<D,
       )
 
 interface MachineImpl
-  { state: Machine.State.Impl
+  { state: Machine.StateIdentifier.Impl
   , context: Machine.Context.Impl
   , event: Machine.Event.Impl
   , nextEvents: Machine.Event.Impl["type"][]
@@ -81,10 +81,8 @@ export namespace Machine {
           : { context: ContextSchema }
       )
 
-  interface DefinitionImp
-    { initial: State.Impl
-    , states: R.Of<State.Impl, Definition.StateNode.Impl>
-    , on?: Definition.On.Impl
+  interface DefinitionImpl extends Definition.StateNode.Impl
+    { on?: Definition.On.Impl
     , schema?: { context?: null, events?: R.Of<Event.Impl["type"], null> }
     , verbose?: boolean
     , console?: Console
@@ -92,7 +90,7 @@ export namespace Machine {
     }
 
   export namespace Definition {
-    export type Impl = DefinitionImp
+    export type Impl = DefinitionImpl
     
     export type FromTypeParamter<D> =
       "$$internalIsConstraint" extends keyof D
@@ -105,7 +103,9 @@ export namespace Machine {
       }
 
     interface StateNodeImpl
-      { on?: On.Impl
+      { initial?: StateIdentifier.Impl
+      , states?: R.Of<StateIdentifier.Impl, Definition.StateNode.Impl>
+      , on?: On.Impl
       , effect?: Effect.Impl
       }
     export namespace StateNode {
@@ -150,7 +150,7 @@ export namespace Machine {
     }
 
     export type Transition<D, P,
-      TargetString = Machine.State<D>,
+      TargetString = Machine.StateIdentifier<D>,
       Event = { type: L.Pop<P> }
     > =
       | TargetString
@@ -247,15 +247,15 @@ export namespace Machine {
     export type InitialEventType = "$$initial";
   }
 
-  export type State<D> =
+  export type StateIdentifier<D> =
     keyof A.Get<D, "states">
 
   export type InitialState<D> =
     A.Get<D, "initial">
 
-  type StateImpl = string & A.Tag<"Machine.State">
-  export namespace State {
-    export type Impl = StateImpl;
+  type StateIdentifierImpl = string & A.Tag<"Machine.StateIdentifier">
+  export namespace StateIdentifier {
+    export type Impl = StateIdentifierImpl;
   }
   
   export type Context<D> =

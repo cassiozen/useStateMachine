@@ -80,7 +80,7 @@ const createReducer = (definition: Machine.Definition.Impl) => {
         if (resolvedTransition.guard === undefined) return [resolvedTransition.target];
         if (resolvedTransition.guard({ context, event })) return [resolvedTransition.target];
         return [resolvedTransition.target, true]
-      })() as [Machine.State.Impl, true?]
+      })() as [Machine.StateIdentifier.Impl, true?]
 
       if (didGuardDeny) {
         log(
