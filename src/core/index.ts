@@ -80,25 +80,25 @@ type PureParameter =
   }
 
 type Node =
-  & ( { state: MachineT.StateIdentifier.Impl
-      , initialState: MachineT.StateIdentifier.Impl
+  & ( { current: MachineT.StateIdentifier.Impl
+      , initial: MachineT.StateIdentifier.Impl
       }
-    | { state: undefined
-      , initialState: undefined
+    | { current: undefined
+      , initial: undefined
       }
     )
   & { children: R.Of<MachineT.StateIdentifier.Impl, Node>
     , definition: MachineT.Definition.StateNode.Impl
     }
-type AtomicNode = Node & { state: undefined, initialState: undefined }
+type AtomicNode = Node & { current: undefined, initial: undefined }
 type CompoundNode = U.Exclude<Node, AtomicNode>
 namespace Node {
   export const from = (definition: MachineT.Definition.StateNode.Impl): Node =>
     ({
       ...(
         definition.initial === undefined
-          ? { state: undefined, initialState: undefined }
-          : { state: definition.initial, initialState: definition.initial }
+          ? { current: undefined, initial: undefined }
+          : { current: definition.initial, initial: definition.initial }
       ),
       children: R.map(R.fromMaybe(definition.states), from),
       definition,
@@ -106,29 +106,29 @@ namespace Node {
 
   export const state = (node: Node): State =>
     isAtomic(node) ? [] :
-    [node.state, ...state(currentChild(node))]
+    [node.current, ...state(currentChild(node))]
 
   export const initialState = (node: Node): State =>
     isAtomic(node) ? [] :
-    [node.initialState, ...state(initialChild(node))]
+    [node.initial, ...state(initialChild(node))]
 
   export const transition = (node: Node, pureParameter: PureParameter): [Node, State, State] => {
-    let [entries, exits] = Node.entriesAndExitsForEvent(node, pureParameter)
+    let [entries, exits] = Node.entriesAndExits(node, pureParameter)
     return [Node.doEntries(Node.doExits(node), entries), entries, exits]
   }
 
-  export const entriesAndExitsForEvent = (node: Node, pureParameter: PureParameter) => {
+  export const entriesAndExits = (node: Node, pureParameter: PureParameter) => {
     let nextStateIdentifier = Node.nextStateIdentifier(node, $$root, pureParameter);
     if (!nextStateIdentifier) return [[], []];
 
-    let nextState = Node.nextStateFromNextStateIdentifier(node, nextStateIdentifier);
+    let nextState = Node.nextState(node, nextStateIdentifier);
     if (!nextState) throw new Error(`Invariant: Could not resolve path for ${nextStateIdentifier}`);
     let currentState = pureParameter.event.type === $$initial ? [] : state(node)
     
     return State.entriesAndExits(currentState, nextState);
   }
 
-  export const nextStateFromNextStateIdentifier = (
+  export const nextState = (
     node: Node,
     nextStateIdentifier: MachineT.StateIdentifier.Impl
   ): State | undefined =>
@@ -139,7 +139,7 @@ namespace Node {
       foundNode ? [nextStateIdentifier, ...initialState(foundNode)] :
       R.find(
         R.map(node.children, (n, k) =>
-          use(nextStateFromNextStateIdentifier(n, nextStateIdentifier))
+          use(nextState(n, nextStateIdentifier))
           .as(foundState =>
             !foundState ? undefined : [k, ...foundState]
           )
@@ -156,14 +156,14 @@ namespace Node {
     isAtomic(node)
       ? identifier :
     pureParameter.event.type === $$initial
-      ? nextStateIdentifier(initialChild(node), node.initialState, pureParameter) :
+      ? nextStateIdentifier(initialChild(node), node.initial, pureParameter) :
     use(
       R.get(
         R.fromMaybe(node.definition.on),
         pureParameter.event.type
       )
     ).as(rootTransition =>
-      !rootTransition ? nextStateIdentifier(currentChild(node), node.state, pureParameter) :
+      !rootTransition ? nextStateIdentifier(currentChild(node), node.current, pureParameter) :
       typeof rootTransition === "string" ? rootTransition :
       !rootTransition.guard ? rootTransition.target :
       rootTransition.guard(pureParameter) ? rootTransition.target :
@@ -174,8 +174,8 @@ namespace Node {
     isAtomic(node) ? node :
     ({
       ...node,
-      state: node.initialState,
-      children: R.map(node.children, (n, i) => i !== node.state ? n : doExits(n))
+      current: node.initial,
+      children: R.map(node.children, (n, i) => i !== node.current ? n : doExits(n))
     })
 
   export const doEntries = (node: Node, entries: State): Node => {
@@ -194,16 +194,16 @@ namespace Node {
     }
     return {
       ...node,
-      state: nextIdentifier,
+      current: nextIdentifier,
       children: R.map(node.children, (n, i) => i !== nextIdentifier ? n : doEntries(n, tailState))
     }
   }
       
   export const currentChild = (compoundNode: CompoundNode) =>
-    R.get(compoundNode.children, compoundNode.state)!
+    R.get(compoundNode.children, compoundNode.current)!
 
   export const initialChild = (compoundNode: CompoundNode) =>
-    R.get(compoundNode.children, compoundNode.initialState)!
+    R.get(compoundNode.children, compoundNode.initial)!
 
   export const isAtomic = (node: Node): node is AtomicNode =>
     R.isEmpty(node.children)
