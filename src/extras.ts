@@ -54,3 +54,4 @@ export const assertNever = (_value: never): never => {
 
 // yes this codebase is written by a hipster-fp-wannabe, apologies.
 export const use = <T>(t: T) => ({ as: <R>(f: (t: T) => R) => f(t) })
+export const doThrow = (error: unknown): never => { throw error }

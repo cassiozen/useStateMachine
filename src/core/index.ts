@@ -1,4 +1,4 @@
-import { R, use } from "../extras";
+import { doThrow, R, use } from "../extras";
 import { F, Machine as MachineT, U } from "../types";
 
 const $$root = "$$root" as MachineT.StateIdentifier.Impl;
@@ -112,21 +112,26 @@ namespace Node {
     isAtomic(node) ? [] :
     [node.initial, ...state(initialChild(node))]
 
-  export const transition = (node: Node, pureParameter: PureParameter): [Node, State, State] => {
-    let [entries, exits] = Node.entriesAndExits(node, pureParameter)
-    return [Node.doEntries(Node.doExits(node), entries), entries, exits]
-  }
+  export const transition = (node: Node, pureParameter: PureParameter): [Node, State, State] =>
+    use(Node.entriesAndExits(node, pureParameter))
+    .as(([entries, exits]) =>
+      [Node.doEntries(Node.doExits(node), entries), entries, exits]
+    )
 
-  export const entriesAndExits = (node: Node, pureParameter: PureParameter) => {
-    let nextStateIdentifier = Node.nextStateIdentifier(node, $$root, pureParameter);
-    if (!nextStateIdentifier) return [[], []];
-
-    let nextState = Node.nextState(node, nextStateIdentifier);
-    if (!nextState) throw new Error(`Invariant: Could not resolve path for ${nextStateIdentifier}`);
-    let currentState = pureParameter.event.type === $$initial ? [] : state(node)
-    
-    return State.entriesAndExits(currentState, nextState);
-  }
+  export const entriesAndExits = (node: Node, pureParameter: PureParameter): [State, State] =>
+    use(Node.nextStateIdentifier(node, $$root, pureParameter))
+    .as(nextStateIdentifier =>
+      !nextStateIdentifier ? [[], []] :
+      use(Node.nextState(node, nextStateIdentifier))
+      .as(nextState =>
+        !nextState
+          ? doThrow(new Error(`Invariant: Could not resolve path for ${nextStateIdentifier}`))
+          : State.entriesAndExits(
+              pureParameter.event.type === $$initial ? [] : state(node),
+              nextState
+            )
+      )
+    )
 
   export const nextState = (
     node: Node,
@@ -178,26 +183,24 @@ namespace Node {
       children: R.map(node.children, (n, i) => i !== node.current ? n : doExits(n))
     })
 
-  export const doEntries = (node: Node, entries: State): Node => {
-    if (isAtomic(node)) {
-      if (entries.length > 0) {
-        throw new Error("Invariant: Attempt to enter states deeper than possible")
-      }
-      return node;
-    }
-    let [nextIdentifier, ...tailState] = entries as [
+  export const doEntries = (node: Node, entries: State): Node =>
+    isAtomic(node)
+      ? entries.length > 0
+        ? doThrow(new Error("Invariant: Attempt to enter states deeper than possible"))
+        : node :
+    use(entries as [
       MachineT.StateIdentifier.Impl?,
       ...MachineT.StateIdentifier.Impl[]
-    ]
-    if (!nextIdentifier) {
-      throw new Error("Invariant: Attempt to enter states shallower than possible")
-    }
-    return {
-      ...node,
-      current: nextIdentifier,
-      children: R.map(node.children, (n, i) => i !== nextIdentifier ? n : doEntries(n, tailState))
-    }
-  }
+    ])
+    .as(([nextIdentifier, ...tailState]) => 
+      !nextIdentifier
+        ? doThrow(new Error("Invariant: Attempt to enter states shallower than possible"))
+        : ({
+            ...node,
+            current: nextIdentifier,
+            children: R.map(node.children, (n, i) => i !== nextIdentifier ? n : doEntries(n, tailState))
+          })
+    )
       
   export const currentChild = (compoundNode: CompoundNode) =>
     R.get(compoundNode.children, compoundNode.current)!
