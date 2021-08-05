@@ -3,14 +3,13 @@ import { R } from "./extras"
 
 export type UseStateMachine =
   <D extends Machine.Definition<D>>(definition: A.InferNarrowestObject<D>) =>
-    [ state: Machine.State<Machine.Definition.FromTypeParamter<D>>
-    , send: Machine.Send<Machine.Definition.FromTypeParamter<D>>
+    [ state: A.Instantiate<Machine.State<Machine.Definition.FromTypeParamter<D>>>
+    , send: A.Instantiate<Machine.Send<Machine.Definition.FromTypeParamter<D>>>
     ]
 
 export const $$t = Symbol("$$t");
 type $$t = typeof $$t;
-export type CreateType =
-  <T>() => { [$$t]: T }
+export type CreateType = <T>() => { [$$t]: T }
 
 export namespace Machine {
   export type Definition<
@@ -150,9 +149,9 @@ export namespace Machine {
         
 
     export type Effect<D, P, StateValue = L.Pop<L.Popped<P>>> = 
-      (parameter: EffectParameterForStateValue<D, StateValue>) =>
+      (parameter: A.Instantiate<EffectParameterForStateValue<D, StateValue>>) =>
         | void
-        | ((parameter: EffectCleanupParameterForStateValue<D, StateValue>) => void)
+        | ((parameter: A.Instantiate<EffectCleanupParameterForStateValue<D, StateValue>>) => void)
     
     type EffectImpl =
       (parameter: EffectParameter.Impl) =>
@@ -240,7 +239,7 @@ export namespace Machine {
   export type Event<D, EventsSchema = A.Get<D, ["schema", "events"], {}>> = 
     | O.Value<{ [T in U.Exclude<keyof EventsSchema, Definition.ExhaustiveIdentifier>]:
         A.Get<EventsSchema, [T, $$t]> extends infer E
-          ? E extends any ? O.ShallowClean<{ type: T } & E> : never
+          ? E extends any ? O.ShallowMerge<{ type: T } & E> : never
           : never
       }>
     | ( A.Get<EventsSchema, Definition.ExhaustiveIdentifier, false> extends true ? never :
@@ -271,26 +270,10 @@ export namespace Machine {
   }
 
   export namespace EffectParameter {
-    export interface EffectParameterForStateValue<D, StateValue>
-      extends Base<D>
-      { event: Machine.EntryEventForStateValue<D, StateValue>
-      }
-
     export namespace Cleanup {
-      export interface ForStateValue<D, StateValue>
-        extends Base<D>
-        { event: Machine.ExitEventForStateValue<D, StateValue>
-        }
-      
       export type Impl = EffectParameter.Impl
     }
 
-    export interface Base<D>
-      { send: Machine.Send<D>
-      , context: Machine.Context<D>
-      , setContext: Machine.SetContext<D>
-      }
-  
     export type Impl = EffectParameterImpl;
   }
   export interface EffectParameterImpl
@@ -446,11 +429,6 @@ export namespace S {
       : false;
 }
 
-export namespace F {
-  export type Call<F> = F extends (...args: any[]) => infer R ? R : never;
-  export type Parameters<F> = F extends (...args: infer A) => any ? A : never;
-}
-
 export namespace U {
   export type Extract<T, U> = T extends U ? T : never;
   export type Exclude<T, U> = T extends U ? never : T;
@@ -458,12 +436,11 @@ export namespace U {
 
 export namespace O {
   export type Value<T> = T[keyof T];
-  export type ShallowClean<T> = { [K in keyof T]: T[K] }
+  export type ShallowMerge<T> = { [K in keyof T]: T[K] }
 }
 
 export namespace A {
   export type Cast<T, U> = T extends U ? T : U;
-  export type Fallback<T, U> = T extends U ? T : U;
   export type Tuple<T = any> = T[] | [T];
   export type Object = object;
   export type String = string;
@@ -508,10 +485,6 @@ export namespace A {
     P extends [infer K1, ...infer Kr] ?
       K1 extends keyof T ?
         _Get<T[K1], Kr, F> :
-      K1 extends Get.Returned$$ ?
-        _Get<T extends (...a: any[]) => infer R ? R : undefined, Kr, F> :
-      K1 extends Get.Parameters$$ ?
-        _Get<T extends (...a: infer A) => any ? A : undefined, Kr, F> :
       F :
     never
 
@@ -520,20 +493,27 @@ export namespace A {
       ? A.Cast<X, any>
       : never
 
-  export namespace Get {
-    const Returned$$ = Symbol("Returned$$");
-    export type Returned$$ = typeof Returned$$;
-
-    const Parameters$$ = Symbol("Parameters$$");
-    export type Parameters$$ = typeof Parameters$$;
-  }
-
   export type CustomError<Error, Place> =
     Place extends (S.IsLiteral<Place> extends true ? Error : A.String)
       ? Place extends `${S.Assert<Error>} `
           ? Error
           : `${S.Assert<Error>} `
       : Error
+
+  export type Instantiate<T> =
+    T extends any
+      ? T extends A.Function
+          ? T extends { (...a: infer A1): infer R1, (...a: infer A2): infer R2 }
+              ? { (...a: Instantiate<A1>): Instantiate<R1>
+                , (...a: Instantiate<A2>): Instantiate<R2>
+                } :
+            T extends (...a: infer A1) => infer R1
+              ? (...a1: Instantiate<A1>) => Instantiate<R1> :
+            never :
+        T extends A.Object
+          ? { [K in keyof T]: Instantiate<T[K]> } :
+        T
+      : never
 
   export type Tag<N extends A.String> =
     { [_ in N]: void }

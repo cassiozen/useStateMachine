@@ -2,7 +2,7 @@
 import { A, LS, UseStateMachine, CreateType } from "../src/types";
 
 const useStateMachine = (() => []) as any as UseStateMachine;
-const t = (() => {}) as CreateType
+const t = (() => undefined) as unknown as CreateType
 
 const query = () => 
   ((global as any).twoSlashQueries.shift()) as { completions: string[], text: string }
