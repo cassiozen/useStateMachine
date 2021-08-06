@@ -127,9 +127,10 @@ export namespace Machine {
       | { target: TargetString
         , guard?:
             ( parameter:
+              A.Instantiate<
               { context: Machine.Context<D>
               , event: U.Extract<Machine.Event<D>, Event>
-              }
+              }>
             ) => boolean
         }
 
