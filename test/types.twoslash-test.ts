@@ -1273,3 +1273,38 @@ describe("workaround for #65", () => {
     }
   >())
 })
+
+describe("A.Instantiated", () => {
+  it("does not instantiate builtin objects", () => {
+    let _x: A.Instantiated<Date> = new Date()
+    _x;
+//  ^?
+    expect(query().text).toContain("Date")
+  })
+
+  it("does not instantiate context", () => {
+    interface Something { foo: string }
+    let [_state] = useStateMachine({
+    //     ^?
+      context: { foo: "" } as Something,
+      initial: "a",
+      states: { a: {} }
+    })
+
+    expect(query().text).toContain("Something")
+  })
+
+  it("does not instantiate event payloads deeply", () => {
+    interface Something { foo: string }
+    let [_, _send] = useStateMachine({
+    //        ^?
+      schema: {
+        events: { A: t<{ bar: Something }>() }
+      },
+      initial: "a",
+      states: { a: { on: { A: "a" } } }
+    })
+
+    expect(query().text).toContain("Something")
+  })
+})
