@@ -501,6 +501,7 @@ export namespace A {
       : Error
 
   export type Instantiate<T> =
+    T extends InstantiateBlockList ? T :
     T extends any
       ? T extends A.Function
           ? T extends { (...a: infer A1): infer R1, (...a: infer A2): infer R2 }
@@ -514,6 +515,13 @@ export namespace A {
           ? { [K in keyof T]: Instantiate<T[K]> } :
         T
       : never
+
+  type InstantiateBlockList =
+    | { [Symbol.toStringTag]: string }
+    | Error
+    | Date
+    | RegExp
+    | Generator
 
   export type Tag<N extends A.String> =
     { [_ in N]: void }
