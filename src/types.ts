@@ -152,6 +152,7 @@ export namespace Machine {
     export type Effect<D, P, StateValue = L.Pop<L.Popped<P>>> = 
       (parameter: EffectParameterForStateValue<D, StateValue>) =>
         | void
+        | Promise<void>
         | ((parameter: EffectCleanupParameterForStateValue<D, StateValue>) => void)
     
     type EffectImpl =
