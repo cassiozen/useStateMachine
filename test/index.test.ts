@@ -13,7 +13,7 @@ const clearLog = () =>
 const useStateMachine =
   ((d: any) =>
     _useStateMachine({ ...d, console: { log: logger } })
-  ) as typeof _useStateMachine
+  ) as any as typeof _useStateMachine
 
 describe("useStateMachine", () => {
   describe("States & Transitions", () => {
