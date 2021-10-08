@@ -432,13 +432,13 @@ describe("Machine.Definition", () => {
     })
 
     it("doesn't infer narrowest", () => {
-      let [state] = useStateMachine({
+      let machine = useStateMachine({
         schema: {},
         context: { foo: "hello" },
         initial: "a",
         states: { a: {} }
       })
-      A.test(A.areEqual<typeof state.context.foo, string>())
+      A.test(A.areEqual<typeof machine.context.foo, string>())
     })
   })
 
@@ -1123,8 +1123,8 @@ describe("Machine.Definition", () => {
   })
 })
 
-describe("UseStateMachine", () => {
-  let [state, send] = useStateMachine({
+describe("Machine", () => {
+  let machine = useStateMachine({
     schema: {
       events: {
         X: t<{ foo: number }>(),
@@ -1152,46 +1152,40 @@ describe("UseStateMachine", () => {
     }
   })
 
-  describe("Machine.State", () => {
-    A.test(A.areEqual<
-      typeof state,
-      | { value: "a"
+  A.test(A.areEqual<
+    typeof machine,
+    & { nextEvents: ("X" | "Y" | "Z")[]
+      , send:
+          { ( sendable:
+              | { type: "X", foo: number }
+              | { type: "Y", bar?: number }
+              | { type: "Z" }
+            ): void
+          , ( sendable:
+              | "Y"
+              | "Z"
+            ): void
+          }
+      }
+    & ( { state: "a"
         , context: { foo?: number }
         , event:
             | { type: "$$initial" }
             | { type: "Y", bar?: number }
             | { type: "Z" }
         , nextEventsT: ("X" | "Z")[]
-        , nextEvents: ("X" | "Y" | "Z")[]
         }
-      | { value: "b"
+      | { state: "b"
         , context: { foo?: number }
         , event: { type: "X", foo: number }
         , nextEventsT: ("Y" | "Z")[]
-        , nextEvents: ("X" | "Y" | "Z")[]
         }
-    >())
-  })
-
-  describe("Machine.Send", () => {
-    A.test(A.areEqual<
-      typeof send,
-      { ( sendable:
-          | { type: "X", foo: number }
-          | { type: "Y", bar?: number }
-          | { type: "Z" }
-        ): void
-      , ( sendable:
-          | "Y"
-          | "Z"
-        ): void
-      }
-    >())
-  })
+      )
+  >())
 })
 
 describe("Machine.Definition.FromTypeParamter", () => {
-  let [state, send] = useStateMachine({
+  let machine = useStateMachine({
     context: { toggleCount: 0 },
     initial: "inactive",
     states: {
@@ -1208,33 +1202,31 @@ describe("Machine.Definition.FromTypeParamter", () => {
   })
 
   A.test(A.areEqual<
-    typeof state,
-    | { value: "inactive"
-      , context: { toggleCount: number }
-      , event:
-          | { type: "$$initial" }
-          | { type: "TOGGLE" }
-      , nextEventsT: "TOGGLE"[]
-      , nextEvents: "TOGGLE"[]
+    typeof machine,
+    & { nextEvents: "TOGGLE"[]
+      , send:
+          { (sendable: { type: "TOGGLE" }): void
+          , (sendable: "TOGGLE"): void
+          }
       }
-    | { value: "active"
-      , context: { toggleCount: number }
-      , event: { type: "TOGGLE" }
-      , nextEventsT: "TOGGLE"[]
-      , nextEvents: "TOGGLE"[]
-      }
-  >())
-
-  A.test(A.areEqual<
-    typeof send,
-    { (sendable: { type: "TOGGLE" }): void
-    , (sendable: "TOGGLE"): void
-    }
+    & ( { state: "inactive"
+        , context: { toggleCount: number }
+        , event:
+            | { type: "$$initial" }
+            | { type: "TOGGLE" }
+        , nextEventsT: "TOGGLE"[]
+        }
+      | { state: "active"
+        , context: { toggleCount: number }
+        , event: { type: "TOGGLE" }
+        , nextEventsT: "TOGGLE"[]
+        }
+      )
   >())
 })
 
 describe("fix(Machine.State['nextEvents']): only normalize don't widen", () => {
-  let [state] = useStateMachine({
+  let machine = useStateMachine({
     schema: {
       events: { Y: t<{}>() }
     },
@@ -1246,11 +1238,11 @@ describe("fix(Machine.State['nextEvents']): only normalize don't widen", () => {
     }
   })
 
-  A.test(A.areEqual<typeof state.nextEvents, "X"[]>())
+  A.test(A.areEqual<typeof machine.nextEvents, "X"[]>())
 })
 
 describe("workaround for #65", () => {
-  let [_, send] = useStateMachine({
+  let machine = useStateMachine({
     schema: {
       events: {
         A: t<{ value: string }>()
@@ -1267,7 +1259,7 @@ describe("workaround for #65", () => {
   })
 
   A.test(A.areEqual<
-    typeof send,
+    typeof machine.send,
     { (sendable: { type: "A", value: string } | { type: "B" }): void
     , (sendable: "B"): void
     }
