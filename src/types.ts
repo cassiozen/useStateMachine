@@ -17,15 +17,17 @@ export type Machine<D,
         : never
     )[]
   > =
-    & { nextEvents: NextEvents
+    & A.Instantiated<
+      { nextEvents: NextEvents
       , send: Machine.Send<D>
-      }
+      }>
     & ( State extends any
-          ? { state: State
+          ? A.Instantiated<
+            { state: State
             , context: Machine.Context<D>
             , event: Machine.EntryEventForState<D, State>
             , nextEventsT: A.Get<Machine.ExitEventForState<D, State>, "type">[]
-            }
+            }>
           : never
       )
 

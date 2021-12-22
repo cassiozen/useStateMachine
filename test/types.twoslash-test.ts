@@ -1276,26 +1276,28 @@ describe("A.Instantiated", () => {
 
   it("does not instantiate context", () => {
     interface Something { foo: string }
-    let [_state] = useStateMachine({
+    let _machine = useStateMachine({
     //     ^?
       context: { foo: "" } as Something,
       initial: "a",
       states: { a: {} }
     })
+    _machine;
 
     expect(query().text).toContain("Something")
   })
 
   it("does not instantiate event payloads deeply", () => {
     interface Something { foo: string }
-    let [_, _send] = useStateMachine({
-    //        ^?
+    let _machine = useStateMachine({
+    //     ^?
       schema: {
         events: { A: t<{ bar: Something }>() }
       },
       initial: "a",
       states: { a: { on: { A: "a" } } }
     })
+    _machine;
 
     expect(query().text).toContain("Something")
   })
