@@ -13,9 +13,6 @@ See the user-facing docs at: [usestatemachine.js.org](https://usestatemachine.js
 <img width="354" alt="size badge" src="https://user-images.githubusercontent.com/33676/126902516-51f46526-3023-43c7-afd4-17df2e89a3a1.png">
 
 
-
-(This readme is for the 1.0.0 version (currently in beta). [Older 0.x.x readme](https://github.com/cassiozen/useStateMachine/tree/b2eea57d877d3b379aa2b86c5301ebbad7515fd9#readme))
-
 ## Examples
 
 - State-driven UI (Hiding and showing UI Elements based on the state) - [CodeSandbox](https://codesandbox.io/s/github/cassiozen/usestatemachine/tree/main/examples/timer?file=/index.tsx) - [Source](./examples/timer)
