@@ -1,6 +1,6 @@
 {
   "name": "@cassiozen/usestatemachine",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "author": "Cassio Zen",
   "main": "dist/index.js",
