@@ -144,4 +144,4 @@ const createLogger = (definition: Machine.Definition.Impl) => (groupLabel: strin
 const useStateMachine = useStateMachineImpl as unknown as UseStateMachine;
 export default useStateMachine;
 
-export const t = <T>() => ({ [$$t]: undefined as unknown as T })
+export const t = <T extends unknown>() => ({ [$$t]: undefined as T })
