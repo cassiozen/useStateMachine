@@ -21,7 +21,7 @@ html[data-theme='dark'] .docusaurus-highlight-code-line {
 
 @media only screen and (max-device-width: 490px) and (orientation : portrait){  
   .hero__title {
-    font-size: 2.3rem;
+    font-size: 2rem;
   }
 }
 
