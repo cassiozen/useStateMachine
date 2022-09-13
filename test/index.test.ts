@@ -6,7 +6,7 @@ const logger: Console["log"] = (...xs) =>
   log += xs.reduce(
     (a, x) => a + (typeof x === "string" ? x : JSON.stringify(x)),
     ""
-  )
+  ) + "\n"
 const clearLog = () =>
   log = "";
 
@@ -32,12 +32,13 @@ describe("useStateMachine", () => {
         })
       );
 
-      expect(result.current[0]).toStrictEqual({
+      expect(result.current).toStrictEqual({
         context: undefined,
         event: { type: "$$initial" },
-        value: "inactive",
+        state: "inactive",
         nextEvents: ["ACTIVATE"],
         nextEventsT: ["ACTIVATE"],
+        send: expect.any(Function)
       });
     });
 
@@ -57,17 +58,18 @@ describe("useStateMachine", () => {
       );
 
       act(() => {
-        result.current[1]("ACTIVATE");
+        result.current.send("ACTIVATE");
       });
 
-      expect(result.current[0]).toStrictEqual({
+      expect(result.current).toStrictEqual({
         context: undefined,
         event: {
           type: "ACTIVATE",
         },
-        value: "active",
+        state: "active",
         nextEvents: ["DEACTIVATE"],
         nextEventsT: ["DEACTIVATE"],
+        send: expect.any(Function)
       });
     });
 
@@ -90,17 +92,18 @@ describe("useStateMachine", () => {
       );
 
       act(() => {
-        result.current[1]("FORCE_ACTIVATE");
+        result.current.send("FORCE_ACTIVATE");
       });
 
-      expect(result.current[0]).toStrictEqual({
+      expect(result.current).toStrictEqual({
         context: undefined,
         event: {
           type: "FORCE_ACTIVATE",
         },
-        value: "active",
+        state: "active",
         nextEvents: ["DEACTIVATE", "FORCE_ACTIVATE"],
         nextEventsT: ["DEACTIVATE", "FORCE_ACTIVATE"],
+        send: expect.any(Function),
       });
     });
 
@@ -120,17 +123,18 @@ describe("useStateMachine", () => {
       );
 
       act(() => {
-        result.current[1]({ type: "ACTIVATE" });
+        result.current.send({ type: "ACTIVATE" });
       });
 
-      expect(result.current[0]).toStrictEqual({
+      expect(result.current).toStrictEqual({
         context: undefined,
         event: {
           type: "ACTIVATE",
         },
-        value: "active",
+        state: "active",
         nextEvents: ["DEACTIVATE"],
         nextEventsT: ["DEACTIVATE"],
+        send: expect.any(Function),
       });
     });
 
@@ -152,15 +156,16 @@ describe("useStateMachine", () => {
       act(() => {
         // TypeScript won"t allow me to type "ON" because it knows it"s not a valid event
         // @ts-expect-error
-        result.current[1]("ON");
+        result.current.send("ON");
       });
 
-      expect(result.current[0]).toStrictEqual({
+      expect(result.current).toStrictEqual({
         context: undefined,
         event: { type: "$$initial" },
-        value: "inactive",
+        state: "inactive",
         nextEvents: ["TOGGLE"],
         nextEventsT: ["TOGGLE"],
+        send: expect.any(Function),
       });
     });
 
@@ -188,17 +193,18 @@ describe("useStateMachine", () => {
       );
 
       act(() => {
-        result.current[1]("TOGGLE");
+        result.current.send("TOGGLE");
       });
 
-      expect(result.current[0]).toStrictEqual({
+      expect(result.current).toStrictEqual({
         context: undefined,
         event: {
           type: "TOGGLE",
         },
-        value: "active",
+        state: "active",
         nextEvents: ["TOGGLE"],
         nextEventsT: ["TOGGLE"],
+        send: expect.any(Function),
       });
     });
     it("should invoke effect callbacks", () => {
@@ -227,7 +233,7 @@ describe("useStateMachine", () => {
       );
 
       act(() => {
-        result.current[1]("TOGGLE");
+        result.current.send("TOGGLE");
       });
 
       expect(entry.mock.calls.length).toBe(2);
@@ -260,14 +266,15 @@ describe("useStateMachine", () => {
         })
       );
 
-      expect(result.current[0]).toStrictEqual({
+      expect(result.current).toStrictEqual({
         context: undefined,
         event: {
           type: "TOGGLE",
         },
-        value: "active",
+        state: "active",
         nextEvents: ["TOGGLE"],
         nextEventsT: ["TOGGLE"],
+        send: expect.any(Function),
       });
     });
 
@@ -295,7 +302,7 @@ describe("useStateMachine", () => {
       );
 
       act(() => {
-        result.current[1]({ type: "ACTIVATE", number: 10 });
+        result.current.send({ type: "ACTIVATE", number: 10 });
       });
       expect(effect.mock.calls[0][0]["event"]).toStrictEqual({ type: "ACTIVATE", number: 10 });
     });
@@ -352,16 +359,17 @@ describe("useStateMachine", () => {
       );
 
       act(() => {
-        result.current[1]("TOGGLE");
+        result.current.send("TOGGLE");
       });
 
       expect(guard).toHaveBeenCalled();
-      expect(result.current[0]).toStrictEqual({
+      expect(result.current).toStrictEqual({
         context: undefined,
         event: { type: "$$initial" },
-        value: "inactive",
+        state: "inactive",
         nextEvents: ["TOGGLE"],
         nextEventsT: ["TOGGLE"],
+        send: expect.any(Function),
       });
     });
 
@@ -388,18 +396,19 @@ describe("useStateMachine", () => {
       );
 
       act(() => {
-        result.current[1]("TOGGLE");
+        result.current.send("TOGGLE");
       });
 
       expect(guard).toHaveBeenCalled();
-      expect(result.current[0]).toStrictEqual({
+      expect(result.current).toStrictEqual({
         context: undefined,
         event: {
           type: "TOGGLE",
         },
-        value: "active",
+        state: "active",
         nextEvents: ["TOGGLE"],
         nextEventsT: ["TOGGLE"],
+        send: expect.any(Function),
       });
     });
   });
@@ -420,12 +429,13 @@ describe("useStateMachine", () => {
         })
       );
 
-      expect(result.current[0]).toStrictEqual({
-        value: "inactive",
+      expect(result.current).toStrictEqual({
+        state: "inactive",
         context: { foo: "bar" },
         event: { type: "$$initial" },
         nextEvents: ["TOGGLE"],
         nextEventsT: ["TOGGLE"],
+        send: expect.any(Function),
       });
     });
 
@@ -453,12 +463,13 @@ describe("useStateMachine", () => {
         })
       );
 
-      expect(result.current[0]).toStrictEqual({
-        value: "inactive",
+      expect(result.current).toStrictEqual({
+        state: "inactive",
         context: { foo: "bar" },
         event: { type: "$$initial" },
         nextEvents: ["TOGGLE"],
         nextEventsT: ["TOGGLE"],
+        send: expect.any(Function),
       });
     });
 
@@ -482,17 +493,18 @@ describe("useStateMachine", () => {
       );
 
       act(() => {
-        result.current[1]("TOGGLE");
+        result.current.send("TOGGLE");
       });
 
-      expect(result.current[0]).toStrictEqual({
-        value: "active",
+      expect(result.current).toStrictEqual({
+        state: "active",
         context: { toggleCount: 1 },
         event: {
           type: "TOGGLE",
         },
         nextEvents: ["TOGGLE"],
         nextEventsT: ["TOGGLE"],
+        send: expect.any(Function),
       });
     });
     it("should update context on exit", () => {
@@ -515,17 +527,18 @@ describe("useStateMachine", () => {
       );
 
       act(() => {
-        result.current[1]("TOGGLE");
+        result.current.send("TOGGLE");
       });
 
-      expect(result.current[0]).toStrictEqual({
-        value: "active",
+      expect(result.current).toStrictEqual({
+        state: "active",
         context: { toggleCount: 1 },
         event: {
           type: "TOGGLE",
         },
         nextEvents: ["TOGGLE"],
         nextEventsT: ["TOGGLE"],
+        send: expect.any(Function),
       });
     });
   });
@@ -592,7 +605,7 @@ describe("useStateMachine", () => {
 
       if (result.all[0] instanceof Error) throw result.all[0];
       else if (result.all[1] instanceof Error) throw result.all[1];
-      else expect(result.all[0][1]).toBe(result.all[1][1]);
+      else expect(result.all[0].send).toBe(result.all[1].send);
     });
   });
 });
