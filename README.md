@@ -28,6 +28,8 @@ npm install @cassiozen/usestatemachine
 ## Sample Usage
 
 ```typescript
+import useStateMachine from "@cassiozen/usestatemachine";
+
 const [state, send] = useStateMachine({
   initial: 'inactive',
   states: {
