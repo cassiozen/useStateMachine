@@ -1,9 +1,10 @@
 import { useEffect, useReducer } from "react";
-import { UseStateMachine, Machine, $$t } from "./types";
+import { UseStateMachine, Machine, $$t, O } from "./types";
 import { assertNever, R, useConstant } from "./extras";
 
+
 const useStateMachineImpl = (definition: Machine.Definition.Impl) => {
-  const [state, dispatch] = useReducer(createReducer(definition), createInitialState(definition));
+  const [machineInstant, dispatch] = useReducer(createReducer(definition), createInitialState(definition));
 
   const send = useConstant(() => (sendable: Machine.Sendable.Impl) => dispatch({ type: "SEND", sendable }));
 
@@ -13,30 +14,33 @@ const useStateMachineImpl = (definition: Machine.Definition.Impl) => {
   };
 
   useEffect(() => {
-    const entry = R.get(definition.states, state.value)!.effect;
+    const entry = R.get(definition.states, machineInstant.state)!.effect;
     let exit = entry?.({
       send,
       setContext,
-      event: state.event,
-      context: state.context,
+      event: machineInstant.event,
+      context: machineInstant.context,
     });
 
     return typeof exit === "function"
-      ? () => exit?.({ send, setContext, event: state.event, context: state.context })
+      ? () => exit?.({ send, setContext, event: machineInstant.event, context: machineInstant.context })
       : undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.value, state.event]);
+  }, [machineInstant.state, machineInstant.event]);
 
-  return [state, send];
+  return { ...machineInstant, send };
 };
 
-const createInitialState = (definition: Machine.Definition.Impl): Machine.State.Impl => {
+type MachineInstant =
+  O.OmitKey<Machine.Impl, "send">
+
+const createInitialState = (definition: Machine.Definition.Impl): MachineInstant => {
   let nextEvents = R.keys(R.concat(
     R.fromMaybe(R.get(definition.states, definition.initial)!.on),
     R.fromMaybe(definition.on)
   ))
   return {
-    value: definition.initial,
+    state: definition.initial,
     context: definition.context as Machine.Context.Impl,
     event: { type: "$$initial" } as Machine.Event.Impl,
     nextEvents: nextEvents,
@@ -46,56 +50,56 @@ const createInitialState = (definition: Machine.Definition.Impl): Machine.State.
 
 const createReducer = (definition: Machine.Definition.Impl) => {
   let log = createLogger(definition);
-  return (machineState: Machine.State.Impl, internalEvent: InternalEvent): Machine.State.Impl => {
+  return (machineInstant: MachineInstant, internalEvent: InternalEvent): MachineInstant => {
     if (internalEvent.type === "SET_CONTEXT") {
-      let nextContext = internalEvent.updater(machineState.context);
-      log("Context update", ["Previous Context", machineState.context], ["Next Context", nextContext]);
+      let nextContext = internalEvent.updater(machineInstant.context);
+      log("Context update", ["Previous Context", machineInstant.context], ["Next Context", nextContext]);
 
-      return { ...machineState, context: nextContext };
+      return { ...machineInstant, context: nextContext };
     }
 
     if (internalEvent.type === "SEND") {
       let sendable = internalEvent.sendable;
       let event = typeof sendable === "string" ? { type: sendable } : sendable;
-      let context = machineState.context;
-      let stateNode = R.get(definition.states, machineState.value)!;
+      let context = machineInstant.context;
+      let stateNode = R.get(definition.states, machineInstant.state)!;
       let resolvedTransition =
         R.get(R.fromMaybe(stateNode.on), event.type) ?? R.get(R.fromMaybe(definition.on), event.type);
 
       if (!resolvedTransition) {
         log(
           `Current state doesn't listen to event type "${event.type}".`,
-          ["Current State", machineState],
+          ["Current State", machineInstant],
           ["Event", event]
         );
-        return machineState;
+        return machineInstant;
       }
 
-      let [nextStateValue, didGuardDeny = false] = (() => {
+      let [nextState, didGuardDeny = false] = (() => {
         if (typeof resolvedTransition === "string") return [resolvedTransition];
         if (resolvedTransition.guard === undefined) return [resolvedTransition.target];
         if (resolvedTransition.guard({ context, event })) return [resolvedTransition.target];
         return [resolvedTransition.target, true]
-      })() as [Machine.StateValue.Impl, true?]
+      })() as [Machine.StateIdentifier.Impl, true?]
 
       if (didGuardDeny) {
         log(
-          `Transition from "${machineState.value}" to "${nextStateValue}" denied by guard`,
+          `Transition from "${machineInstant.state}" to "${nextState}" denied by guard`,
           ["Event", event],
           ["Context", context]
         );
-        return machineState;
+        return machineInstant;
       }
-      log(`Transition from "${machineState.value}" to "${nextStateValue}"`, ["Event", event]);
+      log(`Transition from "${machineInstant.state}" to "${nextState}"`, ["Event", event]);
 
-      let resolvedStateNode = R.get(definition.states, nextStateValue)!;
+      let resolvedStateNode = R.get(definition.states, nextState)!;
 
       let nextEvents = R.keys(R.concat(
         R.fromMaybe(resolvedStateNode.on),
         R.fromMaybe(definition.on)
       ));
       return {
-        value: nextStateValue,
+        state: nextState,
         context,
         event,
         nextEvents,
